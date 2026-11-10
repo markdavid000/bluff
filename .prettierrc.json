@@ -1,0 +1,20 @@
+{
+  "printWidth": 100,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "es5",
+  "plugins": ["prettier-plugin-tailwindcss", "prettier-plugin-solidity"],
+  "tailwindStylesheet": "./apps/web/src/app/globals.css",
+  "tailwindFunctions": ["cn", "cva"],
+  "overrides": [
+    {
+      "files": "*.sol",
+      "options": {
+        "parser": "slang",
+        "printWidth": 120,
+        "tabWidth": 4,
+        "trailingComma": "all"
+      }
+    }
+  ]
+}

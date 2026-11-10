@@ -1,0 +1,13 @@
+node_modules
+pnpm-lock.yaml
+coverage
+.worktrees
+apps/web/.next
+apps/web/.open-next
+apps/web/.wrangler
+apps/web/next-env.d.ts
+packages/contracts/artifacts
+packages/contracts/cache
+packages/contracts/types
+packages/contracts/fhevmTemp
+packages/contracts/deployments
