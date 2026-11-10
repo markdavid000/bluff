@@ -15,10 +15,7 @@ coverage.json
 apps/web/.next/
 apps/web/out/
 apps/web/next-env.d.ts
-apps/web/.open-next/
-apps/web/.wrangler/
-apps/web/.dev.vars*
-!apps/web/.dev.vars.example
+apps/web/.vercel/
 
 packages/contracts/artifacts/
 packages/contracts/cache/

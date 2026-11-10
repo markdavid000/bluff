@@ -4,9 +4,6 @@
     ".": {
       "entry": ["scripts/*.mjs"]
     },
-    "apps/web": {
-      "entry": ["open-next.config.ts"]
-    },
     "packages/contracts": {
       "entry": ["tasks/**/*.ts", ".solcover.js"]
     }

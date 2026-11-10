@@ -86,7 +86,7 @@ jobs:
       - run: pnpm test
 
   build:
-    name: cloudflare build and worker smoke test
+    name: build and smoke test
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -102,10 +102,8 @@ jobs:
           path: apps/web/.next/cache
           key: next-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: next-${{ hashFiles('pnpm-lock.yaml') }}-
-      - run: pnpm --filter @bluff/web build:cloudflare
-      - run: pnpm --filter @bluff/web smoke:worker
-        env:
-          WRANGLER_SEND_METRICS: "false"
+      - run: pnpm build
+      - run: pnpm --filter @bluff/web smoke
 
   secrets:
     name: secrets

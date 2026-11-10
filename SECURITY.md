@@ -25,6 +25,6 @@ Bluff runs on the Sepolia test network with practice chips only. The contracts a
 
 Secrets never enter the repository.
 
-- Web app secrets live in Cloudflare Worker secrets and Workers Builds variables.
+- Web app secrets live in Vercel environment variables.
 - The contract deployer mnemonic and RPC keys live in Hardhat's encrypted variable store (`npx hardhat vars set`), on the deployer's machine only.
 - Every pull request is scanned with gitleaks. If a secret is committed by mistake, treat it as leaked: rotate it first (for a deployer key, move any funds and redeploy from a new key), then remove it from history.

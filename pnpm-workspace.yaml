@@ -4,7 +4,6 @@ packages:
 
 allowBuilds:
   esbuild: true
-  workerd: true
   keccak: false
   secp256k1: false
   lefthook: false

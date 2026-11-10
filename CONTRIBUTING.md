@@ -53,7 +53,7 @@ pnpm compile          # compiles the contracts and generates their types
 pnpm dev              # http://localhost:3000
 ```
 
-For the Workers runtime locally, copy `apps/web/.dev.vars.example` to `apps/web/.dev.vars` and run `pnpm --filter @bluff/web preview:cloudflare`.
+To check the production build locally, run `pnpm build` and then `pnpm --filter @bluff/web start`.
 
 To deploy contracts to Sepolia, set the deployer's variables once:
 
@@ -83,18 +83,17 @@ Run from the repository root.
 | `pnpm knip`           | Unused files, exports and dependencies in every package              |
 | `pnpm comments:check` | The no-comments rule                                                 |
 | `pnpm copy:check`     | The plain-language rule for player-facing text                       |
-| `pnpm preflight`      | All of the above plus the Cloudflare build and Worker smoke test     |
+| `pnpm preflight`      | All of the above plus the production build and smoke test            |
 
 Package scripts, run with `pnpm --filter <package> <script>`:
 
-| Package            | Script               | What it does                                                             |
-| ------------------ | -------------------- | ------------------------------------------------------------------------ |
-| `@bluff/web`       | `build:cloudflare`   | Build the Worker with OpenNext                                           |
-| `@bluff/web`       | `smoke:worker`       | Run the built Worker in the Workers runtime; every route must return 200 |
-| `@bluff/web`       | `preview:cloudflare` | Build and run the Worker locally                                         |
-| `@bluff/contracts` | `coverage`           | Contract test coverage                                                   |
-| `@bluff/contracts` | `test:sepolia`       | Run the Sepolia test suite against the live network                      |
-| `@bluff/contracts` | `deploy:sepolia`     | Deploy the contracts to Sepolia                                          |
+| Package            | Script           | What it does                                                |
+| ------------------ | ---------------- | ----------------------------------------------------------- |
+| `@bluff/web`       | `smoke`          | Start the production build and require a 200 on every route |
+| `@bluff/web`       | `start`          | Serve the production build locally                          |
+| `@bluff/contracts` | `coverage`       | Contract test coverage                                      |
+| `@bluff/contracts` | `test:sepolia`   | Run the Sepolia test suite against the live network         |
+| `@bluff/contracts` | `deploy:sepolia` | Deploy the contracts to Sepolia                             |
 
 ## Where code goes
 
@@ -134,11 +133,11 @@ feature branch ──squash──► dev ──merge──► staging ──merg
                           (develop)      (test)            (production)
 ```
 
-| Branch    | Purpose                                                   | Accepts pull requests from | Merged by            | Deploys to             |
-| --------- | --------------------------------------------------------- | -------------------------- | -------------------- | ---------------------- |
-| `dev`     | Development. Every feature branch lands here.             | feature branches           | anyone with write    | nothing                |
-| `staging` | Testing. Developed features are promoted here and tested. | `dev` only                 | the repository owner | Worker `bluff-staging` |
-| `main`    | Production. Tested features are promoted here.            | `staging` only             | the repository owner | Worker `bluff`         |
+| Branch    | Purpose                                                   | Accepts pull requests from | Merged by            | Deploys to         |
+| --------- | --------------------------------------------------------- | -------------------------- | -------------------- | ------------------ |
+| `dev`     | Development. Every feature branch lands here.             | feature branches           | anyone with write    | nothing            |
+| `staging` | Testing. Developed features are promoted here and tested. | `dev` only                 | the repository owner | Vercel staging URL |
+| `main`    | Production. Tested features are promoted here.            | `staging` only             | the repository owner | Vercel production  |
 
 The rules, all enforced by GitHub:
 
@@ -206,11 +205,11 @@ Keep commits atomic: one logical change each. AI tools never co-author a commit:
 
 Three layers, from fastest to slowest:
 
-| When         | What runs                                                                                            | Configured in              |
-| ------------ | ---------------------------------------------------------------------------------------------------- | -------------------------- |
-| commit       | Prettier on staged files, comment rules, copy rules, commit message lint                             | `lefthook.yml`             |
-| push         | `pnpm preflight --fast`: format, comments, copy, compile, lint, typecheck, tests, knip               | `lefthook.yml`             |
-| pull request | Everything above, the Cloudflare build, the Worker smoke test, a branch flow check and a secret scan | `.github/workflows/ci.yml` |
+| When         | What runs                                                                                     | Configured in              |
+| ------------ | --------------------------------------------------------------------------------------------- | -------------------------- |
+| commit       | Prettier on staged files, comment rules, copy rules, commit message lint                      | `lefthook.yml`             |
+| push         | `pnpm preflight --fast`: format, comments, copy, compile, lint, typecheck, tests, knip        | `lefthook.yml`             |
+| pull request | Everything above, the production build, the smoke test, a branch flow check and a secret scan | `.github/workflows/ci.yml` |
 
 Do not bypass hooks with `--no-verify`. If a hook is wrong, fix the hook in its own PR.
 
@@ -251,15 +250,15 @@ Bluff is for everyone, not only people who know crypto. Every word a player read
 
 ## Environment and secrets
 
-- Never commit secrets. `.env*` and `.dev.vars` are ignored; CI scans every PR with gitleaks.
-- Local Worker variables go in `apps/web/.dev.vars` (copy `.dev.vars.example`).
-- Deployed values are Cloudflare Worker secrets (runtime) and Workers Builds variables (build time).
+- Never commit secrets. `.env*` files are ignored; CI scans every PR with gitleaks.
+- Local variables for the web app go in `apps/web/.env.local`.
+- Deployed values are Vercel environment variables, set per environment (Production, Preview).
 - The contract deployer's mnemonic and RPC keys go in Hardhat's variable store, never in a file.
 - A secret never gets a `NEXT_PUBLIC_` prefix.
 
 ## Deployment
 
-- **Web app:** Cloudflare Workers Builds deploys automatically. A merge to `staging` deploys `bluff-staging`; a merge to `main` deploys `bluff`. Build command `pnpm --filter @bluff/web build:cloudflare`; deploy command `pnpm --filter @bluff/web exec opennextjs-cloudflare deploy` (add `--env staging` for staging).
+- **Web app:** Vercel deploys from GitHub. A merge to `main` deploys production; `staging` deploys to the staging URL; every pull request gets its own preview link. The Vercel project uses `apps/web` as its root directory and needs no secrets to build.
 - **Contracts:** deployed by the repository owner with `pnpm --filter @bluff/contracts deploy:sepolia`. Commit the updated `deployments/sepolia/` files in the same PR as the app change that uses them.
 
 ## Working with AI agents

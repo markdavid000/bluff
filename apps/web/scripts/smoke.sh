@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT="${SMOKE_PORT:-8799}"
+PORT="${SMOKE_PORT:-3099}"
 ROUTES=("/" "/robots.txt" "/sitemap.xml")
 LOG="$(mktemp)"
 
-pnpm exec wrangler dev --port "$PORT" --env staging >"$LOG" 2>&1 &
+pnpm exec next start --port "$PORT" >"$LOG" 2>&1 &
 PID=$!
 trap 'kill "$PID" 2>/dev/null || true; rm -f "$LOG"' EXIT
 
@@ -22,8 +22,8 @@ for route in "${ROUTES[@]}"; do
 done
 
 if [ "$FAILED" -ne 0 ]; then
-  echo "Worker smoke test failed. Worker log:"
+  echo "Smoke test failed. Server log:"
   cat "$LOG"
   exit 1
 fi
-echo "Worker serves every route."
+echo "The production build serves every route."

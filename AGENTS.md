@@ -25,7 +25,7 @@ No agent edits, creates or deletes anything before it has read the codebase it i
 - Sync before you branch: `git fetch origin dev staging main`. Never trust a local long-lived branch.
 - Code flows one way: **feature branch → `dev` → `staging` → `main`**.
   - `dev` is for development. Every feature branch merges here first, and only here.
-  - `staging` receives `dev` once its features are ready for testing, and deploys to the staging Worker.
+  - `staging` receives `dev` once its features are ready for testing, and deploys to the Vercel staging URL.
   - `main` receives `staging` once the features are tested, and deploys to production.
 - A pull request into `staging` must come from `dev`; a pull request into `main` must come from `staging`. The `branch flow` CI check rejects anything else.
 - Only the repository owner merges into `staging` and `main`. Agents never open, approve or merge promotion pull requests unless that person asks.
@@ -83,7 +83,7 @@ A hidden value that leaks breaks the game. For every contract change, check agai
 
 ## Directive 11: Preflight before done
 
-Before you open a pull request or call a task complete, run `pnpm preflight` and get a clean pass: format, comments, copy, compile, lint, typecheck, tests, knip, Cloudflare build and Worker smoke test. Zero errors, zero warnings. Then run the app and use the change yourself. Report anything you could not verify.
+Before you open a pull request or call a task complete, run `pnpm preflight` and get a clean pass: format, comments, copy, compile, lint, typecheck, tests, knip, production build and smoke test. Zero errors, zero warnings. Then run the app and use the change yourself. Report anything you could not verify.
 
 ## Directive 12: Use the tools you have
 
@@ -135,7 +135,7 @@ Before asking for review, check the change against each item. The PR template re
 | ---------------------------------------------------------- | --------------------------------------------------------- |
 | `pnpm dev`                                                 | Web app dev server                                        |
 | `pnpm compile`                                             | Compile the contracts and generate their types            |
-| `pnpm preflight`                                           | Every gate, including the Cloudflare build and smoke test |
+| `pnpm preflight`                                           | Every gate, including the production build and smoke test |
 | `pnpm preflight --fast`                                    | Everything except the build (runs on pre-push)            |
 | `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm knip` | Individual gates across both packages                     |
 | `pnpm comments:check`                                      | The no-comments rule                                      |

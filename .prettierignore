@@ -3,8 +3,7 @@ pnpm-lock.yaml
 coverage
 .worktrees
 apps/web/.next
-apps/web/.open-next
-apps/web/.wrangler
+apps/web/.vercel
 apps/web/next-env.d.ts
 packages/contracts/artifacts
 packages/contracts/cache

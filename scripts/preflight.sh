@@ -35,15 +35,15 @@ step "8/10" "Unused files, exports and dependencies"
 pnpm knip
 
 if [ "$MODE" = "--fast" ]; then
-  echo -e "\n${GREEN}Fast preflight passed. The Cloudflare build and Worker smoke test run in CI and in a full preflight.${NC}"
+  echo -e "\n${GREEN}Fast preflight passed. The production build and smoke test run in CI and in a full preflight.${NC}"
   exit 0
 fi
 
-step "9/10" "Cloudflare build (clean)"
-rm -rf apps/web/.next apps/web/.open-next
-pnpm --filter @bluff/web build:cloudflare
+step "9/10" "Production build (clean)"
+rm -rf apps/web/.next
+pnpm build
 
-step "10/10" "Worker smoke test (Workers runtime)"
-pnpm --filter @bluff/web smoke:worker
+step "10/10" "Smoke test (production server)"
+pnpm --filter @bluff/web smoke
 
 echo -e "\n${GREEN}All preflight gates passed.${NC}"

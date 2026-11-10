@@ -298,9 +298,9 @@ The codebase holds only what it uses. Every package, file, export and config ent
 
 ## Security
 
-- No secrets in the repository. `.env*` and `.dev.vars` are git-ignored; gitleaks runs in CI.
+- No secrets in the repository. `.env*` files are git-ignored; gitleaks runs in CI.
 - The deployer mnemonic and RPC keys live in Hardhat's encrypted variables (`npx hardhat vars set`), never in a file.
-- Secrets for the web app live in Cloudflare. A secret never gets a `NEXT_PUBLIC_` prefix.
+- Secrets for the web app live in Vercel environment variables. A secret never gets a `NEXT_PUBLIC_` prefix.
 - Never render user input as HTML. No `dangerouslySetInnerHTML`.
 - The contract treats every caller as hostile: check turn order, table membership and state on every call.
 - Run `pnpm audit` before adding a dependency with a large install tree.
