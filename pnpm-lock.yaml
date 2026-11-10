@@ -174,8 +174,8 @@ importers:
         specifier: 2.29.1
         version: 2.29.1(supports-color@8.1.1)(ts-node@10.9.2(@types/node@24.19.2)(typescript@5.9.3))(typescript@5.9.3)
       hardhat-deploy:
-        specifier: 0.11.45
-        version: 0.11.45(supports-color@8.1.1)
+        specifier: 0.14.1
+        version: 0.14.1(supports-color@8.1.1)
       hardhat-gas-reporter:
         specifier: 2.3.0
         version: 2.3.0(debug@4.4.3(supports-color@8.1.1))(hardhat@2.29.1(supports-color@8.1.1)(ts-node@10.9.2(@types/node@24.19.2)(typescript@5.9.3))(typescript@5.9.3))(supports-color@8.1.1)(typescript@5.9.3)(zod@4.6.7)
@@ -1555,6 +1555,9 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
+
+  '@rolldown/pluginutils@1.0.1':
+    resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
   '@rolldown/pluginutils@1.1.0':
     resolution: {integrity: sha512-K+NU2HDCEem4sClgHH4ZZXwdJeNFkJo+hRk479DIwdIviAPN2hFJH1KHHwg8CxHQXvi0M5XY4deTXINfIiSG6w==}
@@ -3033,6 +3036,15 @@ packages:
   fmix@0.1.0:
     resolution: {integrity: sha512-Y6hyofImk9JdzU8k5INtTXX1cu8LDlePWDFU5sftm9H+zKCr5SGrVjdhkvsim646cw5zD0nADj8oHyXMZmCZ9w==}
 
+  follow-redirects@1.16.2:
+    resolution: {integrity: sha512-/kVP2U8z596Ia0gwFrwyIeo74ta5aVmSeU1FfAUMAmcEP5EP7zydmag3SLiN64NaRKef3lxsq7i/g7ltJQDGow==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
   follow-redirects@1.16.3:
     resolution: {integrity: sha512-toOSoqN6d51Wjf1aOFJYcoVv1aND9rj/CwjLU0Vz40oDuSpWDayCeKe4JpL5NL0WdFvoOOCI3BRo69HahjbR1A==}
     engines: {node: '>=4.0'}
@@ -3231,8 +3243,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  hardhat-deploy@0.11.45:
-    resolution: {integrity: sha512-aC8UNaq3JcORnEUIwV945iJuvBwi65tjHVDU3v6mOcqik7WAzHVCJ7cwmkkipsHrWysrB5YvGF1q9S1vIph83w==}
+  hardhat-deploy@0.14.1:
+    resolution: {integrity: sha512-hfho8XtlWqCi/xV2y+z3gBzkCcEP8o5smx6IS1X1ar8gL1ocRulD0kVl5rfZtNLdPjvXa77EtvhBgGAeDQsoOA==}
 
   hardhat-gas-reporter@2.3.0:
     resolution: {integrity: sha512-ySdA+044xMQv1BlJu5CYXToHzMexKFfIWxlQTBNNoerx1x96+d15IMdN01iQZ/TJ7NH2V5sU73bz77LoS/PEVw==}
@@ -5375,11 +5387,11 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zksync-web3@0.14.4:
-    resolution: {integrity: sha512-kYehMD/S6Uhe1g434UnaMN+sBr9nQm23Ywn0EUP5BfQCsbjcr3ORuS68PosZw8xUTu3pac7G6YMSnNHk+fwzvg==}
-    deprecated: This package has been deprecated in favor of zksync-ethers@5.0.0
+  zksync-ethers@5.11.2:
+    resolution: {integrity: sha512-R3mOhKJQ79SZe5PzBHCje3X++XKyyOZBVlP00eYlGEgqjW6eFzn4sPnruCA+2+QofwwAjooVc1TdoF+C4eXkaA==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
-      ethers: ^5.7.0
+      ethers: ~5.7.0
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
@@ -6690,6 +6702,8 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.2.18':
     optional: true
 
+  '@rolldown/pluginutils@1.0.1': {}
+
   '@rolldown/pluginutils@1.1.0': {}
 
   '@rtsao/scc@1.1.0': {}
@@ -7439,7 +7453,7 @@ snapshots:
 
   axios@0.21.4(debug@4.4.3(supports-color@8.1.1)):
     dependencies:
-      follow-redirects: 1.16.3(debug@4.4.3(supports-color@8.1.1))
+      follow-redirects: 1.16.2(debug@4.4.3(supports-color@8.1.1))
     transitivePeerDependencies:
       - debug
 
@@ -8517,6 +8531,10 @@ snapshots:
     dependencies:
       imul: 1.0.1
 
+  follow-redirects@1.16.2(debug@4.4.3(supports-color@8.1.1)):
+    optionalDependencies:
+      debug: 4.4.3(supports-color@8.1.1)
+
   follow-redirects@1.16.3(debug@4.4.3(supports-color@8.1.1)):
     optionalDependencies:
       debug: 4.4.3(supports-color@8.1.1)
@@ -8766,7 +8784,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  hardhat-deploy@0.11.45(supports-color@8.1.1):
+  hardhat-deploy@0.14.1(supports-color@8.1.1):
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/abstract-signer': 5.8.0
@@ -8791,7 +8809,7 @@ snapshots:
       match-all: 1.2.7
       murmur-128: 0.2.1
       qs: 6.17.1
-      zksync-web3: 0.14.4(ethers@5.8.0)
+      zksync-ethers: 5.11.2(ethers@5.8.0)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -10101,7 +10119,7 @@ snapshots:
   rolldown@1.2.18:
     dependencies:
       '@oxc-project/types': 0.156.0
-      '@rolldown/pluginutils': 1.1.0
+      '@rolldown/pluginutils': 1.0.1
     optionalDependencies:
       '@rolldown/binding-android-arm-eabi': 1.2.18
       '@rolldown/binding-android-arm64': 1.2.18
@@ -11042,7 +11060,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zksync-web3@0.14.4(ethers@5.8.0):
+  zksync-ethers@5.11.2(ethers@5.8.0):
     dependencies:
       ethers: 5.8.0
 
