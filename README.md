@@ -47,5 +47,5 @@ Requires Node.js 24 (see `.nvmrc`) and pnpm (pinned in `package.json`).
 | Tests           | Vitest and Testing Library; Hardhat with the FHEVM mock                               |
 | Quality         | ESLint with architecture boundaries, solhint, Prettier, knip, comment and copy checks |
 | Git hooks       | Lefthook, commitlint                                                                  |
-| Hosting         | Cloudflare Workers via OpenNext; contracts on Sepolia                                 |
+| Hosting         | Vercel; contracts on Sepolia                                                          |
 | Package manager | pnpm workspaces                                                                       |

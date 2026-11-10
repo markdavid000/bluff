@@ -1,5 +1,7 @@
+const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
 export const siteConfig = {
   name: "Bluff",
   description: "A dice game of nerve. Roll in secret, bid boldly, and call out the liars.",
-  url: "https://bluff.workers.dev",
+  url: productionHost ? `https://${productionHost}` : "http://localhost:3000",
 } as const;

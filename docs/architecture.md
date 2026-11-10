@@ -192,11 +192,9 @@ packages/contracts/
 
 ## Rendering and caching
 
-Same model as New Markets. Cache Components are off because they deadlock on Cloudflare Workers with Next.js 16.3 and later. Do not turn on `cacheComponents` or `partialPrefetching`, and do not use `"use cache"` or `cacheLife`, until OpenNext supports them; turning them back on is an ADR, and `pnpm --filter @bluff/web smoke:worker` must pass.
-
-Game data does not use server caching at all: it is read in the browser and cached by TanStack Query.
+Game data does not use server caching: it is read in the browser and cached by TanStack Query. Pages with no request-time data (the landing page) are prerendered at build time. Cache Components are not used; turning them on is a decision for its own ADR.
 
 ## Deployment
 
-- **Web app:** Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare). `apps/web/wrangler.jsonc` defines `bluff` (production, from `main`) and `bluff-staging` (`--env staging`, from `staging`).
+- **Web app:** [Vercel](https://vercel.com), Hobby plan, with `apps/web` as the project root. `main` deploys production, `staging` deploys to the staging URL, and every pull request gets a preview link. `siteConfig.url` reads Vercel's production host at build time.
 - **Contracts:** deployed to Sepolia with `pnpm --filter @bluff/contracts deploy:sepolia`. The deployed addresses are committed under `packages/contracts/deployments/sepolia/` and read by the web app.
