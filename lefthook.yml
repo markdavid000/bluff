@@ -1,6 +1,11 @@
 pre-commit:
   piped: true
   jobs:
+    - name: branch guard
+      run: |
+        case "$(git branch --show-current)" in
+          dev|staging|main) echo "Commits never go straight to dev, staging or main. Work on a feature branch in a worktree; see AGENTS.md."; exit 1 ;;
+        esac
     - name: format
       glob: "*.{js,mjs,cjs,ts,tsx,json,jsonc,css,md,yml,yaml,sol}"
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
