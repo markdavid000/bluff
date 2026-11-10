@@ -24,7 +24,7 @@
     "prettier": "3.9.10",
     "prettier-plugin-solidity": "2.4.1",
     "prettier-plugin-tailwindcss": "0.8.1",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   },
   "packageManager": "pnpm@11.20.0",
   "engines": {
