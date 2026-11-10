@@ -2,6 +2,7 @@
 
 - **Status:** Approved
 - **Approved by:** (MarkDavid, 10th Nov 2026)
+- **Superseded in part by:** [ADR-2026-11-10-hosting-on-vercel.md](ADR-2026-11-10-hosting-on-vercel.md) (hosting)
 - **Companion:** [ADR-2026-11-10-project-foundation-for-dummies.md](ADR-2026-11-10-project-foundation-for-dummies.md)
 
 ## Context

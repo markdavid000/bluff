@@ -2,6 +2,7 @@
 
 - **Status:** Approved
 - **Approved by:** (MarkDavid, 10th Nov 2026)
+- **Superseded in part by:** [ADR-2026-11-10-game-flow-and-timing.md](ADR-2026-11-10-game-flow-and-timing.md) (dice count, time limits, end of the game)
 - **Companion:** [ADR-2026-11-10-game-rules-for-dummies.md](ADR-2026-11-10-game-rules-for-dummies.md)
 
 ## Context

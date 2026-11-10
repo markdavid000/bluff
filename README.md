@@ -27,6 +27,7 @@ Requires Node.js 24 (see `.nvmrc`) and pnpm (pinned in `package.json`).
 
 | Document                                                         | For                                               |
 | ---------------------------------------------------------------- | ------------------------------------------------- |
+| [`docs/how-to-play.md`](docs/how-to-play.md)                     | The rules, for players                            |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | Setup, scripts, branches, commits, pull requests  |
 | [`docs/engineering-standards.md`](docs/engineering-standards.md) | The coding bar                                    |
 | [`docs/architecture.md`](docs/architecture.md)                   | Packages, layers and import rules                 |
