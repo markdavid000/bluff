@@ -147,6 +147,7 @@ The rules, all enforced by GitHub:
 - The `branch flow` check rejects a pull request into `staging` that is not from `dev`, and one into `main` that is not from `staging`.
 - Feature pull requests into `dev` are squash-merged. Promotions use a merge commit.
 - Only the repository owner can merge into `staging` and `main`.
+- While the repository is private on a free GitHub plan, GitHub cannot enforce these rules. Until it is public, two local guards stand in: the `branch guard` pre-commit hook refuses commits on `dev`, `staging` and `main`, and `.vscode/settings.json` turns on VS Code's branch protection, which shows a lock on those branches and prompts before committing to them.
 
 Feature branches are named `<type>/<short-description>`, using the same types as commits: `feat/place-bid`, `fix/reveal-order`, `chore/upgrade-next`.
 

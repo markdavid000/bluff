@@ -1,0 +1,4 @@
+{
+  "git.branchProtection": ["dev", "staging", "main"],
+  "git.branchProtectionPrompt": "alwaysPrompt"
+}
