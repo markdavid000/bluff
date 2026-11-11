@@ -130,6 +130,16 @@ The owner can upgrade, pause, link the cashier once, and hand ownership over in 
 
 ## On Sepolia
 
+Every proxy and implementation is verified on Etherscan, so its source is readable and the proxy pages offer "Read as Proxy" and "Write as Proxy".
+
+| Contract       | Proxy                                                                                                 | Implementation                                                                                        |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x32Ba…6109`](https://sepolia.etherscan.io/address/0x32BadacDF5791eCc1386aAa8b3cFBF5B27D96109#code) |
+| `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xB8A3…Fe94`](https://sepolia.etherscan.io/address/0xB8A3BA88d47cA1BBD5B530c0CC04145F8714Fe94#code) |
+| `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0x4136…EA9e`](https://sepolia.etherscan.io/address/0x4136f029a66ABC96d414cc38779bfCC1547AEA9e#code) |
+
+The deploy and upgrade tasks verify each new implementation when `ETHERSCAN_API_KEY` is set (`npx hardhat vars set ETHERSCAN_API_KEY`). They name the contract explicitly because the bytecode carries no metadata hash (`bytecodeHash: "none"`), which leaves the verifier unable to match it on its own.
+
 Measured by `test/sepolia/full-game.ts` over the public RPC, in seconds per step, including confirmation:
 
 | Step                                  | Seconds    |

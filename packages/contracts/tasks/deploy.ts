@@ -1,7 +1,8 @@
-import { task, vars } from "hardhat/config";
+import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { CHIP_ADDRESSES, type ChipAddresses } from "../config/networks";
 import { type DeploymentRecord, type ProxyRecord, writeDeployment } from "./deployments";
+import { verifyImplementation } from "./verify";
 
 async function resolveChipAddresses(hre: HardhatRuntimeEnvironment): Promise<ChipAddresses> {
   const known = CHIP_ADDRESSES[hre.network.name];
@@ -53,14 +54,6 @@ async function deployProxy(
   };
 }
 
-async function verifyImplementation(hre: HardhatRuntimeEnvironment, address: string) {
-  if (!vars.has("ETHERSCAN_API_KEY")) {
-    console.log(`Skipped Etherscan verification of ${address}: set ETHERSCAN_API_KEY to verify.`);
-    return;
-  }
-  await hre.run("verify:verify", { address, constructorArguments: [] });
-}
-
 task("deploy", "Deploys Bluff, BluffCashier and ChipFaucet behind UUPS proxies").setAction(
   async (_args, hre) => {
     const [deployer] = await hre.ethers.getSigners();
@@ -87,9 +80,9 @@ task("deploy", "Deploys Bluff, BluffCashier and ChipFaucet behind UUPS proxies")
     console.log(`Recorded in ${file}`);
 
     if (hre.network.name === "sepolia") {
-      await verifyImplementation(hre, bluff.implementation);
-      await verifyImplementation(hre, cashier.implementation);
-      await verifyImplementation(hre, faucet.implementation);
+      await verifyImplementation(hre, "Bluff", bluff.implementation);
+      await verifyImplementation(hre, "BluffCashier", cashier.implementation);
+      await verifyImplementation(hre, "ChipFaucet", faucet.implementation);
     }
   }
 );

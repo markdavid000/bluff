@@ -1,5 +1,6 @@
-import { task, types, vars } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import { PROXY_NAMES, type ProxyName, readDeployment, writeDeployment } from "./deployments";
+import { verifyImplementation } from "./verify";
 
 function isProxyName(name: string): name is ProxyName {
   return (PROXY_NAMES as readonly string[]).includes(name);
@@ -27,7 +28,7 @@ task("upgrade", "Validates and upgrades one proxy to the current source")
     console.log(`${contract} ${current.version} -> ${record.contracts[contract].version}`);
     console.log(`Implementation ${implementation}`);
 
-    if (hre.network.name === "sepolia" && vars.has("ETHERSCAN_API_KEY")) {
-      await hre.run("verify:verify", { address: implementation, constructorArguments: [] });
+    if (hre.network.name === "sepolia") {
+      await verifyImplementation(hre, contract, implementation);
     }
   });
