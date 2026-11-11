@@ -9,14 +9,15 @@
     "lint:sol": "solhint --max-warnings 0 --disc --noPoster \"contracts/**/*.sol\"",
     "lint:ts": "eslint --max-warnings=0 .",
     "typecheck": "tsc --noEmit",
-    "test": "hardhat test",
-    "test:sepolia": "hardhat test --network sepolia",
+    "test": "hardhat test test/unit/*.test.ts",
+    "test:sepolia": "hardhat test test/sepolia/full-game.ts --network sepolia",
     "coverage": "cross-env SOLIDITY_COVERAGE=true hardhat coverage",
     "deploy:sepolia": "hardhat deploy --network sepolia",
     "coverage:check": "node scripts/check-coverage.mjs",
     "deploy:local": "hardhat deploy --network localhost",
     "upgrade:sepolia": "hardhat upgrade --network sepolia",
-    "slither": "./scripts/slither.sh"
+    "slither": "./scripts/slither.sh",
+    "validate-layout:sepolia": "hardhat validate-layout --network sepolia"
   },
   "dependencies": {
     "@fhevm/solidity": "0.11.1",

@@ -1,0 +1,25 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xA020b219e476BFfdcC22b1A47392805e16893E6b",
+  "deployedAt": "2026-11-11T00:00:00.000Z",
+  "chips": "0x4E7B06D78965594eB5EF5414c357ca21E1554491",
+  "dollars": "0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0",
+  "contracts": {
+    "Bluff": {
+      "proxy": "0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e",
+      "implementation": "0x32BadacDF5791eCc1386aAa8b3cFBF5B27D96109",
+      "version": "1.0.0"
+    },
+    "BluffCashier": {
+      "proxy": "0x4837497FEf56758e1bE765062a1504303bDC5EEe",
+      "implementation": "0xB8A3BA88d47cA1BBD5B530c0CC04145F8714Fe94",
+      "version": "1.0.0"
+    },
+    "ChipFaucet": {
+      "proxy": "0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC",
+      "implementation": "0x4136f029a66ABC96d414cc38779bfCC1547AEA9e",
+      "version": "1.0.0"
+    }
+  }
+}

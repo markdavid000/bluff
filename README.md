@@ -25,15 +25,16 @@ Requires Node.js 24 (see `.nvmrc`) and pnpm (pinned in `package.json`).
 
 ## Read next
 
-| Document                                                         | For                                               |
-| ---------------------------------------------------------------- | ------------------------------------------------- |
-| [`docs/how-to-play.md`](docs/how-to-play.md)                     | The rules, for players                            |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | Setup, scripts, branches, commits, pull requests  |
-| [`docs/engineering-standards.md`](docs/engineering-standards.md) | The coding bar                                    |
-| [`docs/architecture.md`](docs/architecture.md)                   | Packages, layers and import rules                 |
-| [`AGENTS.md`](AGENTS.md)                                         | Rules for AI coding agents                        |
-| [`docs/adr/`](docs/adr/)                                         | Architectural decisions, including the game rules |
-| [`SECURITY.md`](SECURITY.md)                                     | Reporting vulnerabilities                         |
+| Document                                                         | For                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`docs/how-to-play.md`](docs/how-to-play.md)                     | The rules, for players                                                    |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | Setup, scripts, branches, commits, pull requests                          |
+| [`docs/engineering-standards.md`](docs/engineering-standards.md) | The coding bar                                                            |
+| [`docs/architecture.md`](docs/architecture.md)                   | Packages, layers and import rules                                         |
+| [`docs/contracts.md`](docs/contracts.md)                         | Contract reference: functions, events, errors, encrypted values, upgrades |
+| [`AGENTS.md`](AGENTS.md)                                         | Rules for AI coding agents                                                |
+| [`docs/adr/`](docs/adr/)                                         | Architectural decisions, including the game rules                         |
+| [`SECURITY.md`](SECURITY.md)                                     | Reporting vulnerabilities                                                 |
 
 ## Stack
 

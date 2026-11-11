@@ -18,6 +18,7 @@ const config: KnipConfig = {
         "tasks/**/*.ts",
         "scripts/*.mjs",
         "test/**/*.test.ts",
+        "test/sepolia/*.ts",
         ".solcover.js",
       ],
       project: ["**/*.{ts,sol}"],

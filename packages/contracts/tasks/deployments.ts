@@ -19,6 +19,8 @@ export interface DeploymentRecord {
 
 export type ProxyName = keyof DeploymentRecord["contracts"];
 
+export const PROXY_NAMES: readonly ProxyName[] = ["Bluff", "BluffCashier", "ChipFaucet"];
+
 const DEPLOYMENTS_DIRECTORY = path.join(__dirname, "..", "deployments");
 
 function deploymentPath(network: string): string {
