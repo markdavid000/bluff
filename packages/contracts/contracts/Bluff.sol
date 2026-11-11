@@ -1,19 +1,59 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {FHE} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint8, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {ZamaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {IERC7984} from "@openzeppelin/confidential-contracts/interfaces/IERC7984.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IBluff} from "./interfaces/IBluff.sol";
+import {TableRules} from "./libraries/TableRules.sol";
 
 contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeable, PausableUpgradeable {
+    using EnumerableSet for EnumerableSet.UintSet;
+
+    struct Table {
+        address host;
+        TableStatus status;
+        bool isPrivate;
+        uint8 seatCount;
+        uint8 playerCount;
+        uint8 dicePerPlayer;
+        uint8 diceInPlay;
+        uint8 turn;
+        uint8 roundStarter;
+        uint8 bidQuantity;
+        uint8 bidFace;
+        uint8 bidder;
+        uint32 round;
+        uint64 buyIn;
+        uint64 createdAt;
+        uint64 startedAt;
+        uint64 deadline;
+        euint64 pot;
+    }
+
+    struct Seat {
+        address player;
+        uint8 dice;
+        uint8 missedTurns;
+        bool isActive;
+        euint64 paid;
+        ebool paidInFull;
+        euint8[] currentDice;
+    }
+
     /// @custom:storage-location erc7201:bluff.storage.Bluff
     struct BluffStorage {
         IERC7984 chips;
+        uint256 nextTableId;
+        mapping(uint256 tableId => Table) tables;
+        mapping(uint256 tableId => Seat[]) seats;
+        mapping(address player => uint256 tableId) tableOf;
+        EnumerableSet.UintSet openTables;
     }
 
     bytes32 private constant _BLUFF_STORAGE_LOCATION =
@@ -33,12 +73,98 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         _getBluffStorage().chips = chipToken;
     }
 
+    function createFreeTable(uint8 seatCount, bool isPrivate) external whenNotPaused returns (uint256 id) {
+        if (!TableRules.isValidSeatCount(seatCount)) revert InvalidSeatCount(seatCount);
+        BluffStorage storage $ = _getBluffStorage();
+        _requireNotAtTable($, msg.sender);
+        id = ++$.nextTableId;
+        Table storage table = $.tables[id];
+        table.host = msg.sender;
+        table.status = TableStatus.Waiting;
+        table.isPrivate = isPrivate;
+        table.seatCount = seatCount;
+        table.dicePerPlayer = TableRules.dicePerPlayer(seatCount);
+        table.createdAt = uint64(block.timestamp);
+        table.deadline = uint64(block.timestamp) + TableRules.LOBBY_LIMIT;
+        if (!isPrivate) _list($, id);
+        emit TableCreated(id, msg.sender, seatCount, table.dicePerPlayer, 0, isPrivate);
+        _seatPlayer($, id, msg.sender);
+    }
+
+    function joinFreeTable(uint256 id) external whenNotPaused {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Waiting);
+        _requireNotAtTable($, msg.sender);
+        _seatPlayer($, id, msg.sender);
+        if (table.playerCount == table.seatCount) _startGame($, id);
+    }
+
+    function startTable(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Waiting);
+        if (table.host != msg.sender) revert NotHost(id);
+        if (table.playerCount < TableRules.MIN_SEATS) revert NotEnoughPlayers(id);
+        _startGame($, id);
+    }
+
+    function leaveTable(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        _requireSeated($, id, msg.sender);
+        Table storage table = _requireStatus($, id, TableStatus.Waiting);
+        _removeSeat($, id, msg.sender);
+        emit PlayerLeft(id, msg.sender, false);
+        if (table.playerCount == 0) {
+            _cancel($, id);
+        } else if (table.host == msg.sender) {
+            table.host = $.seats[id][0].player;
+            emit HostChanged(id, table.host);
+        }
+    }
+
+    function cancelTable(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        _requireSeated($, id, msg.sender);
+        Table storage table = _requireStatus($, id, TableStatus.Waiting);
+        if (block.timestamp <= table.deadline) revert DeadlineNotPassed(table.deadline);
+        _cancel($, id);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function getTable(uint256 id) external view returns (TableView memory table, SeatView[] memory seats) {
+        BluffStorage storage $ = _getBluffStorage();
+        if ($.tables[id].status == TableStatus.None) revert TableNotFound(id);
+        table = _tableView($, id);
+        Seat[] storage stored = $.seats[id];
+        seats = new SeatView[](stored.length);
+        for (uint256 i = 0; i < stored.length; ++i) {
+            seats[i] = SeatView(stored[i].player, stored[i].dice, stored[i].missedTurns, stored[i].isActive);
+        }
+    }
+
+    function openTables(uint256 offset, uint256 limit) external view returns (TableView[] memory tables) {
+        BluffStorage storage $ = _getBluffStorage();
+        uint256 total = $.openTables.length();
+        uint256 end = offset + limit > total ? total : offset + limit;
+        uint256 count = offset < end ? end - offset : 0;
+        tables = new TableView[](count);
+        for (uint256 i = 0; i < count; ++i) {
+            tables[i] = _tableView($, $.openTables.at(offset + i));
+        }
+    }
+
+    function openTableCount() external view returns (uint256) {
+        return _getBluffStorage().openTables.length();
+    }
+
+    function tableOf(address player) external view returns (uint256) {
+        return _getBluffStorage().tableOf[player];
     }
 
     function chips() external view returns (IERC7984) {
@@ -51,6 +177,100 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
         if (newImplementation == address(0)) revert ZeroAddress();
+    }
+
+    function _seatPlayer(BluffStorage storage $, uint256 id, address player) private {
+        Table storage table = $.tables[id];
+        Seat storage seat = $.seats[id].push();
+        seat.player = player;
+        seat.isActive = true;
+        ++table.playerCount;
+        $.tableOf[player] = id;
+        emit PlayerJoined(id, player, table.playerCount - 1);
+    }
+
+    function _removeSeat(BluffStorage storage $, uint256 id, address player) private {
+        Seat[] storage seats = $.seats[id];
+        uint256 last = seats.length - 1;
+        uint256 index = 0;
+        while (seats[index].player != player) ++index;
+        for (uint256 i = index; i < last; ++i) {
+            seats[i] = seats[i + 1];
+        }
+        seats.pop();
+        --$.tables[id].playerCount;
+        delete $.tableOf[player];
+    }
+
+    function _startGame(BluffStorage storage $, uint256 id) private {
+        Table storage table = $.tables[id];
+        table.status = TableStatus.Playing;
+        table.startedAt = uint64(block.timestamp);
+        _unlist($, id);
+        emit GameStarted(id, table.startedAt, table.startedAt + TableRules.GAME_CLOCK);
+    }
+
+    function _cancel(BluffStorage storage $, uint256 id) private {
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            delete $.tableOf[seats[i].player];
+        }
+        $.tables[id].status = TableStatus.Cancelled;
+        _unlist($, id);
+        emit TableCancelled(id);
+    }
+
+    function _list(BluffStorage storage $, uint256 id) private {
+        if ($.openTables.add(id)) emit TableListed(id);
+    }
+
+    function _unlist(BluffStorage storage $, uint256 id) private {
+        if ($.openTables.remove(id)) emit TableUnlisted(id);
+    }
+
+    function _requireStatus(
+        BluffStorage storage $,
+        uint256 id,
+        TableStatus expected
+    ) private view returns (Table storage table) {
+        table = $.tables[id];
+        if (table.status == TableStatus.None) revert TableNotFound(id);
+        if (table.status != expected) revert WrongStatus(id, table.status);
+    }
+
+    function _requireSeated(BluffStorage storage $, uint256 id, address player) private view {
+        if ($.tables[id].status == TableStatus.None) revert TableNotFound(id);
+        if ($.tableOf[player] != id) revert NotAtTable(id);
+    }
+
+    function _requireNotAtTable(BluffStorage storage $, address player) private view {
+        uint256 current = $.tableOf[player];
+        if (current != 0) revert AlreadyAtTable(current);
+    }
+
+    function _tableView(BluffStorage storage $, uint256 id) private view returns (TableView memory) {
+        Table storage t = $.tables[id];
+        return
+            TableView({
+                id: id,
+                host: t.host,
+                status: t.status,
+                isPrivate: t.isPrivate,
+                seatCount: t.seatCount,
+                playerCount: t.playerCount,
+                dicePerPlayer: t.dicePerPlayer,
+                diceInPlay: t.diceInPlay,
+                buyIn: t.buyIn,
+                createdAt: t.createdAt,
+                startedAt: t.startedAt,
+                deadline: t.deadline,
+                round: t.round,
+                turn: t.turn,
+                roundStarter: t.roundStarter,
+                bidQuantity: t.bidQuantity,
+                bidFace: t.bidFace,
+                bidder: t.bidder
+            });
     }
 
     function _getBluffStorage() private pure returns (BluffStorage storage $) {

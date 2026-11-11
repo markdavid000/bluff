@@ -79,6 +79,31 @@ describe("admin", function () {
     });
   });
 
+  describe("pause scope", function () {
+    it("stops new tables and joins while paused, and only those", async function () {
+      const { owner, alice, bob, bluff } = await loadFixture(deployGameFixture);
+      await bluff.connect(alice).createFreeTable(3, false);
+      await bluff.connect(owner).pause();
+      await expect(bluff.connect(bob).createFreeTable(2, false)).to.be.revertedWithCustomError(
+        bluff,
+        "EnforcedPause"
+      );
+      await expect(bluff.connect(bob).joinFreeTable(1)).to.be.revertedWithCustomError(
+        bluff,
+        "EnforcedPause"
+      );
+      await expect(bluff.connect(alice).leaveTable(1)).to.emit(bluff, "PlayerLeft");
+    });
+
+    it("lets a waiting table start while paused", async function () {
+      const { owner, alice, bob, bluff } = await loadFixture(deployGameFixture);
+      await bluff.connect(alice).createFreeTable(3, false);
+      await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(owner).pause();
+      await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
+    });
+  });
+
   describe("ownership", function () {
     it("moves only when the new owner accepts", async function () {
       const { owner, alice, bob, bluff, faucet } = await loadFixture(deployGameFixture);

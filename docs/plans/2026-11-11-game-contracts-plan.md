@@ -272,16 +272,16 @@ Pausing blocks only the creates, joins and the callback. Everything else always 
 
 `id` and player addresses are `indexed`, so the web app can filter by table and by player.
 
-| Contract   | Event                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------------------------------------- |
-| Bluff      | `TableCreated(id, host, seatCount, dicePerPlayer, buyIn, isPrivate)`                                           |
-| Bluff      | `PlayerJoined(id, player, seat)`, `PlayerLeft(id, player, refunded)`, `HostChanged(id, host)`                  |
-| Bluff      | `TableCancelled(id)`, `SeatVerificationStarted(id, deadline)`, `SeatRemoved(id, player)`                       |
-| Bluff      | `GameStarted(id, startedAt, clockEndsAt)`, `RoundStarted(id, round, starter, deadline)`                        |
-| Bluff      | `BidPlaced(id, round, player, quantity, face, nextTurn, deadline)`, `BluffCalled(id, round, caller, deadline)` |
-| Bluff      | `RoundSettled(id, round, face, quantity, count, loser, revealedDice)`                                          |
-| Bluff      | `TurnTimedOut(id, player)`, `PlayerEliminated(id, player)`, `GameEnded(id, reason, winners)`                   |
-| ChipFaucet | `ChipsClaimed(player, nextClaimAt)`, `NicknameSet(player, nickname)`                                           |
+| Contract   | Event                                                                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Bluff      | `TableCreated(id, host, seatCount, dicePerPlayer, buyIn, isPrivate)`                                                             |
+| Bluff      | `PlayerJoined(id, player, seat)`, `PlayerLeft(id, player, refunded)`, `HostChanged(id, host)`                                    |
+| Bluff      | `TableCancelled(id)`, `TableListed(id)`, `TableUnlisted(id)`, `SeatVerificationStarted(id, deadline)`, `SeatRemoved(id, player)` |
+| Bluff      | `GameStarted(id, startedAt, clockEndsAt)`, `RoundStarted(id, round, starter, deadline)`                                          |
+| Bluff      | `BidPlaced(id, round, player, quantity, face, nextTurn, deadline)`, `BluffCalled(id, round, caller, deadline)`                   |
+| Bluff      | `RoundSettled(id, round, face, quantity, count, loser, revealedDice)`                                                            |
+| Bluff      | `TurnTimedOut(id, player)`, `PlayerEliminated(id, player)`, `GameEnded(id, reason, winners)`                                     |
+| ChipFaucet | `ChipsClaimed(player, nextClaimAt)`, `NicknameSet(player, nickname)`                                                             |
 
 Paused, unpaused, upgraded, initialized and ownership events come from OpenZeppelin.
 
@@ -289,7 +289,7 @@ Paused, unpaused, upgraded, initialized and ownership events come from OpenZeppe
 
 Errors carry the values the web app needs to explain them.
 
-- **Bluff:** `TableNotFound(id)`, `WrongStatus(id, status)`, `TableFull(id)`, `AlreadyAtTable(tableId)`, `NotAtTable(id)`, `NotHost(id)`, `NotEnoughPlayers(id)`, `InvalidSeatCount(seatCount)`, `InvalidBuyIn(buyIn)`, `NotYourTurn(id, turn)`, `NoBidToCall(id)`, `InvalidFace(face)`, `QuantityTooHigh(quantity, diceInPlay)`, `BidNotHigher(quantity, face, currentQuantity, currentFace)`, `DeadlineNotPassed(deadline)`, `UnauthorizedCallback(caller)`, `InvalidCallbackData()`.
+- **Bluff:** `TableNotFound(id)`, `WrongStatus(id, status)`, `AlreadyAtTable(tableId)`, `NotAtTable(id)`, `NotHost(id)`, `NotEnoughPlayers(id)`, `InvalidSeatCount(seatCount)`, `InvalidBuyIn(buyIn)`, `NotYourTurn(id, turn)`, `NoBidToCall(id)`, `InvalidFace(face)`, `QuantityTooHigh(quantity, diceInPlay)`, `BidNotHigher(quantity, face, currentQuantity, currentFace)`, `DeadlineNotPassed(deadline)`, `UnauthorizedCallback(caller)`, `InvalidCallbackData()`.
 - **ChipFaucet:** `ClaimTooSoon(nextClaimAt)`, `InvalidNickname()`.
 
 ## 5. Encrypted values and who can read them

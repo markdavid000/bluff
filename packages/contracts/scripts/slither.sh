@@ -9,11 +9,20 @@ solc-select install "$SOLC_VERSION" >/dev/null
 solc-select use "$SOLC_VERSION" >/dev/null
 
 FILES=$(find contracts -name "*.sol" -not -path "contracts/mocks/*" -not -path "contracts/interfaces/*" | sort)
+FAILED=()
 for file in $FILES; do
   echo "Slither: $file"
-  slither "$file" \
+  if ! slither "$file" \
     --solc-remaps "$REMAPS" \
     --solc-args "--optimize --optimize-runs 800 --evm-version cancun --allow-paths $WORKSPACE_MODULES" \
     --filter-paths "node_modules" \
-    --fail-medium
+    --fail-medium; then
+    FAILED+=("$file")
+  fi
 done
+
+if [ "${#FAILED[@]}" -gt 0 ]; then
+  echo "Slither found medium or higher issues in: ${FAILED[*]}"
+  exit 1
+fi
+echo "Slither: no medium or higher issues."
