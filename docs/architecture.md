@@ -192,6 +192,7 @@ packages/contracts/
     └── sepolia/              end-to-end checks against the live network
 ```
 
+- Every external function, event, error and encrypted value is listed in [`contracts.md`](contracts.md).
 - `Bluff` and `BluffCashier` only accept their linking calls from each other (see [ADR-2026-11-11-bluff-cashier](adr/ADR-2026-11-11-bluff-cashier.md)). A player pays and joins through the chip token, which calls the cashier; the cashier seats the player in `Bluff`; `Bluff` tells the cashier whom to refund or pay.
 - `Bluff` is compiled with 50 optimizer runs (a per-file override in `hardhat.config.ts`) to keep at least 2 KB under the 24,576-byte contract size limit for future fixes. Every other contract uses 800.
 - One contract per file, named after the contract.

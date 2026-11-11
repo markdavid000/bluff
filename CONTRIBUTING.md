@@ -93,11 +93,12 @@ Package scripts, run with `pnpm --filter <package> <script>`:
 | `@bluff/web`       | `start`                                                        | Serve the production build locally                                             |
 | `@bluff/contracts` | `coverage`                                                     | Contract test coverage report                                                  |
 | `@bluff/contracts` | `coverage:check`                                               | Fail if line coverage is under 95% or branch coverage under 90%                |
-| `@bluff/contracts` | `test:sepolia`                                                 | Run the Sepolia test suite against the live network                            |
+| `@bluff/contracts` | `test:sepolia`                                                 | Play a free and a paid game on Sepolia and print each step's time              |
 | `@bluff/contracts` | `slither`                                                      | Static analysis of every non-mock contract; fails on medium severity or higher |
 | `@bluff/contracts` | `deploy:local`                                                 | Deploy both proxies with mock chips to a local `hardhat node`                  |
 | `@bluff/contracts` | `deploy:sepolia`                                               | Deploy both proxies to Sepolia against Zama's cUSDT, record and verify them    |
 | `@bluff/contracts` | `upgrade:sepolia --contract <Bluff\|BluffCashier\|ChipFaucet>` | Validate the storage layout and upgrade one proxy in place                     |
+| `@bluff/contracts` | `validate-layout:sepolia`                                      | Check the current source is a safe upgrade of every deployed proxy             |
 
 ## Where code goes
 
@@ -209,11 +210,11 @@ Keep commits atomic: one logical change each. AI tools never co-author a commit:
 
 Three layers, from fastest to slowest:
 
-| When         | What runs                                                                                                                 | Configured in              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| commit       | Prettier on staged files, comment rules, copy rules, commit message lint                                                  | `lefthook.yml`             |
-| push         | `pnpm preflight --fast`: format, comments, copy, compile, lint, typecheck, tests, knip                                    | `lefthook.yml`             |
-| pull request | Everything above, contract coverage, Slither, the production build, the smoke test, a branch flow check and a secret scan | `.github/workflows/ci.yml` |
+| When         | What runs                                                                                                                                                                | Configured in              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| commit       | Prettier on staged files, comment rules, copy rules, commit message lint                                                                                                 | `lefthook.yml`             |
+| push         | `pnpm preflight --fast`: format, comments, copy, compile, lint, typecheck, tests, knip                                                                                   | `lefthook.yml`             |
+| pull request | Everything above, contract coverage, Slither, storage layout against the deployed contracts, the production build, the smoke test, a branch flow check and a secret scan | `.github/workflows/ci.yml` |
 
 Do not bypass hooks with `--no-verify`. If a hook is wrong, fix the hook in its own PR.
 

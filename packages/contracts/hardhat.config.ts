@@ -12,6 +12,7 @@ import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/deploy";
 import "./tasks/upgrade";
+import "./tasks/validate-layout";
 
 const MNEMONIC = vars.get(
   "MNEMONIC",

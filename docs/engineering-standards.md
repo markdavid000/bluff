@@ -219,6 +219,7 @@ Bluff is for everyone, not only people who know crypto. Player-facing text descr
 - Every external function has tests for its success path and **every** revert path.
 - Line coverage of `contracts/` (outside `mocks/`) stays at 95% or more and branch coverage at 90% or more (`pnpm --filter @bluff/contracts coverage:check`, in CI).
 - Slither runs in CI and fails on any finding of medium severity or higher.
+- CI checks every contract's storage layout against the version deployed on Sepolia (`validate-layout:sepolia`, reading `.openzeppelin/sepolia.json`).
 - Tests run against the FHEVM mock (`fhevm.isMock`). Encrypted values are checked by decrypting them in the test with the right signer, and access is checked by proving the wrong signer cannot.
 - Fixtures deploy fresh contracts for each test by calling the fixture directly. Do not use `loadFixture`: its snapshot reverts leave the FHEVM mock coprocessor ahead of the chain, which fails later decryptions with an invalid block range. No test depends on another's state.
 - Sepolia tests live in `test/sepolia/` and run on demand, not in CI.

@@ -1,4 +1,4 @@
-import { task } from "hardhat/config";
+import { task, vars } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { CHIP_ADDRESSES, type ChipAddresses } from "../config/networks";
 import { type DeploymentRecord, type ProxyRecord, writeDeployment } from "./deployments";
@@ -15,6 +15,25 @@ async function resolveChipAddresses(hre: HardhatRuntimeEnvironment): Promise<Chi
   return { chips: await chips.getAddress(), dollars: await dollars.getAddress() };
 }
 
+const CONFIRMATIONS = 2;
+const READ_ATTEMPTS = 10;
+const READ_DELAY_MS = 3_000;
+
+function isLocal(hre: HardhatRuntimeEnvironment): boolean {
+  return hre.network.config.chainId === 31337;
+}
+
+async function implementationOf(hre: HardhatRuntimeEnvironment, proxy: string): Promise<string> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await hre.upgrades.erc1967.getImplementationAddress(proxy);
+    } catch (error) {
+      if (attempt === READ_ATTEMPTS || isLocal(hre)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, READ_DELAY_MS));
+    }
+  }
+}
+
 async function deployProxy(
   hre: HardhatRuntimeEnvironment,
   name: "Bluff" | "BluffCashier" | "ChipFaucet",
@@ -24,16 +43,21 @@ async function deployProxy(
     kind: "uups",
   });
   await proxy.waitForDeployment();
+  await proxy.deploymentTransaction()?.wait(isLocal(hre) ? 1 : CONFIRMATIONS);
   const proxyAddress = await proxy.getAddress();
   const contract = await hre.ethers.getContractAt(name, proxyAddress);
   return {
     proxy: proxyAddress,
-    implementation: await hre.upgrades.erc1967.getImplementationAddress(proxyAddress),
+    implementation: await implementationOf(hre, proxyAddress),
     version: await contract.version(),
   };
 }
 
 async function verifyImplementation(hre: HardhatRuntimeEnvironment, address: string) {
+  if (!vars.has("ETHERSCAN_API_KEY")) {
+    console.log(`Skipped Etherscan verification of ${address}: set ETHERSCAN_API_KEY to verify.`);
+    return;
+  }
   await hre.run("verify:verify", { address, constructorArguments: [] });
 }
 
