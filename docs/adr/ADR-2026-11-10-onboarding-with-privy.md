@@ -59,7 +59,7 @@ Record the result, timings and any failure in this ADR before it is approved.
 - New players can play within seconds of signing in, with no wallet install and no faucet.
 - A third-party dependency for sign-in, with a free tier sufficient for the competition.
 - Packages added with the account feature: `@privy-io/react-auth`, `@privy-io/wagmi`, and a sponsorship SDK only if Privy's own sponsorship does not cover Sepolia.
-- Privy's app id is public by design; any server secret stays in Cloudflare.
+- Privy's app id is public by design; any server secret stays in Vercel.
 - If Zama later confirms ERC-1271 support, smart accounts become an option.
 
 ## Verification

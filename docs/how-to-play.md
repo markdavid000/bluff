@@ -12,7 +12,7 @@ Everyone rolls dice that only they can see. Players take turns guessing how many
 2. The first time, you get a nickname (change it if you like) and **100 practice chips**. They are not real money.
 3. Press **Play now** again to be seated at a table straight away, or **Create a table** and share the link with friends.
 
-Need more chips? When you have fewer than 10, you can claim more once a day.
+Need more chips? You can get 100 more once a day.
 
 ## Your dice
 
