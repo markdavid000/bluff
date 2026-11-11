@@ -29,6 +29,7 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         uint8 bidQuantity;
         uint8 bidFace;
         uint8 bidder;
+        uint8 caller;
         uint32 round;
         uint64 buyIn;
         uint64 createdAt;
@@ -147,6 +148,46 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         emit BidPlaced(id, table.round, msg.sender, quantity, face, table.turn, table.deadline);
     }
 
+    function callBluff(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Playing);
+        if ($.seats[id][table.turn].player != msg.sender) revert NotYourTurn(id, table.turn);
+        if (table.bidQuantity == 0) revert NoBidToCall(id);
+        table.caller = table.turn;
+        table.status = TableStatus.Revealing;
+        table.deadline = uint64(block.timestamp) + TableRules.STUCK_REVEAL_LIMIT;
+        emit BluffCalled(id, table.round, msg.sender, table.deadline);
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            euint8[] storage dice = seats[i].currentDice;
+            for (uint256 j = 0; j < dice.length; ++j) {
+                dice[j] = FHE.makePubliclyDecryptable(dice[j]);
+            }
+        }
+    }
+
+    function settleReveal(uint256 id, bytes calldata clearValues, bytes calldata proof) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Revealing);
+        bytes32[] memory handles = _revealHandles($, id);
+        FHE.checkSignatures(handles, clearValues, proof);
+        uint8[] memory values = _decodeDice(clearValues, handles.length);
+        uint8 count = BidRules.countMatching(values, table.bidFace);
+        uint8 loser = count >= table.bidQuantity ? table.caller : table.bidder;
+        emit RoundSettled(
+            id,
+            table.round,
+            table.bidFace,
+            table.bidQuantity,
+            count,
+            $.seats[id][loser].player,
+            _faces(values)
+        );
+        table.status = TableStatus.Playing;
+        _loseDie($, id, loser);
+        _continueOrEnd($, id, loser);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -192,6 +233,12 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         uint256 index = 0;
         while (seats[index].player != player) ++index;
         return seats[index].currentDice;
+    }
+
+    function revealHandles(uint256 id) external view returns (bytes32[] memory) {
+        BluffStorage storage $ = _getBluffStorage();
+        _requireStatus($, id, TableStatus.Revealing);
+        return _revealHandles($, id);
     }
 
     function chips() external view returns (IERC7984) {
@@ -269,6 +316,41 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         return seat.dice;
     }
 
+    function _loseDie(BluffStorage storage $, uint256 id, uint8 seatIndex) private {
+        Seat storage seat = $.seats[id][seatIndex];
+        --seat.dice;
+        if (seat.dice == 0) {
+            seat.isActive = false;
+            emit PlayerEliminated(id, seat.player);
+        }
+    }
+
+    function _continueOrEnd(BluffStorage storage $, uint256 id, uint8 loser) private {
+        if (_activeCount($, id) == 1) {
+            _endGame($, id, EndReason.LastPlayerStanding);
+            return;
+        }
+        uint8 starter = $.seats[id][loser].isActive ? loser : _nextActiveSeat($, id, loser);
+        _startRound($, id, starter);
+    }
+
+    function _endGame(BluffStorage storage $, uint256 id, EndReason reason) private {
+        Table storage table = $.tables[id];
+        Seat[] storage seats = $.seats[id];
+        address[] memory winners = new address[](_activeCount($, id));
+        uint256 found = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            if (seats[i].isActive) {
+                winners[found] = seats[i].player;
+                ++found;
+            }
+            delete $.tableOf[seats[i].player];
+        }
+        table.status = TableStatus.Finished;
+        table.deadline = 0;
+        emit GameEnded(id, reason, winners);
+    }
+
     function _cancel(BluffStorage storage $, uint256 id) private {
         Seat[] storage seats = $.seats[id];
         for (uint256 i = 0; i < seats.length; ++i) {
@@ -285,6 +367,30 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
 
     function _unlist(BluffStorage storage $, uint256 id) private {
         if ($.openTables.remove(id)) emit TableUnlisted(id);
+    }
+
+    function _activeCount(BluffStorage storage $, uint256 id) private view returns (uint256 count) {
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            if (seats[i].isActive) ++count;
+        }
+    }
+
+    function _revealHandles(BluffStorage storage $, uint256 id) private view returns (bytes32[] memory handles) {
+        Seat[] storage seats = $.seats[id];
+        uint256 total = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            total += seats[i].currentDice.length;
+        }
+        handles = new bytes32[](total);
+        uint256 next = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            euint8[] storage dice = seats[i].currentDice;
+            for (uint256 j = 0; j < dice.length; ++j) {
+                handles[next] = FHE.toBytes32(dice[j]);
+                ++next;
+            }
+        }
     }
 
     function _nextActiveSeat(BluffStorage storage $, uint256 id, uint8 from) private view returns (uint8) {
@@ -338,8 +444,23 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
                 roundStarter: t.roundStarter,
                 bidQuantity: t.bidQuantity,
                 bidFace: t.bidFace,
-                bidder: t.bidder
+                bidder: t.bidder,
+                caller: t.caller
             });
+    }
+
+    function _decodeDice(bytes calldata clearValues, uint256 count) private pure returns (uint8[] memory values) {
+        values = new uint8[](count);
+        for (uint256 i = 0; i < count; ++i) {
+            values[i] = uint8(uint256(bytes32(clearValues[i * 32:(i + 1) * 32])));
+        }
+    }
+
+    function _faces(uint8[] memory values) private pure returns (uint8[] memory faces) {
+        faces = new uint8[](values.length);
+        for (uint256 i = 0; i < values.length; ++i) {
+            faces[i] = BidRules.faceOf(values[i]);
+        }
     }
 
     function _getBluffStorage() private pure returns (BluffStorage storage $) {

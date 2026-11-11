@@ -279,7 +279,7 @@ Pausing blocks only the creates, joins and the callback. Everything else always 
 | Bluff      | `TableCancelled(id)`, `TableListed(id)`, `TableUnlisted(id)`, `SeatVerificationStarted(id, deadline)`, `SeatRemoved(id, player)` |
 | Bluff      | `GameStarted(id, startedAt, clockEndsAt)`, `RoundStarted(id, round, starter, deadline)`                                          |
 | Bluff      | `BidPlaced(id, round, player, quantity, face, nextTurn, deadline)`, `BluffCalled(id, round, caller, deadline)`                   |
-| Bluff      | `RoundSettled(id, round, face, quantity, count, loser, revealedDice)`                                                            |
+| Bluff      | `RoundSettled(id, round, face, quantity, count, loser, revealedFaces)`                                                           |
 | Bluff      | `TurnTimedOut(id, player)`, `PlayerEliminated(id, player)`, `GameEnded(id, reason, winners)`                                     |
 | ChipFaucet | `ChipsClaimed(player, nextClaimAt)`, `NicknameSet(player, nickname)`                                                             |
 
