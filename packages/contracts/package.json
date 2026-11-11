@@ -13,10 +13,16 @@
     "test:sepolia": "hardhat test --network sepolia",
     "coverage": "cross-env SOLIDITY_COVERAGE=true hardhat coverage",
     "deploy:sepolia": "hardhat deploy --network sepolia",
-    "coverage:check": "node scripts/check-coverage.mjs"
+    "coverage:check": "node scripts/check-coverage.mjs",
+    "deploy:local": "hardhat deploy --network localhost",
+    "upgrade:sepolia": "hardhat upgrade --network sepolia",
+    "slither": "./scripts/slither.sh"
   },
   "dependencies": {
     "@fhevm/solidity": "0.11.1",
+    "@openzeppelin/confidential-contracts": "0.5.3",
+    "@openzeppelin/contracts": "5.7.0",
+    "@openzeppelin/contracts-upgradeable": "5.7.0",
     "encrypted-types": "0.0.4"
   },
   "devDependencies": {
@@ -27,6 +33,7 @@
     "@nomicfoundation/hardhat-ethers": "3.1.3",
     "@nomicfoundation/hardhat-network-helpers": "1.1.2",
     "@nomicfoundation/hardhat-verify": "2.1.3",
+    "@openzeppelin/hardhat-upgrades": "3.9.1",
     "@typechain/ethers-v6": "0.5.1",
     "@typechain/hardhat": "9.1.0",
     "@types/chai": "4.3.20",
@@ -40,7 +47,6 @@
     "ethers": "6.17.0",
     "globals": "17.14.0",
     "hardhat": "2.29.1",
-    "hardhat-deploy": "0.11.45",
     "hardhat-gas-reporter": "2.3.0",
     "rimraf": "6.1.4",
     "solhint": "6.2.5",
