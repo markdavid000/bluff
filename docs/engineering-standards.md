@@ -114,6 +114,7 @@ How to write one:
 - Live updates come from contract events: the feature hook watches the events that change its data and writes the new state with `setQueryData`. A slow `refetchInterval` stays on as a fallback for missed events.
 - Data already on screen stays on screen while it refreshes (`placeholderData: keepPreviousData`). Skeletons show only on first load.
 - Decrypted values (a player's own dice) live only in memory, in the Zama SDK's cache. They are never written to `localStorage`, a URL or a log.
+- Every user or public decryption retries every 2 seconds for up to 30 seconds. Zama's gateway reads a copy of the access list that lags Sepolia by about ten blocks, so a decryption sent straight after a transaction can fail before it syncs. The retry lives in the shared decryption hook and stays inside the action's `waiting` status; players never see the transient failure.
 - Contract addresses and ABIs come from `@bluff/contracts`. No address is typed by hand anywhere else.
 - Environment variables are read in one typed module in `src/config/`, never with `process.env.X` scattered across files.
 
@@ -192,6 +193,7 @@ Bluff is for everyone, not only people who know crypto. Player-facing text descr
 
 - Solidity `0.8.27`, `evmVersion: cancun`, optimizer on. Pragma `^0.8.24`.
 - One contract per file. Layout inside a contract, in order: type declarations, constants, immutables, state, events, errors, modifiers, constructor, external, public, internal, private functions, views last within each group.
+- Never name a function after a JavaScript `Object.prototype` member (`valueOf`, `toString`, `constructor`, `hasOwnProperty`): ethers resolves those names to the built-in, not the contract function.
 - Names: contracts and libraries in PascalCase, functions and variables in camelCase, constants in UPPER_SNAKE_CASE, private and internal state prefixed with `_`, events in past tense (`BidPlaced`), errors describe the failure (`BidNotHigher`).
 - Custom errors only, never revert strings (solhint: `custom-errors`).
 - Every state change emits an event. The app depends on events for live updates.

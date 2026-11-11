@@ -1,6 +1,6 @@
 # Letting anyone sign in and play without a crypto wallet, in plain English
 
-- **Status:** Approved, pending a test on the practice network
+- **Status:** Approved; the test on the practice network passed on 2026-11-11
 - **Technical version:** [ADR-2026-11-10-onboarding-with-privy.md](ADR-2026-11-10-onboarding-with-privy.md)
 
 ## What is the problem?
@@ -20,3 +20,7 @@ New players go from the front page to rolling dice in about half a minute. Playe
 ## What could go wrong?
 
 The test might show that paying fees on players' behalf does not work with Zama yet. If so, we keep Google and email sign-in and add a simple button that sends new players free practice money instead.
+
+## What the test showed
+
+Signing in with Google or email created a wallet, and every move went through without the player holding any money: we paid every fee, every time. Hidden values stayed hidden, the owner could see their own, and a public reveal came with proof the game accepted. Moves took about 6 seconds, faster than we expected. The very first move takes longer while the game loads its privacy engine, so the game will start loading it while players are still in the lobby.

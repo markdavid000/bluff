@@ -1,6 +1,6 @@
 # ADR-2026-11-10: Onboarding with Privy
 
-- **Status:** Approved, pending the Sepolia spike below
+- **Status:** Approved; the Sepolia spike passed on 2026-11-11 (results below)
 - **Approved by:** (MarkDavid, 10th Nov 2026)
 - **Companion:** [ADR-2026-11-10-onboarding-with-privy-for-dummies.md](ADR-2026-11-10-onboarding-with-privy-for-dummies.md)
 
@@ -65,3 +65,31 @@ Record the result, timings and any failure in this ADR before it is approved.
 ## Verification
 
 The spike's four steps pass on Sepolia and their timings are recorded. After the account feature lands, a manual round is played start to finish with a Google account that holds no ETH, and with an external wallet.
+
+## Spike results (2026-11-11)
+
+Run on Sepolia against a throwaway contract, `SpikeVault` at `0xA8C54EB2673c3274a1def42f668F3244dfe4D9c5`, from a one-page Vite app using `@privy-io/react-auth` 3.51.3, `@zama-fhe/sdk` 3.7.2 and viem 2.57.17. The spike code lives on the unmerged `spike/privy-sepolia` branch.
+
+| Check                                            | Result                                            | Time (three runs)     |
+| ------------------------------------------------ | ------------------------------------------------- | --------------------- |
+| Sign in with email, then Google; embedded wallet | Passed; Google linked to the same user and wallet |                       |
+| Encrypt a `euint64` in the browser               | Passed                                            | 14.1 to 17.3 s (cold) |
+| Store it in a sponsored transaction              | Passed                                            | 5.8 to 7.0 s          |
+| Decrypt it as its owner (permit and relayer)     | Passed; failed once, see below                    | 5.7 to 7.1 s          |
+| Roll a public random value, sponsored            | Passed                                            | 4.9 to 5.9 s          |
+| Public decryption with proof                     | Passed                                            | 4.8 to 7.4 s          |
+| Verify the proof onchain, sponsored              | Passed; the onchain value matched                 | 5.2 to 9.1 s          |
+| Who paid                                         | The player's balance stayed at 0 wei in every run |                       |
+
+What it showed:
+
+- **Sponsorship works with Zama.** Privy's native sponsorship upgraded the embedded wallet through EIP-7702 (its code starts with `0xef0100`), so the player keeps one address. Encrypted inputs, the EIP-712 decryption permit and `msg.sender` checks all worked unchanged. Privy's own sponsorship covers Sepolia, so ZeroDev is not needed.
+- **Moves are faster than estimated.** A sponsored move confirmed in about 6 seconds, usually in the next block, against the 12 to 24 seconds assumed in the game flow ADR. A call and its settlement took about 13 seconds against 20 to 30.
+- **The first encryption is slow.** 14 to 17 seconds while the SDK loads its WASM modules and the FHE public key. The SDK must start loading in the lobby, as the engineering standards already require.
+- **Decryption must ride out gateway propagation.** One decryption failed in 1.6 seconds with "Failed to decrypt encrypted values" and then passed on later runs. Zama's gateway on Arbitrum reads a synced copy of the ACL, which lags Sepolia by about ten blocks. The SDK retries only delegated decryption on its own. Bluff's decryption hooks retry user and public decryption every 2 seconds for up to 30 seconds, and the roll animation covers the wait.
+- **Google needs its own OAuth client.** Privy refused Google until it was enabled with credentials. Bluff now uses its own Google client, so the consent screen says Bluff. The redirect URI is `https://auth.privy.io/api/v1/oauth/callback`. **The consent screen must be published to production before submission**, or only listed test users can sign in.
+- **Brave users may need to lower Shields** for Google sign-in; the sign-in screen offers email as the fallback.
+- **Build notes for the web app:**
+  - Privy's optional Solana modules break the production build unless `@solana/kit` 8.x is installed alongside it.
+  - The Zama WASM bundles are about 1.3 MB gzipped each, so they load only on game routes.
+  - A contract function named `valueOf` collides with JavaScript's `Object.prototype.valueOf` in ethers and must never be used.
