@@ -70,15 +70,6 @@ describe("waiting room", function () {
         .to.be.revertedWithCustomError(bluff, "TableNotFound")
         .withArgs(4n);
     });
-
-    it("does not yet allow leaving a game in progress", async function () {
-      const { alice, bob, bluff } = await deployGameFixture();
-      await bluff.connect(alice).createFreeTable(2, false);
-      await bluff.connect(bob).joinFreeTable(1);
-      await expect(bluff.connect(bob).leaveTable(1))
-        .to.be.revertedWithCustomError(bluff, "WrongStatus")
-        .withArgs(1n, PLAYING);
-    });
   });
 
   describe("cancelling", function () {

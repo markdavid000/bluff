@@ -88,6 +88,8 @@ interface IBluff {
         uint8[] revealedFaces
     );
     event PlayerEliminated(uint256 indexed id, address indexed player);
+    event TurnTimedOut(uint256 indexed id, address indexed player, uint8 missedTurns);
+    event TurnPassed(uint256 indexed id, uint8 turn, uint64 deadline);
     event GameEnded(uint256 indexed id, EndReason reason, address[] winners);
 
     error ZeroAddress();
@@ -120,6 +122,10 @@ interface IBluff {
     function callBluff(uint256 id) external;
 
     function settleReveal(uint256 id, bytes calldata clearValues, bytes calldata proof) external;
+
+    function claimTimeout(uint256 id) external;
+
+    function cancelStuckReveal(uint256 id) external;
 
     function pause() external;
 
