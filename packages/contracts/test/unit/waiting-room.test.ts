@@ -1,4 +1,4 @@
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { deployGameFixture } from "../fixtures";
 
@@ -10,7 +10,7 @@ const LOBBY_LIMIT = 10 * 60;
 describe("waiting room", function () {
   describe("leaving", function () {
     it("frees the seat and the player", async function () {
-      const { alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await bluff.connect(carol).joinFreeTable(1);
@@ -24,7 +24,7 @@ describe("waiting room", function () {
     });
 
     it("lets a player who left join another table", async function () {
-      const { alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(bob).joinFreeTable(1);
       await bluff.connect(bob).leaveTable(1);
@@ -33,7 +33,7 @@ describe("waiting room", function () {
     });
 
     it("passes the host role to the next player to have joined", async function () {
-      const { alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await bluff.connect(carol).joinFreeTable(1);
@@ -44,7 +44,7 @@ describe("waiting room", function () {
     });
 
     it("closes the table when the last player leaves", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await expect(bluff.connect(alice).leaveTable(1))
         .to.emit(bluff, "TableCancelled")
@@ -57,7 +57,7 @@ describe("waiting room", function () {
     });
 
     it("refuses a player who is not at the table", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await expect(bluff.connect(bob).leaveTable(1))
         .to.be.revertedWithCustomError(bluff, "NotAtTable")
@@ -65,14 +65,14 @@ describe("waiting room", function () {
     });
 
     it("refuses an unknown table", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await expect(bluff.connect(alice).leaveTable(4))
         .to.be.revertedWithCustomError(bluff, "TableNotFound")
         .withArgs(4n);
     });
 
     it("does not yet allow leaving a game in progress", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).joinFreeTable(1);
       await expect(bluff.connect(bob).leaveTable(1))
@@ -83,7 +83,7 @@ describe("waiting room", function () {
 
   describe("cancelling", function () {
     it("waits for the lobby limit to pass", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       const [table] = await bluff.getTable(1);
       await expect(bluff.connect(alice).cancelTable(1))
@@ -92,7 +92,7 @@ describe("waiting room", function () {
     });
 
     it("lets any seated player cancel after 10 minutes and frees everyone", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(bob).joinFreeTable(1);
       await time.increase(LOBBY_LIMIT + 1);
@@ -104,7 +104,7 @@ describe("waiting room", function () {
     });
 
     it("refuses players who are not seated", async function () {
-      const { alice, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await time.increase(LOBBY_LIMIT + 1);
       await expect(bluff.connect(carol).cancelTable(1))
@@ -113,7 +113,7 @@ describe("waiting room", function () {
     });
 
     it("refuses to cancel a game in progress", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).joinFreeTable(1);
       await time.increase(LOBBY_LIMIT + 1);
@@ -123,7 +123,7 @@ describe("waiting room", function () {
     });
 
     it("still lets the host start after the limit with two or more players", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await time.increase(LOBBY_LIMIT + 1);
@@ -132,7 +132,7 @@ describe("waiting room", function () {
     });
 
     it("keeps a waiting table waiting until someone acts", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await time.increase(LOBBY_LIMIT + 1);
       expect((await bluff.getTable(1))[0].status).to.equal(WAITING);

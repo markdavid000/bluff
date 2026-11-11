@@ -289,7 +289,7 @@ Paused, unpaused, upgraded, initialized and ownership events come from OpenZeppe
 
 Errors carry the values the web app needs to explain them.
 
-- **Bluff:** `TableNotFound(id)`, `WrongStatus(id, status)`, `AlreadyAtTable(tableId)`, `NotAtTable(id)`, `NotHost(id)`, `NotEnoughPlayers(id)`, `InvalidSeatCount(seatCount)`, `InvalidBuyIn(buyIn)`, `NotYourTurn(id, turn)`, `NoBidToCall(id)`, `InvalidFace(face)`, `QuantityTooHigh(quantity, diceInPlay)`, `BidNotHigher(quantity, face, currentQuantity, currentFace)`, `DeadlineNotPassed(deadline)`, `UnauthorizedCallback(caller)`, `InvalidCallbackData()`.
+- **Bluff:** `TableNotFound(id)`, `WrongStatus(id, status)`, `AlreadyAtTable(tableId)`, `NotAtTable(id)`, `NotHost(id)`, `NotEnoughPlayers(id)`, `InvalidSeatCount(seatCount)`, `InvalidBuyIn(buyIn)`, `NotYourTurn(id, turn)`, `NoBidToCall(id)`, `InvalidFace(face)`, `InvalidQuantity(quantity, diceInPlay)`, `BidNotHigher(quantity, face, currentQuantity, currentFace)`, `DeadlineNotPassed(deadline)`, `UnauthorizedCallback(caller)`, `InvalidCallbackData()`.
 - **ChipFaucet:** `ClaimTooSoon(nextClaimAt)`, `InvalidNickname()`.
 
 ## 5. Encrypted values and who can read them

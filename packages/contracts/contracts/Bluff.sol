@@ -10,6 +10,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IBluff} from "./interfaces/IBluff.sol";
+import {BidRules} from "./libraries/BidRules.sol";
 import {TableRules} from "./libraries/TableRules.sol";
 
 contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeable, PausableUpgradeable {
@@ -129,6 +130,23 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         _cancel($, id);
     }
 
+    function placeBid(uint256 id, uint8 quantity, uint8 face) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Playing);
+        if ($.seats[id][table.turn].player != msg.sender) revert NotYourTurn(id, table.turn);
+        if (!BidRules.isValidFace(face)) revert InvalidFace(face);
+        if (!BidRules.isValidQuantity(quantity, table.diceInPlay)) revert InvalidQuantity(quantity, table.diceInPlay);
+        if (!BidRules.isHigher(quantity, face, table.bidQuantity, table.bidFace)) {
+            revert BidNotHigher(quantity, face, table.bidQuantity, table.bidFace);
+        }
+        table.bidQuantity = quantity;
+        table.bidFace = face;
+        table.bidder = table.turn;
+        table.turn = _nextActiveSeat($, id, table.turn);
+        table.deadline = uint64(block.timestamp) + TableRules.TURN_LIMIT;
+        emit BidPlaced(id, table.round, msg.sender, quantity, face, table.turn, table.deadline);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -165,6 +183,15 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
 
     function tableOf(address player) external view returns (uint256) {
         return _getBluffStorage().tableOf[player];
+    }
+
+    function diceOf(uint256 id, address player) external view returns (euint8[] memory) {
+        BluffStorage storage $ = _getBluffStorage();
+        _requireSeated($, id, player);
+        Seat[] storage seats = $.seats[id];
+        uint256 index = 0;
+        while (seats[index].player != player) ++index;
+        return seats[index].currentDice;
     }
 
     function chips() external view returns (IERC7984) {
@@ -208,6 +235,38 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         table.startedAt = uint64(block.timestamp);
         _unlist($, id);
         emit GameStarted(id, table.startedAt, table.startedAt + TableRules.GAME_CLOCK);
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            seats[i].dice = table.dicePerPlayer;
+        }
+        _startRound($, id, 0);
+    }
+
+    function _startRound(BluffStorage storage $, uint256 id, uint8 starter) private {
+        Table storage table = $.tables[id];
+        Seat[] storage seats = $.seats[id];
+        uint8 diceInPlay = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            diceInPlay += _rollSeat(seats[i]);
+        }
+        ++table.round;
+        table.diceInPlay = diceInPlay;
+        table.roundStarter = starter;
+        table.turn = starter;
+        table.bidQuantity = 0;
+        table.bidFace = 0;
+        table.deadline = uint64(block.timestamp) + TableRules.TURN_LIMIT;
+        emit RoundStarted(id, table.round, starter, table.deadline);
+    }
+
+    function _rollSeat(Seat storage seat) private returns (uint8) {
+        delete seat.currentDice;
+        if (!seat.isActive) return 0;
+        for (uint256 i = 0; i < seat.dice; ++i) {
+            euint8 die = FHE.asEuint8(FHE.rem(FHE.randEuint16(), BidRules.FACES));
+            seat.currentDice.push(FHE.allow(FHE.allowThis(die), seat.player));
+        }
+        return seat.dice;
     }
 
     function _cancel(BluffStorage storage $, uint256 id) private {
@@ -226,6 +285,16 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
 
     function _unlist(BluffStorage storage $, uint256 id) private {
         if ($.openTables.remove(id)) emit TableUnlisted(id);
+    }
+
+    function _nextActiveSeat(BluffStorage storage $, uint256 id, uint8 from) private view returns (uint8) {
+        Seat[] storage seats = $.seats[id];
+        uint256 count = seats.length;
+        uint256 index = from;
+        do {
+            index = (index + 1) % count;
+        } while (!seats[index].isActive);
+        return uint8(index);
     }
 
     function _requireStatus(

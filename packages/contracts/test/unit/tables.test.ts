@@ -1,4 +1,3 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { deployGameFixture } from "../fixtures";
 
@@ -10,7 +9,7 @@ const GAME_CLOCK = 15n * 60n;
 describe("tables", function () {
   describe("creating", function () {
     it("creates a waiting table with the creator in seat 0 as host", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await expect(bluff.connect(alice).createFreeTable(3, false))
         .to.emit(bluff, "TableCreated")
         .withArgs(1n, alice.address, 3, 3, 0n, false)
@@ -32,7 +31,7 @@ describe("tables", function () {
     });
 
     it("deals dice per player from the seat count", async function () {
-      const { alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).createFreeTable(3, false);
       await bluff.connect(carol).createFreeTable(4, false);
@@ -42,7 +41,7 @@ describe("tables", function () {
     });
 
     it("numbers tables from 1", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).createFreeTable(2, true);
       expect(await bluff.tableOf(alice.address)).to.equal(1n);
@@ -50,7 +49,7 @@ describe("tables", function () {
     });
 
     it("refuses seat counts outside 2 to 4", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       for (const seats of [0, 1, 5]) {
         await expect(bluff.connect(alice).createFreeTable(seats, false))
           .to.be.revertedWithCustomError(bluff, "InvalidSeatCount")
@@ -59,7 +58,7 @@ describe("tables", function () {
     });
 
     it("refuses a player who is already at a table", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await expect(bluff.connect(alice).createFreeTable(2, false))
         .to.be.revertedWithCustomError(bluff, "AlreadyAtTable")
@@ -69,7 +68,7 @@ describe("tables", function () {
 
   describe("joining", function () {
     it("takes the next seat", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await expect(bluff.connect(bob).joinFreeTable(1))
         .to.emit(bluff, "PlayerJoined")
@@ -81,7 +80,7 @@ describe("tables", function () {
     });
 
     it("starts the table when the last seat fills", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       const join = bluff.connect(bob).joinFreeTable(1);
       await expect(join).to.emit(bluff, "GameStarted");
@@ -92,7 +91,7 @@ describe("tables", function () {
     });
 
     it("reports the game clock when a game starts", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       const receipt = await (await bluff.connect(bob).joinFreeTable(1)).wait();
       const event = receipt?.logs
@@ -102,14 +101,14 @@ describe("tables", function () {
     });
 
     it("refuses an unknown table", async function () {
-      const { bob, bluff } = await loadFixture(deployGameFixture);
+      const { bob, bluff } = await deployGameFixture();
       await expect(bluff.connect(bob).joinFreeTable(9))
         .to.be.revertedWithCustomError(bluff, "TableNotFound")
         .withArgs(9n);
     });
 
     it("refuses a full table, which has already started", async function () {
-      const { alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).joinFreeTable(1);
       await expect(bluff.connect(carol).joinFreeTable(1))
@@ -118,7 +117,7 @@ describe("tables", function () {
     });
 
     it("refuses a player who is already at a table", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(bob).createFreeTable(3, false);
       await expect(bluff.connect(bob).joinFreeTable(1))
@@ -132,7 +131,7 @@ describe("tables", function () {
 
   describe("starting by the host", function () {
     it("lets the host start with two or more players", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
@@ -140,7 +139,7 @@ describe("tables", function () {
     });
 
     it("refuses anyone but the host", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await expect(bluff.connect(bob).startTable(1))
@@ -149,7 +148,7 @@ describe("tables", function () {
     });
 
     it("refuses to start with one player", async function () {
-      const { alice, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await expect(bluff.connect(alice).startTable(1))
         .to.be.revertedWithCustomError(bluff, "NotEnoughPlayers")
@@ -157,7 +156,7 @@ describe("tables", function () {
     });
 
     it("refuses to start a table twice", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
       await bluff.connect(alice).startTable(1);
@@ -169,7 +168,7 @@ describe("tables", function () {
 
   describe("the open tables list", function () {
     it("lists public waiting tables only, with pagination", async function () {
-      const { owner, alice, bob, carol, bluff } = await loadFixture(deployGameFixture);
+      const { owner, alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).createFreeTable(3, true);
       await bluff.connect(carol).createFreeTable(4, false);
@@ -183,7 +182,7 @@ describe("tables", function () {
     });
 
     it("announces a public table joining and leaving the list", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await expect(bluff.connect(alice).createFreeTable(2, false))
         .to.emit(bluff, "TableListed")
         .withArgs(1n);
@@ -195,7 +194,7 @@ describe("tables", function () {
     });
 
     it("never lists or unlists a private table", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await expect(bluff.connect(alice).createFreeTable(2, true)).not.to.emit(bluff, "TableListed");
       await expect(bluff.connect(bob).joinFreeTable(1)).not.to.emit(bluff, "TableUnlisted");
     });
@@ -203,7 +202,7 @@ describe("tables", function () {
 
   describe("views", function () {
     it("refuses to describe an unknown table", async function () {
-      const { bluff } = await loadFixture(deployGameFixture);
+      const { bluff } = await deployGameFixture();
       await expect(bluff.getTable(1))
         .to.be.revertedWithCustomError(bluff, "TableNotFound")
         .withArgs(1n);
