@@ -15,6 +15,13 @@ interface IBluff {
         Cancelled
     }
 
+    enum EndReason {
+        LastPlayerStanding,
+        ClockExpired,
+        OthersLeft,
+        StuckReveal
+    }
+
     struct TableView {
         uint256 id;
         address host;
@@ -34,6 +41,7 @@ interface IBluff {
         uint8 bidQuantity;
         uint8 bidFace;
         uint8 bidder;
+        uint8 caller;
     }
 
     struct SeatView {
@@ -69,6 +77,19 @@ interface IBluff {
         uint64 deadline
     );
 
+    event BluffCalled(uint256 indexed id, uint32 round, address indexed caller, uint64 deadline);
+    event RoundSettled(
+        uint256 indexed id,
+        uint32 round,
+        uint8 face,
+        uint8 quantity,
+        uint8 count,
+        address indexed loser,
+        uint8[] revealedFaces
+    );
+    event PlayerEliminated(uint256 indexed id, address indexed player);
+    event GameEnded(uint256 indexed id, EndReason reason, address[] winners);
+
     error ZeroAddress();
     error TableNotFound(uint256 id);
     error WrongStatus(uint256 id, TableStatus status);
@@ -81,6 +102,7 @@ interface IBluff {
     error NotYourTurn(uint256 id, uint8 turn);
     error InvalidFace(uint8 face);
     error InvalidQuantity(uint8 quantity, uint8 diceInPlay);
+    error NoBidToCall(uint256 id);
     error BidNotHigher(uint8 quantity, uint8 face, uint8 currentQuantity, uint8 currentFace);
 
     function createFreeTable(uint8 seatCount, bool isPrivate) external returns (uint256 id);
@@ -95,6 +117,10 @@ interface IBluff {
 
     function placeBid(uint256 id, uint8 quantity, uint8 face) external;
 
+    function callBluff(uint256 id) external;
+
+    function settleReveal(uint256 id, bytes calldata clearValues, bytes calldata proof) external;
+
     function pause() external;
 
     function unpause() external;
@@ -108,6 +134,8 @@ interface IBluff {
     function tableOf(address player) external view returns (uint256);
 
     function diceOf(uint256 id, address player) external view returns (euint8[] memory);
+
+    function revealHandles(uint256 id) external view returns (bytes32[] memory);
 
     function chips() external view returns (IERC7984);
 
