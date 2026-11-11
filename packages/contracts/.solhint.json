@@ -25,6 +25,7 @@
     "no-console": "error",
     "not-rely-on-time": "off",
     "gas-strict-inequalities": "off",
-    "no-inline-assembly": "off"
+    "no-inline-assembly": "off",
+    "gas-indexed-events": "off"
   }
 }
