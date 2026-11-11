@@ -9,7 +9,7 @@
         "ignoreConstructors": true
       }
     ],
-    "max-line-length": ["error", 120],
+    "max-line-length": "off",
     "named-parameters-mapping": "error",
     "gas-custom-errors": "error",
     "immutable-vars-naming": "error",
@@ -24,6 +24,7 @@
     "use-natspec": "off",
     "no-console": "error",
     "not-rely-on-time": "off",
-    "gas-strict-inequalities": "off"
+    "gas-strict-inequalities": "off",
+    "no-inline-assembly": "off"
   }
 }

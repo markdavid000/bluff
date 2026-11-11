@@ -131,13 +131,14 @@ Before asking for review, check the change against each item. The PR template re
 
 ## Commands
 
-| Command                                                    | Purpose                                                   |
-| ---------------------------------------------------------- | --------------------------------------------------------- |
-| `pnpm dev`                                                 | Web app dev server                                        |
-| `pnpm compile`                                             | Compile the contracts and generate their types            |
-| `pnpm preflight`                                           | Every gate, including the production build and smoke test |
-| `pnpm preflight --fast`                                    | Everything except the build (runs on pre-push)            |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm knip` | Individual gates across both packages                     |
-| `pnpm comments:check`                                      | The no-comments rule                                      |
-| `pnpm copy:check`                                          | The plain-language rule                                   |
-| `pnpm --filter @bluff/contracts deploy:sepolia`            | Deploy the contracts to Sepolia                           |
+| Command                                                            | Purpose                                                   |
+| ------------------------------------------------------------------ | --------------------------------------------------------- |
+| `pnpm dev`                                                         | Web app dev server                                        |
+| `pnpm compile`                                                     | Compile the contracts and generate their types            |
+| `pnpm preflight`                                                   | Every gate, including the production build and smoke test |
+| `pnpm preflight --fast`                                            | Everything except the build (runs on pre-push)            |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm knip`         | Individual gates across both packages                     |
+| `pnpm comments:check`                                              | The no-comments rule                                      |
+| `pnpm copy:check`                                                  | The plain-language rule                                   |
+| `pnpm --filter @bluff/contracts deploy:sepolia`                    | Deploy the contract proxies to Sepolia (once)             |
+| `pnpm --filter @bluff/contracts upgrade:sepolia --contract <name>` | Upgrade a proxy in place after a validated layout check   |

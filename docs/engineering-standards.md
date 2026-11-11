@@ -197,6 +197,10 @@ Bluff is for everyone, not only people who know crypto. Player-facing text descr
 - Every state change emits an event. The app depends on events for live updates.
 - Checks, effects, interactions. External calls come last.
 - No `console.log` in contracts (solhint: `no-console`).
+- Upgradeable contracts keep all state in one ERC-7201 namespaced struct (`bluff.storage.<Contract>`), reached through a private `_get<Contract>Storage()` accessor. This accessor is the only place inline assembly is allowed. Never declare plain state variables in an upgradeable contract.
+- Each implementation's constructor only calls `_disableInitializers()`. `initialize` sets everything, including the Zama coprocessor config with `FHE.setCoprocessor(ZamaConfig.getEthereumCoprocessorConfig())`, because `ZamaEthereumConfig`'s constructor never runs for a proxy.
+- Every upgrade bumps `version()` and adds a reinitializer only when new state needs setting.
+- Line length is Prettier's (120 columns for Solidity).
 
 ### FHE rules
 

@@ -115,11 +115,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm compile
       - run: pip install slither-analyzer==0.11.6
       - name: slither (fails on medium or higher)
-        working-directory: packages/contracts
-        run: slither . --hardhat-ignore-compile --filter-paths "node_modules|contracts/mocks" --fail-medium
+        run: pnpm --filter @bluff/contracts slither
 
   build:
     name: build and smoke test

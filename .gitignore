@@ -21,5 +21,5 @@ packages/contracts/artifacts/
 packages/contracts/cache/
 packages/contracts/types/
 packages/contracts/fhevmTemp/
-packages/contracts/deployments/localhost/
-packages/contracts/deployments/hardhat/
+packages/contracts/deployments/hardhat.json
+packages/contracts/deployments/localhost.json

@@ -181,8 +181,10 @@ packages/contracts/
 │   ├── interfaces/           external interfaces (IBluff, token interfaces)
 │   ├── libraries/            pure rule logic: BidRules, TableRules, NicknameRules
 │   └── mocks/                contracts that exist only for tests
-├── tasks/                    Hardhat tasks for operating a deployment
-├── scripts/                  repository checks for this package, such as the coverage gate
+├── config/                   chip token addresses per network
+├── deployments/              proxy and implementation addresses per network
+├── tasks/                    Hardhat tasks: deploy, upgrade, accounts
+├── scripts/                  checks for this package: coverage gate, Slither
 └── test/
     ├── fixtures.ts           deploys what each test needs
     ├── unit/                 one `<area>.test.ts` per contract area, against the FHEVM mock
@@ -200,4 +202,4 @@ Game data does not use server caching: it is read in the browser and cached by T
 ## Deployment
 
 - **Web app:** [Vercel](https://vercel.com), Hobby plan, with `apps/web` as the project root. `main` deploys production, `staging` deploys to the staging URL, and every pull request gets a preview link. `siteConfig.url` reads Vercel's production host at build time.
-- **Contracts:** deployed to Sepolia with `pnpm --filter @bluff/contracts deploy:sepolia`. The deployed addresses are committed under `packages/contracts/deployments/sepolia/` and read by the web app.
+- **Contracts:** UUPS proxies on Sepolia, deployed with `pnpm --filter @bluff/contracts deploy:sepolia` and upgraded in place with `upgrade:sepolia`. Addresses live in `packages/contracts/deployments/sepolia.json`, which the web app reads; the proxy addresses never change.
