@@ -5,6 +5,7 @@ library BidRules {
     uint8 internal constant WILD_FACE = 1;
     uint8 internal constant MIN_BID_FACE = 2;
     uint8 internal constant MAX_FACE = 6;
+    uint16 internal constant FACES = 6;
 
     function isValidFace(uint8 face) internal pure returns (bool) {
         return face >= MIN_BID_FACE && face <= MAX_FACE;

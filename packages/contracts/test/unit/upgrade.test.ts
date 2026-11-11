@@ -1,6 +1,7 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
+import { decryptDice } from "../helpers/dice";
+import { startFreeGame } from "../helpers/tables";
 import { deployGameFixture } from "../fixtures";
 
 const SUBCLASS_MOCK: { kind: "uups"; unsafeAllow: "missing-initializer"[] } = {
@@ -10,7 +11,7 @@ const SUBCLASS_MOCK: { kind: "uups"; unsafeAllow: "missing-initializer"[] } = {
 
 describe("upgrade", function () {
   it("runs initialize only once on the proxy", async function () {
-    const { owner, chips, dollars, bluff, faucet } = await loadFixture(deployGameFixture);
+    const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
     await expect(
       bluff.initialize(owner.address, await chips.getAddress())
     ).to.be.revertedWithCustomError(bluff, "InvalidInitialization");
@@ -20,7 +21,7 @@ describe("upgrade", function () {
   });
 
   it("never lets anyone initialise the implementation", async function () {
-    const { alice, chips, dollars, bluff, faucet } = await loadFixture(deployGameFixture);
+    const { alice, chips, dollars, bluff, faucet } = await deployGameFixture();
     const bluffImplementation = await ethers.getContractAt(
       "Bluff",
       await upgrades.erc1967.getImplementationAddress(await bluff.getAddress())
@@ -42,7 +43,7 @@ describe("upgrade", function () {
   });
 
   it("lets only the owner upgrade", async function () {
-    const { alice, bluff, faucet } = await loadFixture(deployGameFixture);
+    const { alice, bluff, faucet } = await deployGameFixture();
     const bluffV2 = await ethers.deployContract("BluffV2Mock");
     await expect(bluff.connect(alice).upgradeToAndCall(await bluffV2.getAddress(), "0x"))
       .to.be.revertedWithCustomError(bluff, "OwnableUnauthorizedAccount")
@@ -54,7 +55,7 @@ describe("upgrade", function () {
   });
 
   it("keeps the address, owner, settings and pause state across an upgrade", async function () {
-    const { owner, chips, dollars, bluff, faucet } = await loadFixture(deployGameFixture);
+    const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
     await bluff.connect(owner).pause();
     const bluffAddress = await bluff.getAddress();
     const upgradedBluff = await upgrades.upgradeProxy(
@@ -83,7 +84,7 @@ describe("upgrade", function () {
   });
 
   it("runs an upgrade's reinitializer only once", async function () {
-    const { bluff } = await loadFixture(deployGameFixture);
+    const { bluff } = await deployGameFixture();
     const upgraded = await upgrades.upgradeProxy(
       await bluff.getAddress(),
       await ethers.getContractFactory("BluffV2Mock"),
@@ -95,8 +96,21 @@ describe("upgrade", function () {
     );
   });
 
+  it("keeps hidden dice readable by their owner across an upgrade", async function () {
+    const { alice, bob, bluff } = await deployGameFixture();
+    const id = await startFreeGame(bluff, [alice, bob]);
+    const before = await decryptDice(bluff, id, alice);
+    await upgrades.upgradeProxy(
+      await bluff.getAddress(),
+      await ethers.getContractFactory("BluffV2Mock"),
+      { ...SUBCLASS_MOCK, call: { fn: "initializeV2", args: [1] } }
+    );
+    expect(await decryptDice(bluff, id, alice)).to.deep.equal(before);
+    await expect(bluff.connect(alice).placeBid(id, 1, 2)).to.emit(bluff, "BidPlaced");
+  });
+
   it("refuses an upgrade to the zero address", async function () {
-    const { owner, bluff, faucet } = await loadFixture(deployGameFixture);
+    const { owner, bluff, faucet } = await deployGameFixture();
     await expect(
       bluff.connect(owner).upgradeToAndCall(ethers.ZeroAddress, "0x")
     ).to.be.revertedWithCustomError(bluff, "ZeroAddress");

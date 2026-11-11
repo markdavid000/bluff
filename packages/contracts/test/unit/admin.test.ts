@@ -1,4 +1,3 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
 import { deployGameFixture } from "../fixtures";
@@ -6,7 +5,7 @@ import { deployGameFixture } from "../fixtures";
 describe("admin", function () {
   describe("initialisation", function () {
     it("sets the owner, the chip token and version 1.0.0, unpaused", async function () {
-      const { owner, chips, dollars, bluff, faucet } = await loadFixture(deployGameFixture);
+      const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
       expect(await bluff.owner()).to.equal(owner.address);
       expect(await bluff.chips()).to.equal(await chips.getAddress());
       expect(await bluff.version()).to.equal("1.0.0");
@@ -19,7 +18,7 @@ describe("admin", function () {
     });
 
     it("refuses a missing chip token", async function () {
-      const { owner, dollars } = await loadFixture(deployGameFixture);
+      const { owner, dollars } = await deployGameFixture();
       const bluffFactory = await ethers.getContractFactory("Bluff");
       await expect(
         upgrades.deployProxy(bluffFactory, [owner.address, ethers.ZeroAddress], { kind: "uups" })
@@ -35,7 +34,7 @@ describe("admin", function () {
     });
 
     it("refuses a missing dollar token for the faucet", async function () {
-      const { owner, chips } = await loadFixture(deployGameFixture);
+      const { owner, chips } = await deployGameFixture();
       const faucetFactory = await ethers.getContractFactory("ChipFaucet");
       await expect(
         upgrades.deployProxy(
@@ -47,7 +46,7 @@ describe("admin", function () {
     });
 
     it("refuses a missing owner", async function () {
-      const { chips } = await loadFixture(deployGameFixture);
+      const { chips } = await deployGameFixture();
       const bluffFactory = await ethers.getContractFactory("Bluff");
       await expect(
         upgrades.deployProxy(bluffFactory, [ethers.ZeroAddress, await chips.getAddress()], {
@@ -59,7 +58,7 @@ describe("admin", function () {
 
   describe("pausing", function () {
     it("lets only the owner pause and unpause, with events", async function () {
-      const { owner, alice, bluff, faucet } = await loadFixture(deployGameFixture);
+      const { owner, alice, bluff, faucet } = await deployGameFixture();
       for (const contract of [bluff, faucet]) {
         await expect(contract.connect(alice).pause())
           .to.be.revertedWithCustomError(contract, "OwnableUnauthorizedAccount")
@@ -81,7 +80,7 @@ describe("admin", function () {
 
   describe("pause scope", function () {
     it("stops new tables and joins while paused, and only those", async function () {
-      const { owner, alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { owner, alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(owner).pause();
       await expect(bluff.connect(bob).createFreeTable(2, false)).to.be.revertedWithCustomError(
@@ -96,7 +95,7 @@ describe("admin", function () {
     });
 
     it("lets a waiting table start while paused", async function () {
-      const { owner, alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { owner, alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(bob).joinFreeTable(1);
       await bluff.connect(owner).pause();
@@ -106,7 +105,7 @@ describe("admin", function () {
 
   describe("ownership", function () {
     it("moves only when the new owner accepts", async function () {
-      const { owner, alice, bob, bluff, faucet } = await loadFixture(deployGameFixture);
+      const { owner, alice, bob, bluff, faucet } = await deployGameFixture();
       for (const contract of [bluff, faucet]) {
         await expect(contract.connect(owner).transferOwnership(alice.address))
           .to.emit(contract, "OwnershipTransferStarted")
@@ -124,7 +123,7 @@ describe("admin", function () {
     });
 
     it("lets only the owner start a transfer", async function () {
-      const { alice, bob, bluff } = await loadFixture(deployGameFixture);
+      const { alice, bob, bluff } = await deployGameFixture();
       await expect(bluff.connect(alice).transferOwnership(bob.address))
         .to.be.revertedWithCustomError(bluff, "OwnableUnauthorizedAccount")
         .withArgs(alice.address);
