@@ -112,14 +112,10 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
     function leaveTable(uint256 id) external {
         BluffStorage storage $ = _getBluffStorage();
         _requireSeated($, id, msg.sender);
-        Table storage table = _requireStatus($, id, TableStatus.Waiting);
-        _removeSeat($, id, msg.sender);
-        emit PlayerLeft(id, msg.sender, false);
-        if (table.playerCount == 0) {
-            _cancel($, id);
-        } else if (table.host == msg.sender) {
-            table.host = $.seats[id][0].player;
-            emit HostChanged(id, table.host);
+        if ($.tables[id].status == TableStatus.Waiting) {
+            _leaveWaitingRoom($, id, msg.sender);
+        } else {
+            _leaveGame($, id, msg.sender);
         }
     }
 
@@ -185,7 +181,30 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         );
         table.status = TableStatus.Playing;
         _loseDie($, id, loser);
-        _continueOrEnd($, id, loser);
+        _continueOrEnd($, id, loser, true);
+    }
+
+    function claimTimeout(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Playing);
+        if (block.timestamp <= table.deadline) revert DeadlineNotPassed(table.deadline);
+        uint8 idle = table.turn;
+        Seat storage seat = $.seats[id][idle];
+        ++seat.missedTurns;
+        emit TurnTimedOut(id, seat.player, seat.missedTurns);
+        if (seat.missedTurns >= TableRules.MAX_MISSED_TURNS) {
+            _remove($, id, idle);
+        } else {
+            _loseDie($, id, idle);
+        }
+        _continueOrEnd($, id, idle, false);
+    }
+
+    function cancelStuckReveal(uint256 id) external {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Revealing);
+        if (block.timestamp <= table.deadline) revert DeadlineNotPassed(table.deadline);
+        _endGame($, id, EndReason.StuckReveal);
     }
 
     function pause() external onlyOwner {
@@ -229,10 +248,7 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
     function diceOf(uint256 id, address player) external view returns (euint8[] memory) {
         BluffStorage storage $ = _getBluffStorage();
         _requireSeated($, id, player);
-        Seat[] storage seats = $.seats[id];
-        uint256 index = 0;
-        while (seats[index].player != player) ++index;
-        return seats[index].currentDice;
+        return $.seats[id][_seatIndex($, id, player)].currentDice;
     }
 
     function revealHandles(uint256 id) external view returns (bytes32[] memory) {
@@ -316,8 +332,48 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         return seat.dice;
     }
 
+    function _leaveWaitingRoom(BluffStorage storage $, uint256 id, address player) private {
+        Table storage table = $.tables[id];
+        _removeSeat($, id, player);
+        emit PlayerLeft(id, player, false);
+        if (table.playerCount == 0) {
+            _cancel($, id);
+        } else if (table.host == player) {
+            table.host = $.seats[id][0].player;
+            emit HostChanged(id, table.host);
+        }
+    }
+
+    function _leaveGame(BluffStorage storage $, uint256 id, address player) private {
+        uint8 index = _seatIndex($, id, player);
+        Seat storage seat = $.seats[id][index];
+        delete $.tableOf[player];
+        emit PlayerLeft(id, player, false);
+        if (!seat.isActive) return;
+        seat.isActive = false;
+        if (_activeCount($, id) == 1) {
+            _endGame($, id, EndReason.OthersLeft);
+            return;
+        }
+        Table storage table = $.tables[id];
+        if (table.status == TableStatus.Playing && table.turn == index) {
+            table.turn = _nextActiveSeat($, id, index);
+            table.deadline = uint64(block.timestamp) + TableRules.TURN_LIMIT;
+            emit TurnPassed(id, table.turn, table.deadline);
+        }
+    }
+
+    function _remove(BluffStorage storage $, uint256 id, uint8 seatIndex) private {
+        Seat storage seat = $.seats[id][seatIndex];
+        seat.isActive = false;
+        seat.dice = 0;
+        delete $.tableOf[seat.player];
+        emit PlayerEliminated(id, seat.player);
+    }
+
     function _loseDie(BluffStorage storage $, uint256 id, uint8 seatIndex) private {
         Seat storage seat = $.seats[id][seatIndex];
+        if (!seat.isActive) return;
         --seat.dice;
         if (seat.dice == 0) {
             seat.isActive = false;
@@ -325,25 +381,24 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
         }
     }
 
-    function _continueOrEnd(BluffStorage storage $, uint256 id, uint8 loser) private {
+    function _continueOrEnd(BluffStorage storage $, uint256 id, uint8 from, bool fromStarts) private {
         if (_activeCount($, id) == 1) {
             _endGame($, id, EndReason.LastPlayerStanding);
             return;
         }
-        uint8 starter = $.seats[id][loser].isActive ? loser : _nextActiveSeat($, id, loser);
+        if (block.timestamp >= $.tables[id].startedAt + TableRules.GAME_CLOCK) {
+            _endGame($, id, EndReason.ClockExpired);
+            return;
+        }
+        uint8 starter = fromStarts && $.seats[id][from].isActive ? from : _nextActiveSeat($, id, from);
         _startRound($, id, starter);
     }
 
     function _endGame(BluffStorage storage $, uint256 id, EndReason reason) private {
         Table storage table = $.tables[id];
         Seat[] storage seats = $.seats[id];
-        address[] memory winners = new address[](_activeCount($, id));
-        uint256 found = 0;
+        address[] memory winners = _winners($, id, reason);
         for (uint256 i = 0; i < seats.length; ++i) {
-            if (seats[i].isActive) {
-                winners[found] = seats[i].player;
-                ++found;
-            }
             delete $.tableOf[seats[i].player];
         }
         table.status = TableStatus.Finished;
@@ -367,6 +422,39 @@ contract Bluff is IBluff, Initializable, UUPSUpgradeable, Ownable2StepUpgradeabl
 
     function _unlist(BluffStorage storage $, uint256 id) private {
         if ($.openTables.remove(id)) emit TableUnlisted(id);
+    }
+
+    function _winners(
+        BluffStorage storage $,
+        uint256 id,
+        EndReason reason
+    ) private view returns (address[] memory winners) {
+        Seat[] storage seats = $.seats[id];
+        uint8 minimum = reason == EndReason.ClockExpired ? _mostDice($, id) : 0;
+        uint256 count = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            if (seats[i].isActive && seats[i].dice >= minimum) ++count;
+        }
+        winners = new address[](count);
+        uint256 found = 0;
+        for (uint256 i = 0; i < seats.length; ++i) {
+            if (seats[i].isActive && seats[i].dice >= minimum) {
+                winners[found] = seats[i].player;
+                ++found;
+            }
+        }
+    }
+
+    function _mostDice(BluffStorage storage $, uint256 id) private view returns (uint8 most) {
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            if (seats[i].isActive && seats[i].dice > most) most = seats[i].dice;
+        }
+    }
+
+    function _seatIndex(BluffStorage storage $, uint256 id, address player) private view returns (uint8 index) {
+        Seat[] storage seats = $.seats[id];
+        while (seats[index].player != player) ++index;
     }
 
     function _activeCount(BluffStorage storage $, uint256 id) private view returns (uint256 count) {
