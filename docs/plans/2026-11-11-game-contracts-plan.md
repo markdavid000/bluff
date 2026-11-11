@@ -21,9 +21,11 @@ All under `packages/contracts/`. Names follow OpenZeppelin's conventions: contra
 packages/contracts/
 ├── contracts/
 │   ├── Bluff.sol                       the game, UUPS upgradeable
+│   ├── BluffCashier.sol                chips: pay-and-join, payments, refunds, payouts (ADR-2026-11-11-bluff-cashier)
 │   ├── ChipFaucet.sol                  daily practice chips and nicknames, UUPS upgradeable
 │   ├── interfaces/
 │   │   ├── IBluff.sol                  enums, view structs, events, errors, external functions
+│   │   ├── IBluffCashier.sol           the cashier's events, errors and functions
 │   │   ├── IChipFaucet.sol             events, errors, external functions
 │   │   └── IMintableERC20.sol          mint(address,uint256) of the mock USDT
 │   ├── libraries/
@@ -412,7 +414,7 @@ Each step is its own pull request into `dev`, test-first:
 7. Chips: faucet, paid tables, callback, verification, payouts: `faucet.test.ts`, `callback.test.ts`, `seat-verification.test.ts`, `payouts.test.ts`.
 8. Hardening: `confidentiality.test.ts`, `invariants.test.ts`, `limits.test.ts`, `docs/contracts.md`, the deploy and upgrade tasks, the Sepolia deploy and `full-game.ts`.
 
-If `limits.test.ts` shows `Bluff` near the size limit at step 6, the chip handling moves into a separate `BluffCashier` contract before step 7, recorded in its own ADR.
+At step 7 `Bluff` passed the size limit, so chip handling moved into `BluffCashier` ([ADR-2026-11-11-bluff-cashier](../adr/ADR-2026-11-11-bluff-cashier.md)), and `Bluff` is compiled with 50 optimizer runs for at least 2 KB of headroom.
 
 ## 13. Before the Sepolia deploy
 

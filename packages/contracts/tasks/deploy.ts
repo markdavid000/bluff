@@ -17,7 +17,7 @@ async function resolveChipAddresses(hre: HardhatRuntimeEnvironment): Promise<Chi
 
 async function deployProxy(
   hre: HardhatRuntimeEnvironment,
-  name: "Bluff" | "ChipFaucet",
+  name: "Bluff" | "BluffCashier" | "ChipFaucet",
   args: unknown[]
 ): Promise<ProxyRecord> {
   const proxy = await hre.upgrades.deployProxy(await hre.ethers.getContractFactory(name), args, {
@@ -37,28 +37,35 @@ async function verifyImplementation(hre: HardhatRuntimeEnvironment, address: str
   await hre.run("verify:verify", { address, constructorArguments: [] });
 }
 
-task("deploy", "Deploys Bluff and ChipFaucet behind UUPS proxies").setAction(async (_args, hre) => {
-  const [deployer] = await hre.ethers.getSigners();
-  const { chips, dollars } = await resolveChipAddresses(hre);
-  const bluff = await deployProxy(hre, "Bluff", [deployer.address, chips]);
-  const faucet = await deployProxy(hre, "ChipFaucet", [deployer.address, chips, dollars]);
+task("deploy", "Deploys Bluff, BluffCashier and ChipFaucet behind UUPS proxies").setAction(
+  async (_args, hre) => {
+    const [deployer] = await hre.ethers.getSigners();
+    const { chips, dollars } = await resolveChipAddresses(hre);
+    const bluff = await deployProxy(hre, "Bluff", [deployer.address]);
+    const cashier = await deployProxy(hre, "BluffCashier", [deployer.address, chips, bluff.proxy]);
+    const game = await hre.ethers.getContractAt("Bluff", bluff.proxy);
+    await (await game.setCashier(cashier.proxy)).wait();
+    const faucet = await deployProxy(hre, "ChipFaucet", [deployer.address, chips, dollars]);
 
-  const record: DeploymentRecord = {
-    network: hre.network.name,
-    chainId: Number((await hre.ethers.provider.getNetwork()).chainId),
-    deployer: deployer.address,
-    deployedAt: new Date().toISOString(),
-    chips,
-    dollars,
-    contracts: { Bluff: bluff, ChipFaucet: faucet },
-  };
-  const file = writeDeployment(record);
-  console.log(`Bluff proxy ${bluff.proxy}, implementation ${bluff.implementation}`);
-  console.log(`ChipFaucet proxy ${faucet.proxy}, implementation ${faucet.implementation}`);
-  console.log(`Recorded in ${file}`);
+    const record: DeploymentRecord = {
+      network: hre.network.name,
+      chainId: Number((await hre.ethers.provider.getNetwork()).chainId),
+      deployer: deployer.address,
+      deployedAt: new Date().toISOString(),
+      chips,
+      dollars,
+      contracts: { Bluff: bluff, BluffCashier: cashier, ChipFaucet: faucet },
+    };
+    const file = writeDeployment(record);
+    console.log(`Bluff proxy ${bluff.proxy}, implementation ${bluff.implementation}`);
+    console.log(`BluffCashier proxy ${cashier.proxy}, implementation ${cashier.implementation}`);
+    console.log(`ChipFaucet proxy ${faucet.proxy}, implementation ${faucet.implementation}`);
+    console.log(`Recorded in ${file}`);
 
-  if (hre.network.name === "sepolia") {
-    await verifyImplementation(hre, bluff.implementation);
-    await verifyImplementation(hre, faucet.implementation);
+    if (hre.network.name === "sepolia") {
+      await verifyImplementation(hre, bluff.implementation);
+      await verifyImplementation(hre, cashier.implementation);
+      await verifyImplementation(hre, faucet.implementation);
+    }
   }
-});
+);

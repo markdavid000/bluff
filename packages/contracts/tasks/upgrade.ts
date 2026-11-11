@@ -1,14 +1,14 @@
 import { task, types } from "hardhat/config";
 import { type ProxyName, readDeployment, writeDeployment } from "./deployments";
 
-const PROXY_NAMES: readonly ProxyName[] = ["Bluff", "ChipFaucet"];
+const PROXY_NAMES: readonly ProxyName[] = ["Bluff", "BluffCashier", "ChipFaucet"];
 
 function isProxyName(name: string): name is ProxyName {
   return (PROXY_NAMES as readonly string[]).includes(name);
 }
 
 task("upgrade", "Validates and upgrades one proxy to the current source")
-  .addParam("contract", "Bluff or ChipFaucet", undefined, types.string)
+  .addParam("contract", "Bluff, BluffCashier or ChipFaucet", undefined, types.string)
   .setAction(async ({ contract }: { contract: string }, hre) => {
     if (!isProxyName(contract)) {
       throw new Error(`Unknown contract ${contract}. Use one of: ${PROXY_NAMES.join(", ")}.`);

@@ -4,62 +4,81 @@ import { deployGameFixture } from "../fixtures";
 
 describe("admin", function () {
   describe("initialisation", function () {
-    it("sets the owner, the chip token and version 1.0.0, unpaused", async function () {
-      const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
+    it("sets owners, links and version 1.0.0, unpaused", async function () {
+      const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
       expect(await bluff.owner()).to.equal(owner.address);
-      expect(await bluff.chips()).to.equal(await chips.getAddress());
+      expect(await bluff.cashier()).to.equal(await cashier.getAddress());
       expect(await bluff.version()).to.equal("1.0.0");
       expect(await bluff.paused()).to.equal(false);
+      expect(await cashier.owner()).to.equal(owner.address);
+      expect(await cashier.chips()).to.equal(await chips.getAddress());
+      expect(await cashier.bluff()).to.equal(await bluff.getAddress());
+      expect(await cashier.version()).to.equal("1.0.0");
       expect(await faucet.owner()).to.equal(owner.address);
       expect(await faucet.chips()).to.equal(await chips.getAddress());
       expect(await faucet.dollars()).to.equal(await dollars.getAddress());
       expect(await faucet.version()).to.equal("1.0.0");
-      expect(await faucet.paused()).to.equal(false);
     });
 
-    it("refuses a missing chip token", async function () {
-      const { owner, dollars } = await deployGameFixture();
-      const bluffFactory = await ethers.getContractFactory("Bluff");
-      await expect(
-        upgrades.deployProxy(bluffFactory, [owner.address, ethers.ZeroAddress], { kind: "uups" })
-      ).to.be.revertedWithCustomError(bluffFactory, "ZeroAddress");
+    it("refuses missing addresses", async function () {
+      const { owner, chips, dollars, bluff } = await deployGameFixture();
+      const cashierFactory = await ethers.getContractFactory("BluffCashier");
+      for (const args of [
+        [owner.address, ethers.ZeroAddress, await bluff.getAddress()],
+        [owner.address, await chips.getAddress(), ethers.ZeroAddress],
+      ]) {
+        await expect(
+          upgrades.deployProxy(cashierFactory, args, { kind: "uups" })
+        ).to.be.revertedWithCustomError(cashierFactory, "ZeroAddress");
+      }
       const faucetFactory = await ethers.getContractFactory("ChipFaucet");
-      await expect(
-        upgrades.deployProxy(
-          faucetFactory,
-          [owner.address, ethers.ZeroAddress, await dollars.getAddress()],
-          { kind: "uups" }
-        )
-      ).to.be.revertedWithCustomError(faucetFactory, "ZeroAddress");
-    });
-
-    it("refuses a missing dollar token for the faucet", async function () {
-      const { owner, chips } = await deployGameFixture();
-      const faucetFactory = await ethers.getContractFactory("ChipFaucet");
-      await expect(
-        upgrades.deployProxy(
-          faucetFactory,
-          [owner.address, await chips.getAddress(), ethers.ZeroAddress],
-          { kind: "uups" }
-        )
-      ).to.be.revertedWithCustomError(faucetFactory, "ZeroAddress");
+      for (const args of [
+        [owner.address, ethers.ZeroAddress, await dollars.getAddress()],
+        [owner.address, await chips.getAddress(), ethers.ZeroAddress],
+      ]) {
+        await expect(
+          upgrades.deployProxy(faucetFactory, args, { kind: "uups" })
+        ).to.be.revertedWithCustomError(faucetFactory, "ZeroAddress");
+      }
     });
 
     it("refuses a missing owner", async function () {
-      const { chips } = await deployGameFixture();
       const bluffFactory = await ethers.getContractFactory("Bluff");
       await expect(
-        upgrades.deployProxy(bluffFactory, [ethers.ZeroAddress, await chips.getAddress()], {
-          kind: "uups",
-        })
+        upgrades.deployProxy(bluffFactory, [ethers.ZeroAddress], { kind: "uups" })
       ).to.be.revertedWithCustomError(bluffFactory, "OwnableInvalidOwner");
+    });
+  });
+
+  describe("linking the cashier", function () {
+    it("lets only the owner link it, once, to a real address", async function () {
+      const { owner, alice } = await deployGameFixture();
+      const bluff = await upgrades.deployProxy(
+        await ethers.getContractFactory("Bluff"),
+        [owner.address],
+        {
+          kind: "uups",
+        }
+      );
+      await expect(bluff.connect(alice).getFunction("setCashier")(alice.address))
+        .to.be.revertedWithCustomError(bluff, "OwnableUnauthorizedAccount")
+        .withArgs(alice.address);
+      await expect(
+        bluff.connect(owner).getFunction("setCashier")(ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(bluff, "ZeroAddress");
+      await expect(bluff.connect(owner).getFunction("setCashier")(alice.address))
+        .to.emit(bluff, "CashierSet")
+        .withArgs(alice.address);
+      await expect(
+        bluff.connect(owner).getFunction("setCashier")(owner.address)
+      ).to.be.revertedWithCustomError(bluff, "CashierAlreadySet");
     });
   });
 
   describe("pausing", function () {
     it("lets only the owner pause and unpause, with events", async function () {
-      const { owner, alice, bluff, faucet } = await deployGameFixture();
-      for (const contract of [bluff, faucet]) {
+      const { owner, alice, bluff, cashier, faucet } = await deployGameFixture();
+      for (const contract of [bluff, cashier, faucet]) {
         await expect(contract.connect(alice).pause())
           .to.be.revertedWithCustomError(contract, "OwnableUnauthorizedAccount")
           .withArgs(alice.address);
@@ -105,8 +124,8 @@ describe("admin", function () {
 
   describe("ownership", function () {
     it("moves only when the new owner accepts", async function () {
-      const { owner, alice, bob, bluff, faucet } = await deployGameFixture();
-      for (const contract of [bluff, faucet]) {
+      const { owner, alice, bob, bluff, cashier, faucet } = await deployGameFixture();
+      for (const contract of [bluff, cashier, faucet]) {
         await expect(contract.connect(owner).transferOwnership(alice.address))
           .to.emit(contract, "OwnershipTransferStarted")
           .withArgs(owner.address, alice.address);

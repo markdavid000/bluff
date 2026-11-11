@@ -14,7 +14,7 @@ export interface DeploymentRecord {
   deployedAt: string;
   chips: string;
   dollars: string;
-  contracts: Record<"Bluff" | "ChipFaucet", ProxyRecord>;
+  contracts: Record<"Bluff" | "BluffCashier" | "ChipFaucet", ProxyRecord>;
 }
 
 export type ProxyName = keyof DeploymentRecord["contracts"];

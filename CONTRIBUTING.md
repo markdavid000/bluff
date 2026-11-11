@@ -87,17 +87,17 @@ Run from the repository root.
 
 Package scripts, run with `pnpm --filter <package> <script>`:
 
-| Package            | Script                                           | What it does                                                                   |
-| ------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `@bluff/web`       | `smoke`                                          | Start the production build and require a 200 on every route                    |
-| `@bluff/web`       | `start`                                          | Serve the production build locally                                             |
-| `@bluff/contracts` | `coverage`                                       | Contract test coverage report                                                  |
-| `@bluff/contracts` | `coverage:check`                                 | Fail if line coverage is under 95% or branch coverage under 90%                |
-| `@bluff/contracts` | `test:sepolia`                                   | Run the Sepolia test suite against the live network                            |
-| `@bluff/contracts` | `slither`                                        | Static analysis of every non-mock contract; fails on medium severity or higher |
-| `@bluff/contracts` | `deploy:local`                                   | Deploy both proxies with mock chips to a local `hardhat node`                  |
-| `@bluff/contracts` | `deploy:sepolia`                                 | Deploy both proxies to Sepolia against Zama's cUSDT, record and verify them    |
-| `@bluff/contracts` | `upgrade:sepolia --contract <Bluff\|ChipFaucet>` | Validate the storage layout and upgrade one proxy in place                     |
+| Package            | Script                                                         | What it does                                                                   |
+| ------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `@bluff/web`       | `smoke`                                                        | Start the production build and require a 200 on every route                    |
+| `@bluff/web`       | `start`                                                        | Serve the production build locally                                             |
+| `@bluff/contracts` | `coverage`                                                     | Contract test coverage report                                                  |
+| `@bluff/contracts` | `coverage:check`                                               | Fail if line coverage is under 95% or branch coverage under 90%                |
+| `@bluff/contracts` | `test:sepolia`                                                 | Run the Sepolia test suite against the live network                            |
+| `@bluff/contracts` | `slither`                                                      | Static analysis of every non-mock contract; fails on medium severity or higher |
+| `@bluff/contracts` | `deploy:local`                                                 | Deploy both proxies with mock chips to a local `hardhat node`                  |
+| `@bluff/contracts` | `deploy:sepolia`                                               | Deploy both proxies to Sepolia against Zama's cUSDT, record and verify them    |
+| `@bluff/contracts` | `upgrade:sepolia --contract <Bluff\|BluffCashier\|ChipFaucet>` | Validate the storage layout and upgrade one proxy in place                     |
 
 ## Where code goes
 
@@ -263,7 +263,7 @@ Bluff is for everyone, not only people who know crypto. Every word a player read
 ## Deployment
 
 - **Web app:** Vercel deploys from GitHub. A merge to `main` deploys production; `staging` deploys to the staging URL; every pull request gets its own preview link. The Vercel project uses `apps/web` as its root directory and needs no secrets to build.
-- **Contracts:** `Bluff` and `ChipFaucet` are UUPS proxies. The repository owner deploys them once with `pnpm --filter @bluff/contracts deploy:sepolia`, which writes `packages/contracts/deployments/sepolia.json` and verifies the implementations on Etherscan. Later changes are upgrades, never redeploys: bump `version()`, then run `pnpm --filter @bluff/contracts upgrade:sepolia --contract <name>`, which refuses an unsafe storage layout. Commit `deployments/sepolia.json` and the `.openzeppelin/` manifest with every deploy or upgrade; the manifest is what the next upgrade is checked against.
+- **Contracts:** `Bluff`, `BluffCashier` and `ChipFaucet` are UUPS proxies; the deploy task links the cashier to `Bluff`. The repository owner deploys them once with `pnpm --filter @bluff/contracts deploy:sepolia`, which writes `packages/contracts/deployments/sepolia.json` and verifies the implementations on Etherscan. Later changes are upgrades, never redeploys: bump `version()`, then run `pnpm --filter @bluff/contracts upgrade:sepolia --contract <name>`, which refuses an unsafe storage layout. Commit `deployments/sepolia.json` and the `.openzeppelin/` manifest with every deploy or upgrade; the manifest is what the next upgrade is checked against.
 
 ## Working with AI agents
 

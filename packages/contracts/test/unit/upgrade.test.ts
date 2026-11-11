@@ -11,10 +11,14 @@ const SUBCLASS_MOCK: { kind: "uups"; unsafeAllow: "missing-initializer"[] } = {
 
 describe("upgrade", function () {
   it("runs initialize only once on the proxy", async function () {
-    const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
+    const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
+    await expect(bluff.initialize(owner.address)).to.be.revertedWithCustomError(
+      bluff,
+      "InvalidInitialization"
+    );
     await expect(
-      bluff.initialize(owner.address, await chips.getAddress())
-    ).to.be.revertedWithCustomError(bluff, "InvalidInitialization");
+      cashier.initialize(owner.address, await chips.getAddress(), await bluff.getAddress())
+    ).to.be.revertedWithCustomError(cashier, "InvalidInitialization");
     await expect(
       faucet.initialize(owner.address, await chips.getAddress(), await dollars.getAddress())
     ).to.be.revertedWithCustomError(faucet, "InvalidInitialization");
@@ -26,9 +30,10 @@ describe("upgrade", function () {
       "Bluff",
       await upgrades.erc1967.getImplementationAddress(await bluff.getAddress())
     );
-    await expect(
-      bluffImplementation.initialize(alice.address, await chips.getAddress())
-    ).to.be.revertedWithCustomError(bluffImplementation, "InvalidInitialization");
+    await expect(bluffImplementation.initialize(alice.address)).to.be.revertedWithCustomError(
+      bluffImplementation,
+      "InvalidInitialization"
+    );
     const faucetImplementation = await ethers.getContractAt(
       "ChipFaucet",
       await upgrades.erc1967.getImplementationAddress(await faucet.getAddress())
@@ -43,7 +48,11 @@ describe("upgrade", function () {
   });
 
   it("lets only the owner upgrade", async function () {
-    const { alice, bluff, faucet } = await deployGameFixture();
+    const { alice, bluff, cashier, faucet } = await deployGameFixture();
+    const cashierV2 = await ethers.deployContract("BluffCashierV2Mock");
+    await expect(cashier.connect(alice).upgradeToAndCall(await cashierV2.getAddress(), "0x"))
+      .to.be.revertedWithCustomError(cashier, "OwnableUnauthorizedAccount")
+      .withArgs(alice.address);
     const bluffV2 = await ethers.deployContract("BluffV2Mock");
     await expect(bluff.connect(alice).upgradeToAndCall(await bluffV2.getAddress(), "0x"))
       .to.be.revertedWithCustomError(bluff, "OwnableUnauthorizedAccount")
@@ -55,7 +64,7 @@ describe("upgrade", function () {
   });
 
   it("keeps the address, owner, settings and pause state across an upgrade", async function () {
-    const { owner, chips, dollars, bluff, faucet } = await deployGameFixture();
+    const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
     await bluff.connect(owner).pause();
     const bluffAddress = await bluff.getAddress();
     const upgradedBluff = await upgrades.upgradeProxy(
@@ -67,8 +76,19 @@ describe("upgrade", function () {
     expect(await upgradedBluff.version()).to.equal("2.0.0");
     expect(await upgradedBluff.upgradeMarker()).to.equal(42n);
     expect(await upgradedBluff.owner()).to.equal(owner.address);
-    expect(await upgradedBluff.chips()).to.equal(await chips.getAddress());
+    expect(await upgradedBluff.cashier()).to.equal(await cashier.getAddress());
     expect(await upgradedBluff.paused()).to.equal(true);
+
+    const cashierAddress = await cashier.getAddress();
+    const upgradedCashier = await upgrades.upgradeProxy(
+      cashierAddress,
+      await ethers.getContractFactory("BluffCashierV2Mock"),
+      { ...SUBCLASS_MOCK, call: { fn: "initializeV2", args: [9] } }
+    );
+    expect(await upgradedCashier.getAddress()).to.equal(cashierAddress);
+    expect(await upgradedCashier.version()).to.equal("2.0.0");
+    expect(await upgradedCashier.chips()).to.equal(await chips.getAddress());
+    expect(await upgradedCashier.bluff()).to.equal(await bluff.getAddress());
 
     const faucetAddress = await faucet.getAddress();
     const upgradedFaucet = await upgrades.upgradeProxy(
@@ -110,7 +130,10 @@ describe("upgrade", function () {
   });
 
   it("refuses an upgrade to the zero address", async function () {
-    const { owner, bluff, faucet } = await deployGameFixture();
+    const { owner, bluff, cashier, faucet } = await deployGameFixture();
+    await expect(
+      cashier.connect(owner).upgradeToAndCall(ethers.ZeroAddress, "0x")
+    ).to.be.revertedWithCustomError(cashier, "ZeroAddress");
     await expect(
       bluff.connect(owner).upgradeToAndCall(ethers.ZeroAddress, "0x")
     ).to.be.revertedWithCustomError(bluff, "ZeroAddress");
@@ -121,6 +144,9 @@ describe("upgrade", function () {
 
   it("passes the storage layout check for both contracts", async function () {
     await upgrades.validateImplementation(await ethers.getContractFactory("Bluff"), {
+      kind: "uups",
+    });
+    await upgrades.validateImplementation(await ethers.getContractFactory("BluffCashier"), {
       kind: "uups",
     });
     await upgrades.validateImplementation(await ethers.getContractFactory("ChipFaucet"), {
