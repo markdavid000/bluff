@@ -5,7 +5,7 @@
       "entry": ["scripts/*.mjs"]
     },
     "packages/contracts": {
-      "entry": ["tasks/**/*.ts", ".solcover.js"]
+      "entry": ["tasks/**/*.ts", "scripts/*.mjs", "test/**/*.test.ts", ".solcover.js"]
     }
   }
 }
