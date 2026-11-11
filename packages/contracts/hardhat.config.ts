@@ -19,6 +19,16 @@ const MNEMONIC = vars.get(
 );
 const SEPOLIA_RPC_URL = vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
 
+const BLUFF_OPTIMIZER_RUNS = 50;
+
+function compilerSettings(runs: number) {
+  return {
+    metadata: { bytecodeHash: "none" as const },
+    optimizer: { enabled: true, runs },
+    evmVersion: "cancun",
+  };
+}
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   etherscan: {
@@ -47,11 +57,16 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.27",
-    settings: {
-      metadata: { bytecodeHash: "none" },
-      optimizer: { enabled: true, runs: 800 },
-      evmVersion: "cancun",
+    compilers: [{ version: "0.8.27", settings: compilerSettings(800) }],
+    overrides: {
+      "contracts/Bluff.sol": {
+        version: "0.8.27",
+        settings: compilerSettings(BLUFF_OPTIMIZER_RUNS),
+      },
+      "contracts/mocks/BluffV2Mock.sol": {
+        version: "0.8.27",
+        settings: compilerSettings(BLUFF_OPTIMIZER_RUNS),
+      },
     },
   },
   typechain: {

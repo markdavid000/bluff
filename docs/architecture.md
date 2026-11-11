@@ -176,7 +176,8 @@ When two features keep needing each other, they are one feature. Merge them; do 
 ```
 packages/contracts/
 ├── contracts/
-│   ├── Bluff.sol             the game: tables, turns, bids, challenges, payouts
+│   ├── Bluff.sol             the game: tables, turns, bids, calls, reveals, endings; holds no chips
+│   ├── BluffCashier.sol      every chip: pay-and-join, payments, refunds, payouts
 │   ├── ChipFaucet.sol        daily practice chips and nicknames
 │   ├── interfaces/           external interfaces (IBluff, token interfaces)
 │   ├── libraries/            pure rule logic: BidRules, TableRules, NicknameRules
@@ -191,6 +192,8 @@ packages/contracts/
     └── sepolia/              end-to-end checks against the live network
 ```
 
+- `Bluff` and `BluffCashier` only accept their linking calls from each other (see [ADR-2026-11-11-bluff-cashier](adr/ADR-2026-11-11-bluff-cashier.md)). A player pays and joins through the chip token, which calls the cashier; the cashier seats the player in `Bluff`; `Bluff` tells the cashier whom to refund or pay.
+- `Bluff` is compiled with 50 optimizer runs (a per-file override in `hardhat.config.ts`) to keep at least 2 KB under the 24,576-byte contract size limit for future fixes. Every other contract uses 800.
 - One contract per file, named after the contract.
 - Rule logic that does not touch storage goes in a library so it can be tested on its own.
 - The contract is the source of truth for every rule. The web app may check a bid early to give instant feedback, but the contract decides.
