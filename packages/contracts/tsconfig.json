@@ -10,7 +10,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2022"
+    "target": "es2022",
+    "types": ["mocha", "node"]
   },
   "exclude": ["node_modules"],
   "files": ["./hardhat.config.ts"],

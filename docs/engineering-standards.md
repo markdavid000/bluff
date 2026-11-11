@@ -211,6 +211,8 @@ Bluff is for everyone, not only people who know crypto. Player-facing text descr
 ### Contract tests
 
 - Every external function has tests for its success path and **every** revert path.
+- Line coverage of `contracts/` (outside `mocks/`) stays at 95% or more and branch coverage at 90% or more (`pnpm --filter @bluff/contracts coverage:check`, in CI).
+- Slither runs in CI and fails on any finding of medium severity or higher.
 - Tests run against the FHEVM mock (`fhevm.isMock`). Encrypted values are checked by decrypting them in the test with the right signer, and access is checked by proving the wrong signer cannot.
 - Fixtures deploy fresh contracts for each test. No test depends on another's state.
 - Sepolia tests live in `test/sepolia/` and run on demand, not in CI.
@@ -272,7 +274,7 @@ This codebase has no comments. None, from anyone.
 - Code says what it does through names and structure. If code seems to need a comment, rename or restructure it.
 - A reason worth recording goes in the pull request description, an ADR or `docs/`.
 - No tool directives either (`eslint-disable`, `@ts-expect-error`). Fix the code.
-- The only exceptions are machine-required lines: the Solidity licence line (`// SPDX-License-Identifier`) and generated files.
+- The only exceptions are machine-read lines: the Solidity licence line (`// SPDX-License-Identifier`), generated files, and the two annotations OpenZeppelin's upgrade checker reads, exactly as `/// @custom:storage-location erc7201:<namespace>` and `/// @custom:oz-upgrades-unsafe-allow constructor`.
 
 `pnpm comments:check` (`scripts/check-comments.mjs`) runs on every commit and in CI and rejects every other comment.
 

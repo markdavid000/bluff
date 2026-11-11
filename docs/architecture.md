@@ -177,12 +177,15 @@ When two features keep needing each other, they are one feature. Merge them; do 
 packages/contracts/
 ├── contracts/
 │   ├── Bluff.sol             the game: tables, turns, bids, challenges, payouts
+│   ├── ChipFaucet.sol        daily practice chips and nicknames
 │   ├── interfaces/           external interfaces (IBluff, token interfaces)
-│   └── libraries/            pure rule logic: bid ordering, dice mapping
-├── deploy/                   hardhat-deploy scripts, one per contract
+│   ├── libraries/            pure rule logic: BidRules, TableRules, NicknameRules
+│   └── mocks/                contracts that exist only for tests
 ├── tasks/                    Hardhat tasks for operating a deployment
+├── scripts/                  repository checks for this package, such as the coverage gate
 └── test/
-    ├── unit/                 one file per contract area, against the FHEVM mock
+    ├── fixtures.ts           deploys what each test needs
+    ├── unit/                 one `<area>.test.ts` per contract area, against the FHEVM mock
     └── sepolia/              end-to-end checks against the live network
 ```
 

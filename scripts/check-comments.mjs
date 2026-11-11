@@ -9,6 +9,8 @@ const GENERATED = /(^|\/)(next-env\.d\.ts|types\/.*|artifacts\/.*|cache\/.*)$/;
 const ALLOWED = [
   /^\/\/ SPDX-License-Identifier: [\w.-]+$/,
   /^\/\/\/ <reference (types|path)="[^"]+" \/>$/,
+  /^\/\/\/ @custom:storage-location erc7201:[\w.-]+$/,
+  /^\/\/\/ @custom:oz-upgrades-unsafe-allow constructor$/,
 ];
 
 function filesToCheck() {
