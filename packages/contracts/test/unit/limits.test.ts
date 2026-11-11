@@ -22,6 +22,7 @@ async function revertData(action: Promise<unknown>): Promise<string> {
 
 describe("limits", function () {
   it("keeps every contract under the size limit, with room left in Bluff", async function () {
+    if (process.env.SOLIDITY_COVERAGE === "true") this.skip();
     expect(await deployedSize("Bluff")).to.be.at.most(SIZE_LIMIT - BLUFF_HEADROOM);
     for (const name of ["BluffCashier", "ChipFaucet"]) {
       expect(await deployedSize(name)).to.be.below(SIZE_LIMIT);
