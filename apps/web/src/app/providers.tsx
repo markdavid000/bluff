@@ -8,7 +8,9 @@ import { GameToaster } from "@/components/shared/notify";
 import { gameChain, gameTransport } from "@/config/chain";
 import { publicEnv } from "@/config/env";
 import { SessionKeeper } from "@/features/account";
+import { activeWalletFor } from "@/lib/active-wallet";
 import { createQueryClient } from "@/lib/query-client";
+import { GameZamaProvider } from "./zama-provider";
 
 const wagmiConfig = createConfig({
   chains: [gameChain],
@@ -31,10 +33,12 @@ export function Providers({ children }: { children: ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>
-          <SessionKeeper />
-          {children}
-          <GameToaster />
+        <WagmiProvider config={wagmiConfig} setActiveWalletForWagmi={activeWalletFor}>
+          <GameZamaProvider wagmiConfig={wagmiConfig}>
+            <SessionKeeper />
+            {children}
+            <GameToaster />
+          </GameZamaProvider>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>

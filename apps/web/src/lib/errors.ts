@@ -1,3 +1,4 @@
+import { RelayerRequestFailedError, SigningRejectedError, isRetryable } from "@zama-fhe/sdk";
 import {
   BaseError,
   ContractFunctionRevertedError,
@@ -26,6 +27,11 @@ const USER_CANCELLED_CODES = new Set([4001, "ACTION_REJECTED"]);
 
 export function explainProblem(error: unknown): ActionProblem {
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
+  if (error instanceof SigningRejectedError)
+    return { kind: "cancelled", reason: errorCopy.cancelled };
+  if (error instanceof RelayerRequestFailedError || isRetryable(error)) {
+    return { kind: "failed", reason: errorCopy.networkBusy };
+  }
   if (error instanceof BaseError) {
     if (error.walk((cause) => cause instanceof UserRejectedRequestError)) {
       return { kind: "cancelled", reason: errorCopy.cancelled };

@@ -23,3 +23,4 @@ overrides:
   "@typescript-eslint/typescript-estree": 8.72.1
   "@typescript-eslint/utils": 8.72.1
   "@typescript-eslint/visitor-keys": 8.72.1
+  "wasm-feature-detect": 1.9.0

@@ -141,7 +141,7 @@ export function WelcomeForm({ next }: { next: string | undefined }) {
             type="submit"
             tone="red"
             size="large"
-            icon="3d-coin"
+            icon="cowrie"
             sound="shekere"
             disabled={!welcome.canSave}
             working={welcome.working}

@@ -3,6 +3,7 @@ import { PatternBand } from "@/components/shared/pattern-band";
 import { ScreenControls } from "@/components/shared/screen-controls";
 import { siteConfig } from "@/config/site";
 import { PlayerBadge } from "@/features/account";
+import { ChipBalance } from "@/features/chips";
 
 export function AppHeader() {
   return (
@@ -13,6 +14,7 @@ export function AppHeader() {
           {siteConfig.name}
         </Link>
         <div className="flex items-center gap-3">
+          <ChipBalance />
           <ScreenControls />
           <PlayerBadge />
         </div>

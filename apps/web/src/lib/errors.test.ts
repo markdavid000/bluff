@@ -6,6 +6,7 @@ import {
   UserRejectedRequestError,
   encodeErrorResult,
 } from "viem";
+import { RelayerRequestFailedError, SigningRejectedError } from "@zama-fhe/sdk";
 import { describe, expect, it } from "vitest";
 import { errorCopy } from "./copy";
 import { MoveNotReadyError, explainProblem } from "./errors";
@@ -23,6 +24,20 @@ function reverted(
 }
 
 describe("explainProblem", () => {
+  it("treats a declined signature for hidden values as cancelled", () => {
+    expect(explainProblem(new SigningRejectedError("declined"))).toEqual({
+      kind: "cancelled",
+      reason: errorCopy.cancelled,
+    });
+  });
+
+  it("asks for patience when the decryption service is busy", () => {
+    expect(explainProblem(new RelayerRequestFailedError("busy", 503))).toEqual({
+      kind: "failed",
+      reason: errorCopy.networkBusy,
+    });
+  });
+
   it("names the rule a move broke, in plain words", () => {
     expect(explainProblem(reverted(bluffAbi, "NotYourTurn", [1n, 0]))).toEqual({
       kind: "failed",

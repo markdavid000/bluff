@@ -11,6 +11,7 @@ import {
 import { usePublicClient, useSendTransaction } from "wagmi";
 import { gameChain } from "@/config/chain";
 import { MoveNotReadyError } from "@/lib/errors";
+import { useEnsureGameChain } from "./use-game-chain";
 
 export interface ContractCall {
   address: Address;
@@ -27,6 +28,7 @@ export function useSendMove() {
   const { sendTransaction: sendSponsored } = usePrivySend();
   const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient({ chainId: gameChain.id });
+  const ensureGameChain = useEnsureGameChain();
 
   return async function sendMove(
     call: ContractCall,
@@ -49,8 +51,9 @@ export function useSendMove() {
         { sponsor: true, uiOptions: { showWalletUIs: false } }
       ));
     } else {
+      await ensureGameChain();
       report("confirming");
-      hash = await sendTransactionAsync({ to: call.address, data, chainId: gameChain.id });
+      hash = await sendTransactionAsync({ account, to: call.address, data, chainId: gameChain.id });
       report("sending");
     }
     report("waiting");
