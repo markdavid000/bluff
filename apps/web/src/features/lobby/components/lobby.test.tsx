@@ -144,6 +144,23 @@ describe("Lobby", () => {
     expect(leaveTable.leave).toHaveBeenCalledWith(12n);
   });
 
+  it("says everyone is here, not that it waits for nobody, when a waiting table is full", () => {
+    lobby = {
+      ...base,
+      myTableId: { status: "ready", id: 12n },
+      myTable: {
+        status: "ready",
+        seated: { table: table(12n, 2, 2), players: [ACCOUNT], status: 1 },
+      },
+    };
+    show();
+    expect(screen.getByRole("status")).toHaveTextContent(lobbyCopy.everyoneHere);
+    expect(screen.queryByText(lobbyCopy.waitingFor(0))).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: lobbyCopy.copyInvite })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leave }));
+    expect(leaveTable.leave).toHaveBeenCalledWith(12n);
+  });
+
   it("lets a player leave a game that has started, but asks first", () => {
     lobby = {
       ...base,

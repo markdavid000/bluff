@@ -42,6 +42,7 @@ export const lobbyCopy = {
   yourTableProblem: "We could not check your table.",
   waitingFor: (count: number) => `Waiting for ${count} more ${count === 1 ? "player" : "players"}`,
   startsSoon: "Everyone is here. The game is starting.",
+  everyoneHere: "Everyone is here. Waiting for the host to start.",
   inGame: "Your game is on.",
   copyInvite: "Copy invite link",
   inviteCopied: "Invite link copied",

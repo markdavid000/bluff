@@ -35,8 +35,11 @@ export function MyTableCard({
   onCopyInvite: () => void;
 }) {
   const waiting = status === WAITING;
+  const free = openSeats(table);
   const line = waiting
-    ? lobbyCopy.waitingFor(openSeats(table))
+    ? free > 0
+      ? lobbyCopy.waitingFor(free)
+      : lobbyCopy.everyoneHere
     : status === VERIFYING
       ? lobbyCopy.startsSoon
       : lobbyCopy.inGame;
@@ -64,7 +67,7 @@ export function MyTableCard({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {waiting ? (
+          {waiting && free > 0 ? (
             <ActionButton tone="blue" icon="copy" onClick={onCopyInvite}>
               {lobbyCopy.copyInvite}
             </ActionButton>
