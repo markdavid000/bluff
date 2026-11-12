@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
 import {
@@ -7,7 +8,7 @@ import {
   sessionCookieOptions,
 } from "./session-token";
 
-const SECRET = "a-test-secret-that-is-long-enough-123456";
+const SECRET = randomBytes(32).toString("hex");
 
 describe("session token", () => {
   it("accepts a token it signed and returns the player", async () => {
