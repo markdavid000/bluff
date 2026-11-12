@@ -3,7 +3,7 @@
 import { useLogin, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
-import { notify } from "@/components/shared/notify";
+import { notify } from "@/lib/notify";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { accountCopy } from "../copy";
 import { openSession } from "../lib/session-client";

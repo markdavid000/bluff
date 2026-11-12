@@ -15,10 +15,10 @@ import { useScreenControls } from "@/hooks/use-screen-controls";
 import { MUSIC_TRACKS, type MusicTrack } from "@/lib/settings-store";
 import { ActionButton } from "./action-button";
 import { sharedCopy } from "./copy";
-import type { GameIconName } from "./game-icon";
+import { GameIcon, type GameIconName } from "./game-icon";
 
 const ITEM =
-  "cursor-pointer rounded-lg py-2 pr-3 pl-9 font-game text-base focus:bg-accent focus:text-accent-foreground [&>span:first-child]:left-3";
+  "cursor-pointer rounded-lg py-2.5 pr-4 pl-11 font-game text-lg tracking-wide focus:bg-accent focus:text-accent-foreground [&>span:first-child]:left-3";
 
 function ControlTile({
   icon,
@@ -75,7 +75,7 @@ export function ScreenControls({ className }: { className?: string }) {
           align="end"
           className="min-w-52 rounded-xl border-2 border-toast-edge bg-toast p-2 text-toast-foreground shadow-[0_5px_0_0_var(--color-toast-edge),0_16px_24px_-10px_rgb(0_0_0/0.55)]"
         >
-          <DropdownMenuLabel className="font-game text-sm opacity-80">
+          <DropdownMenuLabel className="px-3 pb-1 font-game text-base opacity-85">
             {sharedCopy.chooseMusic}
           </DropdownMenuLabel>
           <DropdownMenuRadioGroup
@@ -83,7 +83,12 @@ export function ScreenControls({ className }: { className?: string }) {
             onValueChange={(value) => controls.chooseMusic(value as MusicTrack)}
           >
             {MUSIC_TRACKS.map((track) => (
-              <DropdownMenuRadioItem key={track} value={track} className={ITEM}>
+              <DropdownMenuRadioItem
+                key={track}
+                value={track}
+                className={ITEM}
+                indicator={<GameIcon name="music" size={24} />}
+              >
                 {sharedCopy.musicChoices[track]}
               </DropdownMenuRadioItem>
             ))}
@@ -93,6 +98,7 @@ export function ScreenControls({ className }: { className?: string }) {
             checked={controls.music}
             onCheckedChange={controls.toggleMusic}
             className={ITEM}
+            indicator={<GameIcon name="tick" size={24} />}
           >
             {sharedCopy.musicPlaying}
           </DropdownMenuCheckboxItem>

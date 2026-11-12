@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import { PROXY_NAMES, type ProxyName, readDeployment, writeDeployment } from "./deployments";
+import { landedImplementation, versionAt } from "./chain";
 import { verifyImplementation } from "./verify";
 
 function isProxyName(name: string): name is ProxyName {
@@ -15,14 +16,16 @@ task("upgrade", "Validates and upgrades one proxy to the current source")
     const record = readDeployment(hre.network.name);
     const current = record.contracts[contract];
     const factory = await hre.ethers.getContractFactory(contract);
+    const prepared = await hre.upgrades.prepareUpgrade(current.proxy, factory, { kind: "uups" });
+    if (typeof prepared !== "string") throw new Error("Expected the new implementation's address.");
+    const implementation = hre.ethers.getAddress(prepared);
     const upgraded = await hre.upgrades.upgradeProxy(current.proxy, factory, { kind: "uups" });
     await upgraded.waitForDeployment();
-    const instance = await hre.ethers.getContractAt(contract, current.proxy);
-    const implementation = await hre.upgrades.erc1967.getImplementationAddress(current.proxy);
+    const block = await landedImplementation(hre, current.proxy, implementation);
     record.contracts[contract] = {
       proxy: current.proxy,
       implementation,
-      version: await instance.version(),
+      version: await versionAt(hre, contract, current.proxy, block),
     };
     writeDeployment(record);
     console.log(`${contract} ${current.version} -> ${record.contracts[contract].version}`);

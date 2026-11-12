@@ -82,6 +82,8 @@
   --tile-edge: oklch(0.68 0.07 60);
   --tile-foreground: oklch(0.28 0.05 45);
   --cowrie: oklch(0.95 0.03 90);
+  --glow-top: oklch(0.8 0.13 75 / 0.55);
+  --glow-bottom: oklch(0.36 0.08 35 / 0.45);
   --toast: oklch(0.38 0.085 38);
   --toast-edge: oklch(0.24 0.06 35);
   --toast-foreground: oklch(0.96 0.03 85);
@@ -122,12 +124,14 @@
   --ring: oklch(0.8 0.13 75);
   --board: oklch(0.3 0.07 35);
   --board-edge: oklch(0.2 0.05 35);
-  --tile: oklch(0.34 0.05 275);
-  --tile-edge: oklch(0.2 0.04 275);
-  --tile-foreground: oklch(0.94 0.025 85);
+  --tile: oklch(0.46 0.08 50);
+  --tile-edge: oklch(0.34 0.07 45);
+  --tile-foreground: oklch(0.97 0.02 85);
   --cowrie: oklch(0.92 0.03 90);
+  --glow-top: oklch(0.62 0.07 75 / 0.18);
+  --glow-bottom: oklch(0.32 0.06 280 / 0.35);
   --toast: oklch(0.42 0.09 40);
-  --toast-edge: oklch(0.14 0.03 275);
+  --toast-edge: oklch(0.3 0.07 40);
   --toast-foreground: oklch(0.97 0.025 85);
   --pattern: oklch(0.72 0.14 70);
   --pattern-accent: oklch(0.82 0.12 85);
@@ -168,6 +172,12 @@
 
 @utility animate-tumble {
   animation: tumble 2.4s cubic-bezier(0.45, 0.05, 0.35, 1) infinite;
+}
+
+@utility glow-backdrop {
+  background-image:
+    radial-gradient(ellipse at top, var(--glow-top) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom, var(--glow-bottom) 0%, transparent 60%);
 }
 
 @utility preserve-3d {

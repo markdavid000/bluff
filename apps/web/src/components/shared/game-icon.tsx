@@ -1,19 +1,8 @@
 import { cn } from "cn";
 import Image from "next/image";
 
-export type GameIconName =
-  | "sun"
-  | "moon"
-  | "headphone"
-  | "music"
-  | "play"
-  | "chat-bubble"
-  | "megaphone"
-  | "link"
-  | "back"
-  | "3d-coin"
-  | "setting"
-  | "trophy";
+export type { GameIconName } from "@/config/icons";
+import type { GameIconName } from "@/config/icons";
 
 export function GameIcon({
   name,

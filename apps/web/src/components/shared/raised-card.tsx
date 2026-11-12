@@ -20,7 +20,7 @@ export function RaisedCard({ children, className }: { children: ReactNode; class
       <motion.div
         className={cn(
           "relative rounded-2xl border-2 border-tile-edge/40 bg-card p-6 text-card-foreground",
-          "shadow-[0_6px_0_0_var(--color-tile-edge),0_18px_30px_-12px_rgb(0_0_0/0.4)]",
+          "shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_6px_0_0_var(--color-tile-edge),0_18px_30px_-12px_rgb(0_0_0/0.4)]",
           className
         )}
         style={calm ? undefined : { rotateX, rotateY }}

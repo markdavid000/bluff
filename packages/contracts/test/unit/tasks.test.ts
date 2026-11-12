@@ -25,9 +25,10 @@ describe("tasks", function () {
     expect(existsSync(RECORD)).to.equal(true);
     const record = readDeployment("hardhat");
     expect(record.chainId).to.equal(31337);
+    const versions = { Bluff: "1.0.0", BluffCashier: "1.0.0", ChipFaucet: "1.1.0" } as const;
     for (const name of ["Bluff", "BluffCashier", "ChipFaucet"] as const) {
       const entry = record.contracts[name];
-      expect(entry.version).to.equal("1.0.0");
+      expect(entry.version).to.equal(versions[name]);
       expect(await hre.upgrades.erc1967.getImplementationAddress(entry.proxy)).to.equal(
         entry.implementation
       );

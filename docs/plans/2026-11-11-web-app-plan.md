@@ -590,6 +590,14 @@ Before PR 1, a clickable prototype on its own route group, reviewed by the owner
 
 Once approved, the prototype's pieces move into `components/shared/`, `lib/` and `features/table/components/board/`, and the prototype route is deleted in the same change.
 
+### Reading events
+
+Alchemy's free plan limits `eth_getLogs` to **10 blocks per request**, which was found on 2026-11-12. So:
+
+- live updates use `watchContractEvent` from the current block, which stays within the limit;
+- the lobby lists tables from the `openTables` and `getTable` views, not from past events;
+- anything that needs history, like a player's games played and won, either reads it through the public Sepolia node (wider log range) in small windows, or comes from a contract view if one is added later. It never assumes the keyed provider can scan history.
+
 ## 8. Removal
 
 - Done with this plan's pull request: `docs/how-to-play.md` drops the "fewer than 10 chips" rule ("You can get 100 more once a day"), and the Privy ADR now says server secrets stay in Vercel, not Cloudflare.

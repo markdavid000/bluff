@@ -3,7 +3,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { notify } from "@/components/shared/notify";
+import { notify } from "@/lib/notify";
 import { accountCopy } from "../copy";
 import { closeSession } from "../lib/session-client";
 

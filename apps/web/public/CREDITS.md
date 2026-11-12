@@ -19,9 +19,15 @@ Every sound and image Bluff ships, where it came from, and its licence. Sounds w
 
 ## Icons
 
-| Files                                                                                                          | Source                                                                      | Licence |
-| -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------- |
-| `icons/*.png`: sun, moon, headphone, music, play, chat-bubble, megaphone, link, back, 3d-coin, setting, trophy | 3dicons by Vijay Verma, https://3dicons.co, colour style, resized to 128 px | CC0 1.0 |
+| Files                                                                                                                | Source                                                                      | Licence |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------- |
+| `icons/*.png`: sun, moon, headphone, music, play, chat-bubble, megaphone, link, back, 3d-coin, setting, trophy, tick | 3dicons by Vijay Verma, https://3dicons.co, colour style, resized to 128 px | CC0 1.0 |
+
+## Avatars
+
+| Files                               | Source                                                                                                                                                                                                                   | Licence          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| `avatars/1.svg` to `avatars/12.svg` | Open Peeps by Pablo Stanley (https://www.openpeeps.com), drawn through DiceBear's `open-peeps` style 9 (code MIT, Florian Körner), with Bluff's skin tones, seat colours, hairstyles and head wraps chosen for each face | CC0 1.0 (design) |
 
 ## Fonts
 
