@@ -240,7 +240,7 @@ pnpm dlx shadcn@latest add <component>
 - Add a component in the PR that first uses it.
 - Theme values live in `apps/web/src/app/globals.css`. Change colours there, never in components.
 - A component two features need goes to `components/shared/`, not into either feature.
-- Merge classes with `cn` from `@/lib/utils`.
+- Merge classes with `cn` from the `cn` package.
 
 ## Writing for players
 

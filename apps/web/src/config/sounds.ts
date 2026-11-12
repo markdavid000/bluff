@@ -1,0 +1,12 @@
+export const SOUNDS = {
+  tap: { url: "/audio/tap.mp3", channel: "effects", volume: 0.5 },
+  shake: { url: "/audio/shake.mp3", channel: "effects", volume: 0.8 },
+  roll: { url: "/audio/roll.mp3", channel: "effects", volume: 0.9 },
+  knock: { url: "/audio/knock.mp3", channel: "effects", volume: 0.8 },
+  drum: { url: "/audio/drum.mp3", channel: "effects", volume: 0.9 },
+  shekere: { url: "/audio/shekere.mp3", channel: "effects", volume: 0.7 },
+  cowries: { url: "/audio/cowries.mp3", channel: "effects", volume: 0.7 },
+  table: { url: "/audio/table-loop.mp3", channel: "music", volume: 0.3, loop: true },
+} as const;
+
+export type SoundName = keyof typeof SOUNDS;
