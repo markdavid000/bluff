@@ -25,7 +25,7 @@ describe("tasks", function () {
     expect(existsSync(RECORD)).to.equal(true);
     const record = readDeployment("hardhat");
     expect(record.chainId).to.equal(31337);
-    const versions = { Bluff: "1.0.0", BluffCashier: "1.0.0", ChipFaucet: "1.1.0" } as const;
+    const versions = { Bluff: "1.1.0", BluffCashier: "1.1.0", ChipFaucet: "1.1.0" } as const;
     for (const name of ["Bluff", "BluffCashier", "ChipFaucet"] as const) {
       const entry = record.contracts[name];
       expect(entry.version).to.equal(versions[name]);
@@ -49,7 +49,7 @@ describe("tasks", function () {
     await hre.run("upgrade", { contract: "Bluff" });
     const after = readDeployment("hardhat");
     expect(after.contracts.Bluff.proxy).to.equal(before.contracts.Bluff.proxy);
-    expect(after.contracts.Bluff.version).to.equal("1.0.0");
+    expect(after.contracts.Bluff.version).to.equal("1.1.0");
   });
 
   it("refuses an unknown contract name", async function () {

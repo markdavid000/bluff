@@ -22,15 +22,16 @@ On Sepolia the chip token is Zama's `cUSDTMock` (`0x4E7B06D78965594eB5EF5414c357
 
 ### Player actions
 
-| Function                                | Caller                | Allowed when                      | Does                                                                                                              |
-| --------------------------------------- | --------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                        | Creates a free table; the creator takes seat 0 and hosts. Returns the id.                                         |
-| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, free table, not paused | Takes the next seat; filling the last seat starts the game.                                                       |
-| `startTable(id)`                        | host                  | `Waiting`, 2+ players             | Starts a free game, or the payment check of a paid one.                                                           |
-| `leaveTable(id)`                        | seated player         | any open status                   | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left. |
-| `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed     | Cancels and refunds everyone.                                                                                     |
-| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                         | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                   |
-| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists           | Makes every die of the round publicly decryptable; status `Revealing`.                                            |
+| Function                                | Caller                | Allowed when                                    | Does                                                                                                              |
+| --------------------------------------- | --------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                      | Creates a free table; the creator takes seat 0 and hosts. Returns the id.                                         |
+| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused  | Takes the next seat. A full table waits for its host; it leaves the open list until a seat frees up.              |
+| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark.                   |
+| `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready | Starts a free game, or the payment check of a paid one. Otherwise reverts with `NotEveryoneReady`.                |
+| `leaveTable(id)`                        | seated player         | any open status                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left. |
+| `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed                   | Cancels and refunds everyone.                                                                                     |
+| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                                       | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                   |
+| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists                         | Makes every die of the round publicly decryptable; status `Revealing`.                                            |
 
 ### Anyone-can-call actions
 
@@ -49,7 +50,6 @@ These keep a table moving; the web app sends them automatically.
 | Function                          | Does                                                                                    |
 | --------------------------------- | --------------------------------------------------------------------------------------- |
 | `seatPaidPlayer(player, request)` | Creates or joins a paid table for a paying player. Returns the table id and its buy-in. |
-| `startIfFull(id)`                 | Starts the payment check once the last seat is paid for.                                |
 
 ### Owner
 
@@ -57,15 +57,15 @@ These keep a table moving; the web app sends them automatically.
 
 ### Views
 
-`getTable(id)` returns the table and its seats. Also: `openTables(offset, limit)`, `openTableCount()`, `tableOf(player)`, `diceOf(id, player)`, `revealHandles(id)` (dice while `Revealing`, payment flags while `Verifying`), `cashier()`, `version()`.
+`getTable(id)` returns the table and its seats, each with its ready mark. Also: `openTables(offset, limit)`, `openTableCount()`, `tableOf(player)`, `diceOf(id, player)`, `revealHandles(id)` (dice while `Revealing`, payment flags while `Verifying`), `cashier()`, `version()`.
 
 ### Events
 
-`TableCreated`, `PlayerJoined`, `PlayerLeft`, `HostChanged`, `TableCancelled`, `TableListed`, `TableUnlisted`, `SeatVerificationStarted`, `SeatRemoved`, `TableReopened`, `GameStarted`, `RoundStarted`, `BidPlaced`, `BluffCalled`, `RoundSettled` (with every revealed face), `PlayerEliminated`, `TurnTimedOut`, `TurnPassed`, `GameEnded` (with reason and winners), `CashierSet`. Every event indexes the table id, and the player where there is one.
+`TableCreated`, `PlayerJoined`, `PlayerLeft`, `PlayerReady`, `HostChanged`, `TableCancelled`, `TableListed`, `TableUnlisted`, `SeatVerificationStarted`, `SeatRemoved`, `TableReopened`, `GameStarted`, `RoundStarted`, `BidPlaced`, `BluffCalled`, `RoundSettled` (with every revealed face), `PlayerEliminated`, `TurnTimedOut`, `TurnPassed`, `GameEnded` (with reason and winners), `CashierSet`. Every event indexes the table id, and the player where there is one.
 
 ### Errors
 
-`TableNotFound`, `WrongStatus`, `AlreadyAtTable`, `NotAtTable`, `NotHost`, `NotEnoughPlayers`, `InvalidSeatCount`, `InvalidBuyIn`, `DeadlineNotPassed`, `NotYourTurn`, `InvalidFace`, `InvalidQuantity`, `NoBidToCall`, `BidNotHigher`, `NotCashier`, `CashierAlreadySet`, `ZeroAddress`. Each carries the values the app needs to explain it.
+`TableNotFound`, `WrongStatus`, `AlreadyAtTable`, `NotAtTable`, `NotHost`, `NotEnoughPlayers`, `NotEveryoneReady`, `TableFull`, `InvalidSeatCount`, `InvalidBuyIn`, `DeadlineNotPassed`, `NotYourTurn`, `InvalidFace`, `InvalidQuantity`, `NoBidToCall`, `BidNotHigher`, `NotCashier`, `CashierAlreadySet`, `ZeroAddress`. Each carries the values the app needs to explain it.
 
 ## BluffCashier
 
@@ -111,9 +111,9 @@ The owner cannot read any of these. `confidentiality.test.ts` proves each row ag
 
 | Contract                    | Bytecode | Under the 24,576-byte limit |
 | --------------------------- | -------- | --------------------------- |
-| `Bluff` (50 optimizer runs) | 22,436   | 2,140                       |
-| `BluffCashier`              | 9,529    | 15,047                      |
-| `ChipFaucet`                | 3,863    | 20,713                      |
+| `Bluff` (50 optimizer runs) | 22,946   | 1,630                       |
+| `BluffCashier`              | 9,524    | 15,052                      |
+| `ChipFaucet`                | 8,433    | 16,143                      |
 
 Zama's per-transaction encryption limits are 20,000,000 HCU in total and 5,000,000 HCU along any dependency chain. The FHEVM mock enforces both, which `limits.test.ts` proves: `HCUTransactionDepthLimitExceeded` at 16 chained 64-bit multiplications, and `HCUTransactionLimitExceeded` at 40 independent ones. Every test runs under that mock, including:
 

@@ -3,6 +3,7 @@ import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signer
 import { AbiCoder, ZeroHash } from "ethers";
 import { fhevm } from "hardhat";
 import type { Bluff, BluffCashier, ChipFaucet, MockConfidentialUSDT } from "../../types";
+import { readyAndStart } from "./tables";
 
 export const CHIP = 1_000_000n;
 export const CREATE = 0;
@@ -84,7 +85,7 @@ export async function confirmSeats(bluff: Bluff, id: bigint, settler: HardhatEth
     .confirmSeats(id, result.abiEncodedClearValues, result.decryptionProof);
 }
 
-export async function seatPaidTable(
+async function payForSeats(
   contracts: {
     chips: MockConfidentialUSDT;
     cashier: BluffCashier;
@@ -100,6 +101,21 @@ export async function seatPaidTable(
   await (await payToCreate(chips, cashier, host, players.length, buyIn)).wait();
   const id = await bluff.tableOf(host.address);
   for (const player of others) await (await payToJoin(chips, cashier, player, id, buyIn)).wait();
+  return id;
+}
+
+export async function seatPaidTable(
+  contracts: {
+    chips: MockConfidentialUSDT;
+    cashier: BluffCashier;
+    bluff: Bluff;
+    faucet: ChipFaucet;
+  },
+  players: HardhatEthersSigner[],
+  buyIn: bigint
+): Promise<bigint> {
+  const id = await payForSeats(contracts, players, buyIn);
+  await readyAndStart(contracts.bluff, id, players);
   return id;
 }
 

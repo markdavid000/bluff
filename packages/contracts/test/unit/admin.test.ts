@@ -8,12 +8,12 @@ describe("admin", function () {
       const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
       expect(await bluff.owner()).to.equal(owner.address);
       expect(await bluff.cashier()).to.equal(await cashier.getAddress());
-      expect(await bluff.version()).to.equal("1.0.0");
+      expect(await bluff.version()).to.equal("1.1.0");
       expect(await bluff.paused()).to.equal(false);
       expect(await cashier.owner()).to.equal(owner.address);
       expect(await cashier.chips()).to.equal(await chips.getAddress());
       expect(await cashier.bluff()).to.equal(await bluff.getAddress());
-      expect(await cashier.version()).to.equal("1.0.0");
+      expect(await cashier.version()).to.equal("1.1.0");
       expect(await faucet.owner()).to.equal(owner.address);
       expect(await faucet.chips()).to.equal(await chips.getAddress());
       expect(await faucet.dollars()).to.equal(await dollars.getAddress());
@@ -117,6 +117,7 @@ describe("admin", function () {
       const { owner, alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
       await bluff.connect(owner).pause();
       await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
     });

@@ -47,6 +47,18 @@ describe("pay and join", function () {
     expect(await chipBalance(chips, bob)).to.equal(90n * CHIP);
   });
 
+  it("refuses a payer at a full paid table and leaves their chips untouched", async function () {
+    const { alice, bob, carol, chips, bluff, cashier, faucet } = await deployGameFixture();
+    for (const player of [alice, bob, carol]) await claimChips(faucet, player);
+    await payToCreate(chips, cashier, alice, 2, BUY_IN);
+    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
+    await expect(payToJoin(chips, cashier, carol, 1n, BUY_IN))
+      .to.be.revertedWithCustomError(bluff, "TableFull")
+      .withArgs(1n);
+    expect(await chipBalance(chips, carol)).to.equal(100n * CHIP);
+    expect((await bluff.getTable(1))[0].playerCount).to.equal(2n);
+  });
+
   it("hands back a payment that is not exactly the buy-in, and records nothing paid", async function () {
     const { alice, bob, carol, chips, bluff, cashier, faucet } = await deployGameFixture();
     for (const player of [alice, bob, carol]) await claimChips(faucet, player);
@@ -135,7 +147,7 @@ describe("pay and join", function () {
         .withArgs(alice.address);
     });
 
-    it("lets only the cashier seat paid players or start tables", async function () {
+    it("lets only the cashier seat paid players", async function () {
       const { alice, bluff } = await deployGameFixture();
       await expect(
         bluff.connect(alice).seatPaidPlayer(alice.address, {
@@ -146,9 +158,6 @@ describe("pay and join", function () {
           isPrivate: false,
         })
       )
-        .to.be.revertedWithCustomError(bluff, "NotCashier")
-        .withArgs(alice.address);
-      await expect(bluff.connect(alice).startIfFull(1))
         .to.be.revertedWithCustomError(bluff, "NotCashier")
         .withArgs(alice.address);
     });

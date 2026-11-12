@@ -48,7 +48,7 @@ Bluff's dice are encrypted. A computer player that plays fairly must be a real s
 
 - **Shown honestly.** Its nickname is set onchain to **"Baba Dice"**. The app shows a "Computer" badge on its seat, from a known-address list in `config/`, so nobody mistakes it for a person.
 - **In the app.**
-  - **Quick game** in the lobby creates a free 2-seat table and calls `/seat`; the game starts when the bot joins.
+  - **Quick game** in the lobby creates a free 2-seat table and calls `/seat`; the bot joins and marks itself ready with `setReady`, and the player starts the game (amended by [ADR-2026-11-12-waiting-room-and-ready](ADR-2026-11-12-waiting-room-and-ready.md)).
   - When **Play now** finds no open public table, it waits 30 seconds for a human and then offers "Play the computer instead".
   - If the bot can't be reached, Quick game says "The computer is resting. Try Play now", and nothing else breaks.
 

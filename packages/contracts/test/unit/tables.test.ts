@@ -79,11 +79,12 @@ describe("tables", function () {
       expect(await bluff.tableOf(bob.address)).to.equal(1n);
     });
 
-    it("starts the table when the last seat fills", async function () {
+    it("starts the table when the host starts it", async function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
-      const join = bluff.connect(bob).joinFreeTable(1);
-      await expect(join).to.emit(bluff, "GameStarted");
+      await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
+      await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
       const [table] = await bluff.getTable(1);
       expect(table.status).to.equal(PLAYING);
       expect(table.startedAt).to.be.greaterThan(0n);
@@ -93,7 +94,9 @@ describe("tables", function () {
     it("reports the game clock when a game starts", async function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
-      const receipt = await (await bluff.connect(bob).joinFreeTable(1)).wait();
+      await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
+      const receipt = await (await bluff.connect(alice).startTable(1)).wait();
       const event = receipt?.logs
         .map((log) => bluff.interface.parseLog(log))
         .find((parsed) => parsed?.name === "GameStarted");
@@ -107,10 +110,22 @@ describe("tables", function () {
         .withArgs(9n);
     });
 
-    it("refuses a full table, which has already started", async function () {
+    it("refuses a full table that is still waiting for its start", async function () {
       const { alice, bob, carol, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await expect(bluff.connect(carol).joinFreeTable(1))
+        .to.be.revertedWithCustomError(bluff, "TableFull")
+        .withArgs(1n);
+      expect((await bluff.getTable(1))[0].playerCount).to.equal(2n);
+    });
+
+    it("refuses a table that has already started", async function () {
+      const { alice, bob, carol, bluff } = await deployGameFixture();
+      await bluff.connect(alice).createFreeTable(3, false);
+      await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
+      await bluff.connect(alice).startTable(1);
       await expect(bluff.connect(carol).joinFreeTable(1))
         .to.be.revertedWithCustomError(bluff, "WrongStatus")
         .withArgs(1n, PLAYING);
@@ -134,6 +149,7 @@ describe("tables", function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
       await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
       expect((await bluff.getTable(1))[0].status).to.equal(PLAYING);
     });
@@ -159,6 +175,7 @@ describe("tables", function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
       await bluff.connect(alice).startTable(1);
       await expect(bluff.connect(alice).startTable(1))
         .to.be.revertedWithCustomError(bluff, "WrongStatus")

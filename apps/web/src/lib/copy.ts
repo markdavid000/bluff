@@ -16,6 +16,8 @@ export const errorCopy = {
     NoBidToCall: "Someone has to bid before you can call a bluff.",
     NotAtTable: "You are not sitting at this table.",
     NotEnoughPlayers: "Wait for at least one more player.",
+    NotEveryoneReady: "Wait until everyone at the table is ready.",
+    TableFull: "That table just filled up. Try another one, or start your own.",
     NotHost: "Only the host can do that.",
     NotYourTurn: "It is not your turn yet.",
     TableNotFound: "That table does not exist.",

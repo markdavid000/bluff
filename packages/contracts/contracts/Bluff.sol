@@ -61,6 +61,7 @@ contract Bluff is
         mapping(uint256 tableId => Seat[]) seats;
         mapping(address player => uint256 tableId) tableOf;
         EnumerableSet.UintSet openTables;
+        mapping(uint256 tableId => mapping(address player => bool)) ready;
     }
 
     bytes32 private constant _BLUFF_STORAGE_LOCATION =
@@ -87,7 +88,6 @@ contract Bluff is
         Table storage table = _requireJoinable($, id, msg.sender);
         if (table.buyIn != 0) revert InvalidBuyIn(table.buyIn);
         _seatPlayer($, id, msg.sender);
-        _startIfFull($, id);
     }
 
     function seatPaidPlayer(
@@ -103,10 +103,12 @@ contract Bluff is
         tableBuyIn = $.tables[id].buyIn;
     }
 
-    function startIfFull(uint256 id) external {
+    function setReady(uint256 id, bool isReady) external {
         BluffStorage storage $ = _getBluffStorage();
-        _requireCashier($);
-        _startIfFull($, id);
+        _requireSeated($, id, msg.sender);
+        _requireStatus($, id, TableStatus.Waiting);
+        $.ready[id][msg.sender] = isReady;
+        emit PlayerReady(id, msg.sender, isReady);
     }
 
     function startTable(uint256 id) external {
@@ -114,6 +116,11 @@ contract Bluff is
         Table storage table = _requireStatus($, id, TableStatus.Waiting);
         if (table.host != msg.sender) revert NotHost(id);
         if (table.playerCount < TableRules.MIN_SEATS) revert NotEnoughPlayers(id);
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) {
+            address player = seats[i].player;
+            if (player != table.host && !$.ready[id][player]) revert NotEveryoneReady(id);
+        }
         _startGame($, id);
     }
 
@@ -270,7 +277,13 @@ contract Bluff is
         Seat[] storage stored = $.seats[id];
         seats = new SeatView[](stored.length);
         for (uint256 i = 0; i < stored.length; ++i) {
-            seats[i] = SeatView(stored[i].player, stored[i].dice, stored[i].missedTurns, stored[i].isActive);
+            seats[i] = SeatView(
+                stored[i].player,
+                stored[i].dice,
+                stored[i].missedTurns,
+                stored[i].isActive,
+                $.ready[id][stored[i].player]
+            );
         }
     }
 
@@ -312,7 +325,7 @@ contract Bluff is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
@@ -369,6 +382,7 @@ contract Bluff is
         ++table.playerCount;
         $.tableOf[player] = id;
         emit PlayerJoined(id, player, table.playerCount - 1);
+        if (table.playerCount == table.seatCount) _unlist($, id);
     }
 
     function _removeSeat(BluffStorage storage $, uint256 id, address player) private {
@@ -382,11 +396,7 @@ contract Bluff is
         seats.pop();
         --$.tables[id].playerCount;
         delete $.tableOf[player];
-    }
-
-    function _startIfFull(BluffStorage storage $, uint256 id) private {
-        Table storage table = $.tables[id];
-        if (table.playerCount == table.seatCount) _startGame($, id);
+        delete $.ready[id][player];
     }
 
     function _startGame(BluffStorage storage $, uint256 id) private {
@@ -469,6 +479,7 @@ contract Bluff is
             _cancel($, id);
         } else {
             _ensureHost($, id);
+            if (!table.isPrivate) _list($, id);
         }
         if (refunded) $.cashier.refund(id, player);
     }
@@ -664,6 +675,7 @@ contract Bluff is
         address player
     ) private view returns (Table storage table) {
         table = _requireStatus($, id, TableStatus.Waiting);
+        if (table.playerCount == table.seatCount) revert TableFull(id);
         _requireNotAtTable($, player);
     }
 

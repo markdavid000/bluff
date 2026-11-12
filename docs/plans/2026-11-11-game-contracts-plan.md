@@ -151,6 +151,7 @@ struct SeatView {
   uint8 dice;
   uint8 missedTurns;
   bool isActive;
+  bool ready;
 }
 ```
 
@@ -227,7 +228,7 @@ Fields are ordered so a table's clear values pack into three storage slots. Only
 | Function                                                       | Who            | When                             | Does                                                                                                         |
 | -------------------------------------------------------------- | -------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `createFreeTable(uint8 seatCount, bool isPrivate) → id`        | anyone         | not at a table, not paused       | Creates a free table; the creator takes seat 0                                                               |
-| `joinFreeTable(uint256 id)`                                    | anyone         | `Waiting`, seat free, not paused | Takes the next seat; filling the last seat starts the table                                                  |
+| `joinFreeTable(uint256 id)`                                    | anyone         | `Waiting`, seat free, not paused | Takes the next seat; a full table waits for its host to start it                                             |
 | `onConfidentialTransferReceived(operator, from, amount, data)` | the chip token | not paused                       | Paid create or join, decoded from `data` as `(JoinAction, seatCount or id, isPrivate)`; returns `paidInFull` |
 | `startTable(uint256 id)`                                       | host           | `Waiting`, 2+ players            | Starts: `Verifying` for paid tables, the first roll for free ones                                            |
 | `leaveTable(uint256 id)`                                       | seated player  | any open status                  | Refund while waiting or verifying; forfeit in a game                                                         |
