@@ -11,4 +11,13 @@ export type GameIconName =
   | "3d-coin"
   | "setting"
   | "trophy"
-  | "tick";
+  | "tick"
+  | "copy"
+  | "dollar"
+  | "lock"
+  | "money-bag"
+  | "plus"
+  | "rocket"
+  | "target"
+  | "wallet"
+  | "zoom";

@@ -9,7 +9,7 @@ export function AppHeader() {
   return (
     <header className="w-full">
       <PatternBand className="h-3 w-full" />
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/play" className="font-heading text-3xl">
           {siteConfig.name}
         </Link>

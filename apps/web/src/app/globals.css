@@ -84,6 +84,14 @@
   --cowrie: oklch(0.95 0.03 90);
   --cowrie-shade: oklch(0.76 0.06 72);
   --cowrie-slit: oklch(0.18 0.02 45);
+  --skin-deep: oklch(0.36 0.06 40);
+  --skin-mid: oklch(0.46 0.08 48);
+  --skin-warm: oklch(0.57 0.09 55);
+  --zinc: oklch(0.72 0.02 240);
+  --glass: oklch(0.84 0.06 225);
+  --street-shadow: oklch(0.55 0.06 55 / 0.22);
+  --zinc-edge: oklch(0.56 0.03 240);
+  --outline: oklch(0.25 0.04 40);
   --glow-top: oklch(0.8 0.13 75 / 0.55);
   --glow-bottom: oklch(0.36 0.08 35 / 0.45);
   --toast: oklch(0.38 0.085 38);
@@ -132,6 +140,14 @@
   --cowrie: oklch(0.92 0.03 90);
   --cowrie-shade: oklch(0.72 0.06 70);
   --cowrie-slit: oklch(0.16 0.02 45);
+  --skin-deep: oklch(0.36 0.06 40);
+  --skin-mid: oklch(0.46 0.08 48);
+  --skin-warm: oklch(0.57 0.09 55);
+  --zinc: oklch(0.72 0.02 240);
+  --glass: oklch(0.86 0.16 80);
+  --street-shadow: oklch(0.13 0.04 275);
+  --zinc-edge: oklch(0.56 0.03 240);
+  --outline: oklch(0.25 0.04 40);
   --glow-top: oklch(0.62 0.07 75 / 0.18);
   --glow-bottom: oklch(0.32 0.06 280 / 0.35);
   --toast: oklch(0.42 0.09 40);
@@ -182,6 +198,49 @@
   background-image:
     radial-gradient(ellipse at top, var(--glow-top) 0%, transparent 55%),
     radial-gradient(ellipse at bottom, var(--glow-bottom) 0%, transparent 60%);
+}
+
+@keyframes street-move {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0deg);
+  }
+  80% {
+    transform: rotate(-14deg);
+  }
+  90% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes street-hop {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  70% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(0);
+  }
+  88% {
+    transform: translateY(-5px);
+  }
+}
+
+@utility animate-street-move {
+  animation: street-move 4.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 85% 15%;
+}
+
+@utility animate-street-hop {
+  animation: street-hop 3.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
 }
 
 @utility preserve-3d {

@@ -1,11 +1,16 @@
 "use client";
 
-import { useLogin, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
+import { chipFaucetAbi } from "@bluff/contracts";
+import { useCreateWallet, useLogin, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
+import type { Address } from "viem";
+import { usePublicClient } from "wagmi";
+import { contracts, gameChain } from "@/config/chain";
 import { notify } from "@/lib/notify";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { accountCopy } from "../copy";
+import { makeWalletOnce } from "../lib/player-wallet";
 import { openSession } from "../lib/session-client";
 
 export type SignInMethod = "google" | "email" | "wallet";
@@ -16,7 +21,9 @@ const USER_CANCELLED = new Set(["exited_auth_flow", "user_exited_auth_flow"]);
 
 export function useSignIn(next: string | undefined) {
   const router = useRouter();
-  const { ready, authenticated, getAccessToken } = usePrivy();
+  const { ready, authenticated, user, getAccessToken } = usePrivy();
+  const { createWallet } = useCreateWallet();
+  const publicClient = usePublicClient({ chainId: gameChain.id });
   const [chosen, setChosen] = useState<SignInState>({ kind: "choosing" });
   const [returnFailed, setReturnFailed] = useState(false);
   const destination = safeNextPath(next);
@@ -39,9 +46,21 @@ export function useSignIn(next: string | undefined) {
   const { initOAuth } = useLoginWithOAuth({ onError: failed });
 
   const enter = useEffectEvent(async () => {
+    if (!publicClient) throw new Error("The game network is not ready yet.");
+    if (!user) throw new Error("Privy has not shared the player yet.");
+    const address = (user.wallet?.address ??
+      (await makeWalletOnce(user.id, () => createWallet()))) as Address;
     const token = await getAccessToken();
     if (!token || !(await openSession(token))) throw new Error("Privy gave no usable session.");
-    router.replace(destination);
+    const nickname = await publicClient.readContract({
+      address: contracts.faucet,
+      abi: chipFaucetAbi,
+      functionName: "nicknameOf",
+      args: [address],
+    });
+    router.replace(
+      nickname === "" ? `/welcome?next=${encodeURIComponent(destination)}` : destination
+    );
   });
 
   useEffect(() => {

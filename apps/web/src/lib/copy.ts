@@ -27,5 +27,7 @@ export const errorCopy = {
     InvalidAvatar: "Pick one of the faces shown.",
     InvalidAvatarImage: "That picture could not be used. Please try another.",
     EnforcedPause: "The game is taking a short break. Please try again soon.",
+    InvalidUnwrapRequest:
+      "That cash out has already finished. Your practice dollars are in your account.",
   },
 } as const;

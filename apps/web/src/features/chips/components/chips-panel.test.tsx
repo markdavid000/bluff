@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { chipsCopy } from "../copy";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChipsPanel } from "./chips-panel";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
@@ -35,6 +36,16 @@ let panel: Panel = base;
 
 vi.mock("../hooks/use-chips-panel", () => ({ useChipsPanel: () => panel }));
 
+function showPanel() {
+  render(
+    <Dialog open>
+      <DialogContent>
+        <ChipsPanel />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 beforeEach(() => {
   panel = { ...base };
   vi.clearAllMocks();
@@ -42,7 +53,7 @@ beforeEach(() => {
 
 describe("ChipsPanel", () => {
   it("shows the balance, the free chips and cash out", () => {
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getAllByText("150")).not.toHaveLength(0);
     expect(screen.queryByText(chipsCopy.seeCashOuts)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.claim }));
@@ -58,7 +69,7 @@ describe("ChipsPanel", () => {
       claim: { status: "loading" },
       canCashOut: false,
     };
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getByRole("status")).toHaveTextContent(chipsCopy.balanceLoading);
     expect(screen.getByRole("button", { name: chipsCopy.cashOut })).toBeDisabled();
   });
@@ -69,7 +80,7 @@ describe("ChipsPanel", () => {
       balance: { status: "hidden", reveal, revealing: false, asksWallet: true },
       canCashOut: false,
     };
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getByText(chipsCopy.showChipsHelp)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.showChips }));
     expect(reveal).toHaveBeenCalledOnce();
@@ -77,7 +88,7 @@ describe("ChipsPanel", () => {
 
   it("explains a failed count and offers to try again", () => {
     panel = { ...base, balance: { status: "failed", retry }, canCashOut: false };
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getByText(chipsCopy.balanceProblem)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.tryAgain }));
     expect(retry).toHaveBeenCalledOnce();
@@ -85,14 +96,14 @@ describe("ChipsPanel", () => {
 
   it("counts down when the free chips are not ready yet", () => {
     panel = { ...base, claim: { status: "waiting", remainingMs: (2 * 3600 + 5 * 60 + 9) * 1000 } };
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getByRole("timer")).toHaveAccessibleName(`${chipsCopy.claimNext} 02:05:09`);
     expect(screen.queryByRole("button", { name: chipsCopy.claim })).not.toBeInTheDocument();
   });
 
   it("offers to finish an unfinished cash out, and holds new ones until then", () => {
     panel = { ...base, resume, canCashOut: false };
-    render(<ChipsPanel />);
+    showPanel();
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutResume }));
     expect(resume).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: chipsCopy.cashOut })).toBeDisabled();
@@ -100,7 +111,7 @@ describe("ChipsPanel", () => {
 
   it("shows cashed out practice dollars and where anyone can see them", () => {
     panel = { ...base, cashOut: { ...(base.cashOut as object), dollars: 25_000_000n } };
-    render(<ChipsPanel />);
+    showPanel();
     expect(screen.getAllByText(chipsCopy.dollars("25"))).not.toHaveLength(0);
     const record = screen.getByRole("link", { name: chipsCopy.seeCashOuts });
     expect(record).toHaveAttribute("href", "https://sepolia.etherscan.io/token/0xdo?a=0xme");

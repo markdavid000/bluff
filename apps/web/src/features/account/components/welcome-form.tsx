@@ -12,8 +12,8 @@ import { useWelcome } from "../hooks/use-welcome";
 
 const OPPONENT_FACE = 11;
 
-export function WelcomeForm({ next }: { next: string | undefined }) {
-  const welcome = useWelcome(next);
+export function WelcomeForm() {
+  const welcome = useWelcome();
   const calm = useReducedMotion();
   const nameId = useId();
   const helpId = useId();
@@ -77,7 +77,7 @@ export function WelcomeForm({ next }: { next: string | undefined }) {
                       maxLength={20}
                       autoComplete="nickname"
                       aria-describedby={helpId}
-                      aria-invalid={welcome.nicknameError ? true : undefined}
+                      aria-invalid={welcome.nicknameInvalid || undefined}
                       className="min-h-12 w-full rounded-xl border-2 border-tile-edge bg-card px-4 font-game text-xl outline-none focus-visible:ring-4 focus-visible:ring-ring/60 aria-invalid:border-destructive"
                     />
                   </motion.div>
@@ -95,14 +95,8 @@ export function WelcomeForm({ next }: { next: string | undefined }) {
                 {accountCopy.suggestAnother}
               </ActionButton>
             </div>
-            <p
-              id={helpId}
-              className={cn(
-                "text-sm",
-                welcome.nicknameError ? "text-destructive" : "text-muted-foreground"
-              )}
-            >
-              {welcome.nicknameError ?? accountCopy.nicknameHelp}
+            <p id={helpId} className="text-sm text-muted-foreground">
+              {accountCopy.nicknameHelp}
             </p>
           </div>
 
@@ -146,10 +140,10 @@ export function WelcomeForm({ next }: { next: string | undefined }) {
             disabled={!welcome.canSave}
             working={welcome.working}
             workingLabel={
-              welcome.confirmInWallet ? accountCopy.confirmInWallet : accountCopy.welcomeWorking
+              welcome.confirmInWallet ? accountCopy.confirmInWallet : welcome.workingLabel
             }
           >
-            {accountCopy.welcomeSubmit}
+            {welcome.submitLabel}
           </ActionButton>
         </form>
       </PatternFrame>
