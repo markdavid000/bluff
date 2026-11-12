@@ -135,14 +135,15 @@ src/features/<name>/
 
 The planned features:
 
-| Feature    | Player area                                                       |
-| ---------- | ----------------------------------------------------------------- |
-| `landing`  | The front page that explains the game                             |
-| `account`  | Signing in with Google or email, or with an own wallet            |
-| `lobby`    | Creating, finding and joining tables                              |
-| `table`    | Playing: own dice, bids, calling a bluff, the reveal, the results |
-| `chips`    | Chip balance, getting practice chips, cashing out                 |
-| `fairness` | The "How is this fair?" panel                                     |
+| Feature    | Player area                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| `landing`  | The front page that explains the game                                                    |
+| `account`  | Signing in with Google or email, or with an own wallet                                   |
+| `lobby`    | Creating, finding and joining tables                                                     |
+| `table`    | Playing: own dice, bids, calling a bluff, the reveal, the results                        |
+| `chips`    | Chip balance, getting practice chips, cashing out                                        |
+| `fairness` | The "How is this fair?" panel                                                            |
+| `design`   | The `/design` sample page from the design pass; removed once real screens use its pieces |
 
 A feature folder is created by the change that first needs it.
 

@@ -349,7 +349,11 @@ export const tableCopy = {
   rolling: "Rolling your dice…",
   bid: (quantity: number, face: string) => `${quantity} × ${face}`,
   raise: "Bid",
-  callBluff: "Call bluff",
+  callBluff: (name: string) => `Call bluff on ${name}`,
+  someoneBid: (name: string, quantity: number, face: string) => `${name} bid ${quantity} × ${face}`,
+  calledYou: (name: string) => `${name} says you are bluffing!`,
+  calledSomeone: (caller: string, bidder: string, bid: string) =>
+    `${caller} called ${bidder}'s bluff on ${bid}`,
   mustBeHigher: (quantity: number, face: string) =>
     `Your bid has to be higher than ${quantity} × ${face}`,
   revealing: "Revealing dice…",
@@ -450,6 +454,7 @@ Every legal bid is on screen at once, and nothing illegal can be chosen.
 - **The grid holds every bid.** Rows are quantities from 1 to the dice in play; columns are the faces 2 to 6. Bids that are not higher than the current one are dimmed and can't be chosen. Ones are not a column, because they are wild; a small note says "Ones count as every face".
 - **It opens on the right row.** The grid scrolls to the first legal row, so the likely bids are under the thumb. On a laptop, all rows fit.
 - **Quick picks.** Three one-tap suggestions above the grid: the same quantity with the next face, one more of the lowest face, and one more of the current face. A quick pick selects; the big button confirms.
+- **Call bluff names who you are calling.** A call always challenges the last bid, so the button reads "Call bluff on Sly Fox", naming the player who made it.
 - **The button says the bid.** "Bid 5 × five" is spelled out in words for the screen reader ("Bid five fives"). Before a selection it reads "Pick a bid".
 - **Your own count helps.** "Your dice that count for fives: 2" updates as the selection changes. It counts your dice showing that face plus your ones, and only you see it.
 - **The top bid.** When the bid already reaches every die in play showing six, the grid is replaced by "No higher bid is possible. Call the bluff", and only Call bluff remains.

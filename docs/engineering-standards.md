@@ -160,7 +160,9 @@ Toasts go through one `notify` module in `src/lib/`. No feature calls the toast 
 - One toast per action, updated in place by id. Never a new toast per status.
 - At most three toasts visible. Duplicates collapse into one.
 - A problem tied to one input (an invalid bid) shows next to that input, not as a toast.
-- Things the player can already see change on screen (an opponent's bid) do not also get a toast.
+- Every bid gets a short `info` toast naming who bid what ("Sly Fox bid 4 × five"), so a player never misses a move while looking away. A newer bid replaces the older toast instead of stacking.
+- A bluff call tells each player what it means for them: the accused sees "Kola says you are bluffing!", and everyone else sees "Kola called Sly Fox's bluff on 4 × five". The talking drum plays with it.
+- Other changes the player can already see on screen (a die count, the turn moving) do not also get a toast.
 
 ### Errors
 
@@ -228,7 +230,7 @@ Bluff is for everyone, not only people who know crypto. Player-facing text descr
 
 - Tailwind CSS v4 only, configured in `apps/web/src/app/globals.css`. No CSS-in-JS, no inline `style` except for values computed at runtime.
 - Use theme tokens (`bg-background`, `text-muted-foreground`, `text-success`), never raw colour values in components. Change the palette in `globals.css`, in one place.
-- Merge classes with `cn` from `@/lib/utils`. Never concatenate class strings by hand.
+- Merge classes with `cn` from the `cn` package (shadcn's class merger, which current shadcn components import). Never concatenate class strings by hand.
 - Variants use `cva`, defined once beside the component.
 - UI primitives come from shadcn (`pnpm dlx shadcn@latest add <name>`). Add a component the day a feature uses it, not before. Generated components may be edited; record why in the PR.
 - Motion animates `transform` and `opacity` only and respects `prefers-reduced-motion`.
