@@ -55,4 +55,11 @@ A full table no longer starts by itself. Every seated player marks themselves re
 - **Storage layout:** `validate-layout:sepolia` confirms `Bluff` and `BluffCashier` are safe upgrades of the 1.0.0 implementations on Sepolia.
 - **Web:** 208 tests passing, including the two new sentences.
 - **Preflight:** `pnpm preflight` passed.
-- **Not yet:** the upgrade on Sepolia and the two-account run (free and paid). This runs after CI passes; the results are added to this note before merging.
+- **Sepolia upgrade** (`upgrade:sepolia`, the cashier first, so paid joins never called a missing function):
+  - `BluffCashier` 1.0.0 → 1.1.0 at implementation `0xA10e003BfE989b4651602BC310208461bF96c322`;
+  - `Bluff` 1.0.0 → 1.1.0 at `0xC4bee5463fad2bEf09B80e321CeE2d7FD01B6546`;
+  - both are verified on Etherscan, both proxies are unchanged, and they're still linked to each other.
+- **Sepolia end to end** (`test:sepolia`, two accounts, both passing):
+  - a free game: create, join, ready, host start and roll, bid, call, reveal, leave;
+  - a paid game: claim, pay to create and join, ready, host start, the payment check, bid, call, reveal, the winner paid.
+  - Marking ready and the host start each took 11 to 13 seconds to land.
