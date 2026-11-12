@@ -2,11 +2,13 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { SoundName } from "@/config/sounds";
 import { useSound } from "@/hooks/use-sound";
 import { GameIcon, type GameIconName } from "./game-icon";
+import { SpinningDie } from "./spinning-die";
 
 const tileVariants = cva(
   [
@@ -60,6 +62,9 @@ export function ActionButton({
   ...props
 }: ActionButtonProps) {
   const { play } = useSound();
+  const calm = useReducedMotion();
+  const showWorking = working && workingLabel !== undefined;
+  const iconSize = size === "large" ? 34 : size === "small" ? 22 : 28;
   return (
     <Button
       {...props}
@@ -70,8 +75,30 @@ export function ActionButton({
         onPointerDown?.(event);
       }}
     >
-      {icon && <GameIcon name={icon} size={size === "large" ? 34 : size === "small" ? 22 : 28} />}
-      {working && workingLabel ? workingLabel : children}
+      <span className="relative inline-grid overflow-hidden">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={showWorking ? "working" : "ready"}
+            className="inline-flex items-center justify-center gap-2"
+            initial={calm ? { opacity: 0 } : { opacity: 0, y: "70%", filter: "blur(2px)" }}
+            animate={{ opacity: 1, y: "0%", filter: "blur(0px)" }}
+            exit={calm ? { opacity: 0 } : { opacity: 0, y: "-70%", filter: "blur(2px)" }}
+            transition={calm ? { duration: 0.12 } : { type: "spring", stiffness: 520, damping: 34 }}
+          >
+            {showWorking ? (
+              <>
+                <SpinningDie className={size === "large" ? "size-6" : "size-5"} />
+                {workingLabel}
+              </>
+            ) : (
+              <>
+                {icon && <GameIcon name={icon} size={iconSize} />}
+                {children}
+              </>
+            )}
+          </motion.span>
+        </AnimatePresence>
+      </span>
     </Button>
   );
 }

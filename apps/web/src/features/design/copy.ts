@@ -3,12 +3,6 @@ export const designCopy = {
   intro:
     "A sample of the board, the dice, the buttons and the messages. Try it on your phone and in both day and night.",
   settings: "Settings",
-  day: "Day",
-  night: "Night",
-  sounds: "Sounds",
-  music: "Music",
-  on: "On",
-  off: "Off",
   typeTitle: "Type",
   typeHeading: "Roll in secret",
   typeGame: "Bid five fives",

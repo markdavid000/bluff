@@ -3,7 +3,7 @@
 - **Status:** Approved
 - **Approved by:** (MarkDavid, 10th Nov 2026)
 - **Supersedes:** in [ADR-2026-11-10-game-rules.md](ADR-2026-11-10-game-rules.md), the dice count, the time limits and the end of the game. Every other rule there stands.
-- **Superseded in part by:** [ADR-2026-11-11-chips-and-buy-ins.md](ADR-2026-11-11-chips-and-buy-ins.md) (claiming more practice chips, the "not enough chips" case)
+- **Superseded in part by:** [ADR-2026-11-11-chips-and-buy-ins.md](ADR-2026-11-11-chips-and-buy-ins.md) (claiming more practice chips, the "not enough chips" case); [ADR-2026-11-12-route-protection.md](ADR-2026-11-12-route-protection.md) (watching needs sign-in)
 - **Companion:** [ADR-2026-11-10-game-flow-and-timing-for-dummies.md](ADR-2026-11-10-game-flow-and-timing-for-dummies.md)
 - **Player guide:** [how-to-play.md](../how-to-play.md)
 
@@ -149,7 +149,7 @@ The penalty for leaving a game is losing the buy-in. There is no other penalty a
 
 ### Watching
 
-A public game in progress can be watched read-only from the lobby: bids, dice counts and reveals, never hidden dice. Watching needs no sign-in.
+A public game in progress can be watched read-only from the lobby: bids, dice counts and reveals, never hidden dice. Watching needs sign-in, like every game page ([ADR-2026-11-12-route-protection](ADR-2026-11-12-route-protection.md) superseded the earlier "no sign-in" rule).
 
 ## Diagram
 

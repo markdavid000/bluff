@@ -8,6 +8,7 @@ import type { GameIconName } from "@/components/shared/game-icon";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import { RaisedCard } from "@/components/shared/raised-card";
 import { ToastTile } from "@/components/shared/toast-tile";
+import { ScreenControls } from "@/components/shared/screen-controls";
 import { TumblingDie } from "@/components/shared/tumbling-die";
 import type { Face } from "@/lib/dice-physics";
 import { designCopy } from "../copy";
@@ -33,34 +34,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Switch({
-  label,
-  on,
-  icon,
-  onToggle,
-}: {
-  label: string;
-  on: boolean;
-  icon: GameIconName;
-  onToggle: () => void;
-}) {
-  return (
-    <ActionButton
-      tone={on ? "green" : "quiet"}
-      size="small"
-      icon={icon}
-      aria-pressed={on}
-      onClick={onToggle}
-    >
-      {label}
-      <span className="font-normal">{on ? designCopy.on : designCopy.off}</span>
-    </ActionButton>
-  );
-}
-
 export function DesignShowcase({ board }: { board: ReactNode }) {
   const page = useDesignShowcase();
-  const { settings } = page;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-14 px-4 py-10 sm:px-8">
@@ -71,24 +46,7 @@ export function DesignShowcase({ board }: { board: ReactNode }) {
 
       <Section title={designCopy.settings}>
         <div className="flex flex-wrap gap-3">
-          <Switch
-            label={designCopy.night}
-            icon={settings.theme === "night" ? "moon" : "sun"}
-            on={settings.theme === "night"}
-            onToggle={() => page.setTheme(settings.theme === "night" ? "day" : "night")}
-          />
-          <Switch
-            label={designCopy.sounds}
-            icon="headphone"
-            on={settings.sounds}
-            onToggle={page.toggleSounds}
-          />
-          <Switch
-            label={designCopy.music}
-            icon="music"
-            on={settings.music}
-            onToggle={page.toggleMusic}
-          />
+          <ScreenControls />
         </div>
       </Section>
 

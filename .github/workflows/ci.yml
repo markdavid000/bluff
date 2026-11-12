@@ -139,6 +139,9 @@ jobs:
     name: build and smoke test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_PRIVY_APP_ID: cmwbbcuel00aj0hk11kbgxv94
+      NEXT_PUBLIC_SEPOLIA_RPC_URL: https://ethereum-sepolia-rpc.publicnode.com
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -152,6 +155,9 @@ jobs:
           path: apps/web/.next/cache
           key: next-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: next-${{ hashFiles('pnpm-lock.yaml') }}-
+      - name: Session secret for this run only
+        run: echo "SESSION_SECRET=$(openssl rand -base64 48 | tr -d '\n')" >> "$GITHUB_ENV"
+      - run: pnpm compile
       - run: pnpm build
       - run: pnpm --filter @bluff/web smoke
 

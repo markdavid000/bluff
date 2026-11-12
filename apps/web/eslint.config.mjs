@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import pluginQuery from "@tanstack/eslint-plugin-query";
 import boundaries from "eslint-plugin-boundaries";
 
 const FEATURE_ENTRY = { element: { type: "feature", fileInternalPath: ["index.ts", "server.ts"] } };
@@ -8,6 +9,7 @@ const FEATURE_ENTRY = { element: { type: "feature", fileInternalPath: ["index.ts
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
+  ...pluginQuery.configs["flat/recommended"],
   globalIgnores([".next/**", ".vercel/**", "coverage/**", "next-env.d.ts"]),
   {
     rules: {
@@ -60,6 +62,7 @@ export default defineConfig([
       "boundaries/include": ["src/**/*"],
       "boundaries/elements": [
         { type: "app", pattern: "src/app" },
+        { type: "proxy", pattern: "src/proxy*", mode: "file" },
         { type: "layout", pattern: "src/components/layout" },
         { type: "shared", pattern: "src/components/shared" },
         { type: "ui", pattern: "src/components/ui" },
@@ -90,6 +93,10 @@ export default defineConfig([
                   FEATURE_ENTRY,
                 ],
               },
+            },
+            {
+              from: { element: { type: "proxy" } },
+              allow: { to: { element: { type: ["proxy", "lib", "config"] } } },
             },
             {
               from: { element: { type: "layout" } },

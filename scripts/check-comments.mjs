@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import ts from "typescript";
 
@@ -21,7 +21,9 @@ function filesToCheck() {
       : execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
           encoding: "utf8",
         }).split("\n");
-  return files.filter((file) => CHECKED_EXTENSIONS.test(file) && !GENERATED.test(file));
+  return files.filter(
+    (file) => existsSync(file) && CHECKED_EXTENSIONS.test(file) && !GENERATED.test(file)
+  );
 }
 
 function scriptComments(source, file) {

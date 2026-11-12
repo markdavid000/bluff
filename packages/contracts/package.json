@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "clean": "rimraf ./fhevmTemp ./artifacts ./cache ./coverage ./types ./coverage.json",
-    "compile": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat compile",
+    "compile": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat compile && node scripts/export-abis.mjs",
     "lint": "pnpm lint:sol && pnpm lint:ts",
     "lint:sol": "solhint --max-warnings 0 --disc --noPoster \"contracts/**/*.sol\"",
     "lint:ts": "eslint --max-warnings=0 .",
@@ -56,5 +56,8 @@
     "typechain": "8.3.2",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1"
+  },
+  "exports": {
+    ".": "./exports/index.ts"
   }
 }

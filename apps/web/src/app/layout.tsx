@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Irish_Grover, Nunito } from "next/font/google";
+import { Atmosphere } from "@/components/shared/atmosphere";
 import { siteConfig } from "@/config/site";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const irishGrover = Irish_Grover({
@@ -36,8 +38,18 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${irishGrover.variable} ${nunito.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
+    <html
+      lang="en"
+      className={`${irishGrover.variable} ${nunito.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
+      <body className="flex min-h-full flex-col bg-background text-foreground">
+        <Atmosphere />
+        {children}
+      </body>
     </html>
   );
 }
