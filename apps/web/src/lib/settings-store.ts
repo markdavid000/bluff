@@ -1,25 +1,47 @@
-type Theme = "day" | "night";
+import type { ThemeSetting } from "./theme";
+
+export const MUSIC_TRACKS = ["drum", "bell", "both"] as const;
+
+export type MusicTrack = (typeof MUSIC_TRACKS)[number];
 
 export interface Settings {
   music: boolean;
+  musicTrack: MusicTrack;
   sounds: boolean;
   calmMotion: boolean;
-  theme: Theme;
+  theme: ThemeSetting;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   music: true,
+  musicTrack: "both",
   sounds: true,
   calmMotion: false,
-  theme: "day",
+  theme: "auto",
 };
 
 const STORAGE_KEY = "bluff.settings";
 
 type Listener = () => void;
 
-function isSettings(value: unknown): value is Partial<Settings> {
+const THEMES: readonly ThemeSetting[] = ["auto", "day", "night"];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function fromSaved(saved: Record<string, unknown>): Settings {
+  const pick = <T>(value: unknown, allowed: readonly T[], fallback: T): T =>
+    allowed.includes(value as T) ? (value as T) : fallback;
+  const flag = (value: unknown, fallback: boolean) =>
+    typeof value === "boolean" ? value : fallback;
+  return {
+    music: flag(saved.music, DEFAULT_SETTINGS.music),
+    musicTrack: pick(saved.musicTrack, MUSIC_TRACKS, DEFAULT_SETTINGS.musicTrack),
+    sounds: flag(saved.sounds, DEFAULT_SETTINGS.sounds),
+    calmMotion: flag(saved.calmMotion, DEFAULT_SETTINGS.calmMotion),
+    theme: pick(saved.theme, THEMES, DEFAULT_SETTINGS.theme),
+  };
 }
 
 function read(storage: Storage | null): Settings {
@@ -28,8 +50,7 @@ function read(storage: Storage | null): Settings {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw === null) return DEFAULT_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
-    if (!isSettings(parsed)) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    return isRecord(parsed) ? fromSaved(parsed) : DEFAULT_SETTINGS;
   } catch (error) {
     console.warn("Bluff could not read saved settings; using the defaults for now.", error);
     return DEFAULT_SETTINGS;

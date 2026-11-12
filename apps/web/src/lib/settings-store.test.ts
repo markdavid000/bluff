@@ -16,13 +16,14 @@ function memoryStorage(): Storage {
 }
 
 describe("settings store", () => {
-  it("starts with music and sounds on, normal motion and day", () => {
+  it("starts with music and sounds on, normal motion, and the device's day or night", () => {
     expect(createSettingsStore(memoryStorage()).get()).toEqual(DEFAULT_SETTINGS);
     expect(DEFAULT_SETTINGS).toEqual({
       music: true,
+      musicTrack: "both",
       sounds: true,
       calmMotion: false,
-      theme: "day",
+      theme: "auto",
     });
   });
 
@@ -30,6 +31,21 @@ describe("settings store", () => {
     const storage = memoryStorage();
     createSettingsStore(storage).update({ sounds: false, theme: "night" });
     expect(createSettingsStore(storage).get()).toMatchObject({ sounds: false, theme: "night" });
+  });
+
+  it("remembers the chosen music", () => {
+    const storage = memoryStorage();
+    createSettingsStore(storage).update({ musicTrack: "bell" });
+    expect(createSettingsStore(storage).get().musicTrack).toBe("bell");
+  });
+
+  it("ignores saved values that make no sense", () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      "bluff.settings",
+      JSON.stringify({ musicTrack: "opera", theme: "purple", sounds: "yes", music: false })
+    );
+    expect(createSettingsStore(storage).get()).toEqual({ ...DEFAULT_SETTINGS, music: false });
   });
 
   it("tells subscribers about a change", () => {

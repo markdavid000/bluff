@@ -12,6 +12,7 @@ export default tseslint.config(
       "fhevmTemp/**",
       "types/**",
       "deployments/**",
+      "exports/abis.ts",
     ],
   },
   eslint.configs.recommended,

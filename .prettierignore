@@ -11,3 +11,4 @@ packages/contracts/types
 packages/contracts/fhevmTemp
 packages/contracts/deployments
 packages/contracts/.openzeppelin
+packages/contracts/exports/abis.ts

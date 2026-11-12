@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import ts from "typescript";
 
@@ -55,7 +55,9 @@ function filesToCheck() {
       : execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
           encoding: "utf8",
         }).split("\n");
-  return files.filter((file) => COPY_FILE.test(file) && !TECHNICAL_COPY.test(file));
+  return files.filter(
+    (file) => existsSync(file) && COPY_FILE.test(file) && !TECHNICAL_COPY.test(file)
+  );
 }
 
 function stringLiterals(source, file) {

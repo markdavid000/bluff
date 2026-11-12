@@ -2,8 +2,15 @@
 
 import { useEffect } from "react";
 import { SOUNDS, type SoundName } from "@/config/sounds";
+import type { MusicTrack } from "@/lib/settings-store";
 import { createSoundBoard, type SoundBoard } from "@/lib/sound";
 import { useSettings } from "./use-settings";
+
+const MUSIC_FOR_TRACK: Record<MusicTrack, SoundName> = {
+  drum: "drumLoop",
+  bell: "bellLoop",
+  both: "bothLoop",
+};
 
 let board: SoundBoard<SoundName> | null = null;
 
@@ -42,29 +49,28 @@ export function useSound(): { play: (name: SoundName) => void; stop: (name: Soun
   };
 }
 
-export function useBackgroundMusic(track: SoundName) {
+export function useBackgroundMusic() {
   const { settings } = useSettings();
+  const track = MUSIC_FOR_TRACK[settings.musicTrack];
 
   useEffect(() => {
     const sounds = soundBoard();
-    if (!settings.music) {
-      sounds.stop(track);
-      return;
-    }
-    if (sounds.unlocked) {
-      void sounds.play(track);
-      return;
-    }
+    if (!settings.music) return;
     const start = () => {
       sounds.unlock();
       sounds.setMuted("music", false);
       void sounds.play(track);
     };
+    if (sounds.unlocked) {
+      start();
+      return () => sounds.stop(track);
+    }
     window.addEventListener("pointerdown", start, { once: true });
     window.addEventListener("keydown", start, { once: true });
     return () => {
       window.removeEventListener("pointerdown", start);
       window.removeEventListener("keydown", start);
+      sounds.stop(track);
     };
   }, [settings.music, track]);
 }

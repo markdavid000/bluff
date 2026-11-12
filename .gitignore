@@ -20,6 +20,7 @@ apps/web/.vercel/
 packages/contracts/artifacts/
 packages/contracts/cache/
 packages/contracts/types/
+packages/contracts/exports/abis.ts
 packages/contracts/fhevmTemp/
 packages/contracts/deployments/hardhat.json
 packages/contracts/deployments/localhost.json

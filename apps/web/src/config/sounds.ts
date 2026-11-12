@@ -6,7 +6,9 @@ export const SOUNDS = {
   drum: { url: "/audio/drum.mp3", channel: "effects", volume: 0.9 },
   shekere: { url: "/audio/shekere.mp3", channel: "effects", volume: 0.7 },
   cowries: { url: "/audio/cowries.mp3", channel: "effects", volume: 0.7 },
-  table: { url: "/audio/table-loop.mp3", channel: "music", volume: 0.3, loop: true },
+  drumLoop: { url: "/audio/drum-loop.mp3", channel: "music", volume: 0.3, loop: true },
+  bellLoop: { url: "/audio/bell-loop.mp3", channel: "music", volume: 0.38, loop: true },
+  bothLoop: { url: "/audio/drum-and-bell-loop.mp3", channel: "music", volume: 0.3, loop: true },
 } as const;
 
 export type SoundName = keyof typeof SOUNDS;
