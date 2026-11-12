@@ -7,14 +7,11 @@ import { SignInPanel } from "./sign-in-panel";
 
 export function SignInScene({ next }: { next: string | undefined }) {
   return (
-    <div className="relative isolate flex w-full flex-1 items-center justify-center overflow-hidden px-4 py-10">
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_top,var(--color-accent)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,var(--color-board)_0%,transparent_60%)] opacity-60"
-      />
+    <div className="relative isolate flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden px-4 py-6">
+      <div aria-hidden className="absolute inset-0 -z-20 glow-backdrop" />
       <PatternBackdrop className="-z-10 text-pattern opacity-[0.07]" />
       <ScreenControls className="absolute top-4 right-4" />
-      <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid w-full max-w-6xl items-center gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
         <section aria-labelledby="welcome-title" className="flex flex-col gap-8">
           <div className="flex items-center gap-6">
             <TumblingDie className="size-24 shrink-0 sm:size-28" />
@@ -39,14 +36,6 @@ export function SignInScene({ next }: { next: string | undefined }) {
         </section>
         <div className="flex justify-center lg:justify-end">
           <SignInPanel next={next} />
-        </div>
-        <div className="grid gap-4 sm:hidden">
-          {accountCopy.welcomeSteps.map((step) => (
-            <RaisedCard key={step.title} className="p-4">
-              <h3 className="text-lg">{step.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
-            </RaisedCard>
-          ))}
         </div>
       </div>
     </div>

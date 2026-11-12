@@ -936,6 +936,252 @@
           ]
         }
       }
+    },
+    "c46560644709c3aa87e394b02b9a1968ea455b10badde5174e83368fd4bfac8e": {
+      "address": "0xc0276c42C793F86c7ad4e6a5aD91E5C9F8eF49ac",
+      "txHash": "0x19396f17be1a4cf8dd352e31bafc69fb6a1996b61ea93c35f16788cf3f3d8a23",
+      "layout": {
+        "solcVersion": "0.8.27",
+        "storage": [],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IERC7984ERC20Wrapper)10673": {
+            "label": "contract IERC7984ERC20Wrapper",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IMintableERC20)16262": {
+            "label": "contract IMintableERC20",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_string_storage)": {
+            "label": "mapping(address => string)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint64)": {
+            "label": "mapping(address => uint64)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint8)": {
+            "label": "mapping(address => uint8)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(ChipFaucetStorage)15591_storage": {
+            "label": "struct ChipFaucet.ChipFaucetStorage",
+            "members": [
+              {
+                "label": "chips",
+                "type": "t_contract(IERC7984ERC20Wrapper)10673",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "dollars",
+                "type": "t_contract(IMintableERC20)16262",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "nicknames",
+                "type": "t_mapping(t_address,t_string_storage)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "nextClaimAt",
+                "type": "t_mapping(t_address,t_uint64)",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "avatars",
+                "type": "t_mapping(t_address,t_uint8)",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "avatarImages",
+                "type": "t_mapping(t_address,t_string_storage)",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(InitializableStorage)11817_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)11339_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)11394_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)11496_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:bluff.storage.ChipFaucet": [
+            {
+              "contract": "ChipFaucet",
+              "label": "chips",
+              "type": "t_contract(IERC7984ERC20Wrapper)10673",
+              "src": "contracts/ChipFaucet.sol:27",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "dollars",
+              "type": "t_contract(IMintableERC20)16262",
+              "src": "contracts/ChipFaucet.sol:28",
+              "offset": 0,
+              "slot": "1"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "nicknames",
+              "type": "t_mapping(t_address,t_string_storage)",
+              "src": "contracts/ChipFaucet.sol:29",
+              "offset": 0,
+              "slot": "2"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "nextClaimAt",
+              "type": "t_mapping(t_address,t_uint64)",
+              "src": "contracts/ChipFaucet.sol:30",
+              "offset": 0,
+              "slot": "3"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "avatars",
+              "type": "t_mapping(t_address,t_uint8)",
+              "src": "contracts/ChipFaucet.sol:31",
+              "offset": 0,
+              "slot": "4"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "avatarImages",
+              "type": "t_mapping(t_address,t_string_storage)",
+              "src": "contracts/ChipFaucet.sol:32",
+              "offset": 0,
+              "slot": "5"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:29",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
     }
   }
 }

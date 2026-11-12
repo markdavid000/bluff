@@ -14,9 +14,9 @@ const tileVariants = cva(
   [
     "relative h-auto rounded-xl font-game tracking-wide select-none",
     "transition-[translate,box-shadow,filter] duration-75 ease-out",
-    "shadow-[0_var(--depth)_0_0_var(--edge),0_calc(var(--depth)+6px)_14px_-4px_rgb(0_0_0/0.35)]",
+    "shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_var(--depth)_0_0_var(--edge),0_calc(var(--depth)+6px)_14px_-4px_rgb(0_0_0/0.35)]",
     "hover:brightness-105 active:translate-y-[calc(var(--depth)-2px)]",
-    "active:shadow-[0_2px_0_0_var(--edge),0_4px_8px_-4px_rgb(0_0_0/0.35)]",
+    "active:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_2px_0_0_var(--edge),0_4px_8px_-4px_rgb(0_0_0/0.35)]",
     "aria-busy:translate-y-[calc(var(--depth)-2px)] aria-busy:shadow-[0_2px_0_0_var(--edge)]",
     "focus-visible:ring-4 focus-visible:ring-ring/60 disabled:opacity-60",
   ],

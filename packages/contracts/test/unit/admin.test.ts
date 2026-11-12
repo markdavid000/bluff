@@ -4,7 +4,7 @@ import { deployGameFixture } from "../fixtures";
 
 describe("admin", function () {
   describe("initialisation", function () {
-    it("sets owners, links and version 1.0.0, unpaused", async function () {
+    it("sets owners, links and versions, unpaused", async function () {
       const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
       expect(await bluff.owner()).to.equal(owner.address);
       expect(await bluff.cashier()).to.equal(await cashier.getAddress());
@@ -17,7 +17,7 @@ describe("admin", function () {
       expect(await faucet.owner()).to.equal(owner.address);
       expect(await faucet.chips()).to.equal(await chips.getAddress());
       expect(await faucet.dollars()).to.equal(await dollars.getAddress());
-      expect(await faucet.version()).to.equal("1.0.0");
+      expect(await faucet.version()).to.equal("1.1.0");
     });
 
     it("refuses missing addresses", async function () {

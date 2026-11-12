@@ -11,6 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {IChipFaucet} from "./interfaces/IChipFaucet.sol";
 import {IMintableERC20} from "./interfaces/IMintableERC20.sol";
+import {AvatarRules} from "./libraries/AvatarRules.sol";
 import {NicknameRules} from "./libraries/NicknameRules.sol";
 
 contract ChipFaucet is
@@ -27,6 +28,8 @@ contract ChipFaucet is
         IMintableERC20 dollars;
         mapping(address player => string) nicknames;
         mapping(address player => uint64) nextClaimAt;
+        mapping(address player => uint8) avatars;
+        mapping(address player => string) avatarImages;
     }
 
     uint64 public constant CLAIM_CHIPS = 100 * 1e6;
@@ -56,20 +59,33 @@ contract ChipFaucet is
 
     function claim(string calldata nickname) external whenNotPaused nonReentrant {
         ChipFaucetStorage storage $ = _getChipFaucetStorage();
-        uint64 allowedAt = $.nextClaimAt[msg.sender];
-        if (block.timestamp < allowedAt) revert ClaimTooSoon(allowedAt);
+        _checkClaimAllowed($);
         if (bytes(nickname).length != 0) _setNickname($, nickname);
-        uint64 next = uint64(block.timestamp) + CLAIM_INTERVAL;
-        $.nextClaimAt[msg.sender] = next;
-        uint256 dollarAmount = uint256(CLAIM_CHIPS) * $.chips.rate();
-        $.dollars.mint(address(this), dollarAmount);
-        SafeERC20.forceApprove($.dollars, address($.chips), dollarAmount);
-        euint64 minted = $.chips.wrap(msg.sender, dollarAmount);
-        emit ChipsClaimed(msg.sender, minted, next);
+        _claim($);
+    }
+
+    function claimWithAvatar(string calldata nickname, uint8 avatar) external whenNotPaused nonReentrant {
+        ChipFaucetStorage storage $ = _getChipFaucetStorage();
+        _checkClaimAllowed($);
+        if (bytes(nickname).length != 0) _setNickname($, nickname);
+        _setAvatar($, avatar);
+        _claim($);
     }
 
     function setNickname(string calldata nickname) external {
         _setNickname(_getChipFaucetStorage(), nickname);
+    }
+
+    function setAvatar(uint8 avatar) external {
+        _setAvatar(_getChipFaucetStorage(), avatar);
+    }
+
+    function setAvatarImage(string calldata image) external {
+        if (!AvatarRules.isValidImage(image)) revert InvalidAvatarImage();
+        ChipFaucetStorage storage $ = _getChipFaucetStorage();
+        $.avatars[msg.sender] = 0;
+        $.avatarImages[msg.sender] = image;
+        emit AvatarSet(msg.sender, 0, image);
     }
 
     function pause() external onlyOwner {
@@ -88,6 +104,11 @@ contract ChipFaucet is
         return _getChipFaucetStorage().nextClaimAt[player];
     }
 
+    function avatarOf(address player) external view returns (uint8 preset, string memory image) {
+        ChipFaucetStorage storage $ = _getChipFaucetStorage();
+        return ($.avatars[player], $.avatarImages[player]);
+    }
+
     function chips() external view returns (IERC7984ERC20Wrapper) {
         return _getChipFaucetStorage().chips;
     }
@@ -97,17 +118,39 @@ contract ChipFaucet is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
         if (newImplementation == address(0)) revert ZeroAddress();
     }
 
+    function _claim(ChipFaucetStorage storage $) private {
+        uint64 next = uint64(block.timestamp) + CLAIM_INTERVAL;
+        $.nextClaimAt[msg.sender] = next;
+        uint256 dollarAmount = uint256(CLAIM_CHIPS) * $.chips.rate();
+        $.dollars.mint(address(this), dollarAmount);
+        SafeERC20.forceApprove($.dollars, address($.chips), dollarAmount);
+        euint64 minted = $.chips.wrap(msg.sender, dollarAmount);
+        emit ChipsClaimed(msg.sender, minted, next);
+    }
+
+    function _setAvatar(ChipFaucetStorage storage $, uint8 avatar) private {
+        if (!AvatarRules.isValidPreset(avatar)) revert InvalidAvatar(avatar);
+        $.avatars[msg.sender] = avatar;
+        delete $.avatarImages[msg.sender];
+        emit AvatarSet(msg.sender, avatar, "");
+    }
+
     function _setNickname(ChipFaucetStorage storage $, string calldata nickname) private {
         if (!NicknameRules.isValid(nickname)) revert InvalidNickname();
         $.nicknames[msg.sender] = nickname;
         emit NicknameSet(msg.sender, nickname);
+    }
+
+    function _checkClaimAllowed(ChipFaucetStorage storage $) private view {
+        uint64 allowedAt = $.nextClaimAt[msg.sender];
+        if (block.timestamp < allowedAt) revert ClaimTooSoon(allowedAt);
     }
 
     function _getChipFaucetStorage() private pure returns (ChipFaucetStorage storage $) {

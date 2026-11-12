@@ -83,13 +83,16 @@ Errors: `UnauthorizedCallback`, `InvalidCallbackData`, `NotBluff`, `ZeroAddress`
 
 ## ChipFaucet
 
-| Function                                                                                                          | Does                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `claim(nickname)`                                                                                                 | 100 chips every 24 hours: mints `100 × rate()` mock USDT, approves the token and wraps to the caller. A non-empty nickname is saved too. Blocked while paused. |
-| `setNickname(nickname)`                                                                                           | 3 to 20 characters: letters, digits, single spaces, `_`, `-`. Works while paused.                                                                              |
-| `nicknameOf(player)`, `nextClaimAt(player)`, `CLAIM_CHIPS`, `CLAIM_INTERVAL`, `chips()`, `dollars()`, `version()` | Views.                                                                                                                                                         |
+| Function                                                                                                                                                                            | Does                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `claim(nickname)`                                                                                                                                                                   | 100 chips every 24 hours: mints `100 × rate()` mock USDT, approves the token and wraps to the caller. A non-empty nickname is saved too. Blocked while paused. |
+| `setNickname(nickname)`                                                                                                                                                             | 3 to 20 characters: letters, digits, single spaces, `_`, `-`. Works while paused.                                                                              |
+| `claimWithAvatar(nickname, avatar)`                                                                                                                                                 | The first-visit move, added in 1.1.0: the same daily claim as `claim`, which also saves a preset face from 1 to 12. Blocked while paused.                      |
+| `setAvatar(avatar)`                                                                                                                                                                 | A preset face, 1 to 12. Clears an uploaded picture. Works while paused.                                                                                        |
+| `setAvatarImage(image)`                                                                                                                                                             | An uploaded picture's IPFS content id: 1 to 100 letters and digits. Clears the preset. Works while paused.                                                     |
+| `nicknameOf(player)`, `nextClaimAt(player)`, `avatarOf(player)` (preset, image; `0, ""` when none was chosen), `CLAIM_CHIPS`, `CLAIM_INTERVAL`, `chips()`, `dollars()`, `version()` | Views.                                                                                                                                                         |
 
-Events: `ChipsClaimed`, `NicknameSet`. Errors: `ClaimTooSoon`, `InvalidNickname`, `ZeroAddress`.
+Events: `ChipsClaimed`, `NicknameSet`, `AvatarSet`. Errors: `ClaimTooSoon`, `InvalidNickname`, `InvalidAvatar`, `InvalidAvatarImage`, `ZeroAddress`. Version 1.1.0 adds avatars; its storage only appends to `bluff.storage.ChipFaucet`.
 
 ## Encrypted values and who can read them
 
@@ -132,11 +135,11 @@ The owner can upgrade, pause, link the cashier once, and hand ownership over in 
 
 Every proxy and implementation is verified on Etherscan, so its source is readable and the proxy pages offer "Read as Proxy" and "Write as Proxy".
 
-| Contract       | Proxy                                                                                                 | Implementation                                                                                        |
-| -------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x32Ba…6109`](https://sepolia.etherscan.io/address/0x32BadacDF5791eCc1386aAa8b3cFBF5B27D96109#code) |
-| `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xB8A3…Fe94`](https://sepolia.etherscan.io/address/0xB8A3BA88d47cA1BBD5B530c0CC04145F8714Fe94#code) |
-| `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0x4136…EA9e`](https://sepolia.etherscan.io/address/0x4136f029a66ABC96d414cc38779bfCC1547AEA9e#code) |
+| Contract       | Proxy                                                                                                 | Implementation                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x32Ba…6109`](https://sepolia.etherscan.io/address/0x32BadacDF5791eCc1386aAa8b3cFBF5B27D96109#code)         |
+| `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xB8A3…Fe94`](https://sepolia.etherscan.io/address/0xB8A3BA88d47cA1BBD5B530c0CC04145F8714Fe94#code)         |
+| `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0xc027…49ac`](https://sepolia.etherscan.io/address/0xc0276c42C793F86c7ad4e6a5aD91E5C9F8eF49ac#code) (1.1.0) |
 
 The deploy and upgrade tasks verify each new implementation when `ETHERSCAN_API_KEY` is set (`npx hardhat vars set ETHERSCAN_API_KEY`). They name the contract explicitly because the bytecode carries no metadata hash (`bytecodeHash: "none"`), which leaves the verifier unable to match it on its own.
 
