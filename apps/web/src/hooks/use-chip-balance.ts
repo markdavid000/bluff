@@ -4,8 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useConfidentialBalance } from "@zama-fhe/react-sdk";
 import type { Address } from "viem";
 import { contracts } from "@/config/chain";
-import { usePermit } from "@/hooks/use-permit";
-import { chipsCopy } from "../copy";
+import { usePermit } from "./use-permit";
 
 const DECRYPT_ATTEMPTS = 5;
 const MAX_RETRY_DELAY_MS = 8_000;
@@ -16,10 +15,16 @@ export type ChipBalance =
   | { status: "ready"; amount: bigint }
   | { status: "failed"; retry: () => void };
 
-export function useChipBalance({ automaticPermit = false } = {}): ChipBalance {
+export function useChipBalance({
+  working,
+  automaticPermit = false,
+}: {
+  working: string;
+  automaticPermit?: boolean;
+}): ChipBalance {
   const { user } = usePrivy();
   const account = user?.wallet?.address as Address | undefined;
-  const permit = usePermit({ working: chipsCopy.showingChips, automatic: automaticPermit });
+  const permit = usePermit({ working, automatic: automaticPermit });
   const balance = useConfidentialBalance(
     { address: contracts.chips, account },
     {

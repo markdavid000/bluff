@@ -1,8 +1,9 @@
 import { cn } from "cn";
-import { useId } from "react";
+
+const BACKDROP_PATTERN_ID = "bluff-pattern-backdrop";
 
 export function PatternBackdrop({ className }: { className?: string }) {
-  const id = useId();
+  const id = BACKDROP_PATTERN_ID;
   return (
     <svg aria-hidden className={cn("pointer-events-none absolute inset-0 size-full", className)}>
       <defs>

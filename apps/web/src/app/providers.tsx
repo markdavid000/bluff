@@ -25,7 +25,7 @@ export function Providers({ children }: { children: ReactNode }) {
       config={{
         loginMethods: ["google", "email", "wallet"],
         embeddedWallets: {
-          ethereum: { createOnLogin: "users-without-wallets" },
+          ethereum: { createOnLogin: "off" },
           showWalletUIs: false,
         },
         defaultChain: gameChain,

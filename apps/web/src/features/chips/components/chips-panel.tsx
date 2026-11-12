@@ -5,6 +5,7 @@ import { CountdownBadge } from "@/components/shared/countdown-badge";
 import { CountingAmount } from "@/components/shared/counting-amount";
 import { Cowrie } from "@/components/shared/cowrie";
 import { PatternFrame } from "@/components/shared/pattern-band";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatChips } from "@/lib/chips";
 import { chipsCopy } from "../copy";
 import { useChipsPanel } from "../hooks/use-chips-panel";
@@ -15,14 +16,14 @@ export function ChipsPanel() {
   const { balance, claim, cashOut } = panel;
 
   return (
-    <PatternFrame className="w-full max-w-2xl">
-      <section aria-labelledby="chips-title" className="flex flex-col gap-4">
+    <PatternFrame className="w-full">
+      <section className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <Cowrie size={56} />
           <div className="flex flex-col">
-            <h2 id="chips-title" className="font-game text-lg text-muted-foreground">
+            <DialogTitle className="font-game text-lg text-muted-foreground">
               {chipsCopy.balanceLabel}
-            </h2>
+            </DialogTitle>
             {balance.status === "ready" ? (
               <p aria-live="polite" className="font-heading text-5xl">
                 <CountingAmount amount={balance.amount} />
@@ -32,6 +33,7 @@ export function ChipsPanel() {
                 <ActionButton
                   tone="yellow"
                   size="small"
+                  icon="lock"
                   working={balance.revealing}
                   workingLabel={chipsCopy.showingChips}
                   onClick={balance.reveal}
@@ -45,7 +47,7 @@ export function ChipsPanel() {
             ) : balance.status === "failed" ? (
               <p className="flex items-center gap-3 text-base">
                 {chipsCopy.balanceProblem}
-                <ActionButton tone="quiet" size="small" onClick={balance.retry}>
+                <ActionButton tone="quiet" size="small" icon="target" onClick={balance.retry}>
                   {chipsCopy.tryAgain}
                 </ActionButton>
               </p>
@@ -56,9 +58,9 @@ export function ChipsPanel() {
             )}
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <DialogDescription className="text-sm">
           {chipsCopy.hiddenNote} {chipsCopy.practiceNote}
-        </p>
+        </DialogDescription>
         {cashOut.dollars !== undefined && cashOut.dollars > 0n ? (
           <div className="flex flex-col gap-1 rounded-xl bg-muted/60 px-4 py-3">
             <p aria-live="polite" className="font-game text-lg">
@@ -83,6 +85,7 @@ export function ChipsPanel() {
         {panel.resume ? (
           <ActionButton
             tone="yellow"
+            icon="wallet"
             working={cashOut.working}
             workingLabel={chipsCopy.cashOutFinishing}
             onClick={panel.resume}
@@ -115,6 +118,7 @@ export function ChipsPanel() {
           )}
           <ActionButton
             tone="quiet"
+            icon="wallet"
             disabled={!panel.canCashOut || cashOut.working}
             onClick={() => panel.setCashOutOpen(true)}
           >

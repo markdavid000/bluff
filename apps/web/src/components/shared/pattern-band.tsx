@@ -1,8 +1,9 @@
 import { cn } from "cn";
-import { useId } from "react";
+
+const BAND_PATTERN_ID = "bluff-pattern-band";
 
 export function PatternBand({ className }: { className?: string }) {
-  const id = useId();
+  const id = BAND_PATTERN_ID;
   return (
     <svg aria-hidden className={cn("text-pattern", className)} preserveAspectRatio="none">
       <defs>

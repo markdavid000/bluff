@@ -10,7 +10,7 @@ const STAYS_MS: Record<NoticeKind, number> = {
   loading: Infinity,
   success: 3_000,
   info: 4_000,
-  error: Infinity,
+  error: 6_000,
 };
 
 export function GameToaster() {
@@ -33,6 +33,7 @@ export function GameToaster() {
                   <ActionButton
                     tone="quiet"
                     size="small"
+                    icon="target"
                     onClick={() => {
                       toast.dismiss(toastId);
                       action.onPress();

@@ -1,5 +1,6 @@
 "use client";
 
+import { bluffAbi, bluffCashierAbi, chipFaucetAbi, chipTokenAbi } from "@bluff/contracts";
 import { usePrivy, useSendTransaction as usePrivySend, useWallets } from "@privy-io/react-auth";
 import {
   type Abi,
@@ -20,6 +21,14 @@ export interface ContractCall {
   args: readonly unknown[];
 }
 
+const GAME_ERRORS: Abi = [
+  ...new Map(
+    [...bluffAbi, ...bluffCashierAbi, ...chipFaucetAbi, ...chipTokenAbi]
+      .filter((item) => item.type === "error")
+      .map((item) => [item.name, item])
+  ).values(),
+];
+
 export type MoveStep = "preparing" | "confirming" | "sending" | "waiting";
 
 export function useSendMove() {
@@ -37,7 +46,7 @@ export function useSendMove() {
     const account = user?.wallet?.address as Address | undefined;
     if (!account || !publicClient) throw new MoveNotReadyError();
     report("preparing");
-    await publicClient.simulateContract({ ...call, account });
+    await publicClient.simulateContract({ ...call, abi: [...call.abi, ...GAME_ERRORS], account });
     const data = encodeFunctionData(call);
     const embedded = wallets.find(
       (wallet) =>

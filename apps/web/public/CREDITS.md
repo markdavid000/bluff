@@ -19,9 +19,10 @@ Every sound and image Bluff ships, where it came from, and its licence. Sounds w
 
 ## Icons
 
-| Files                                                                                                                | Source                                                                      | Licence |
-| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------- |
-| `icons/*.png`: sun, moon, headphone, music, play, chat-bubble, megaphone, link, back, 3d-coin, setting, trophy, tick | 3dicons by Vijay Verma, https://3dicons.co, colour style, resized to 128 px | CC0 1.0 |
+| Files                                                                                                                | Source                                                                                                               | Licence |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| `icons/*.png`: sun, moon, headphone, music, play, chat-bubble, megaphone, link, back, 3d-coin, setting, trophy, tick | 3dicons by Vijay Verma, https://3dicons.co, colour style, resized to 128 px                                          | CC0 1.0 |
+| `icons/*.png`: copy, dollar, lock, money-bag, plus, rocket, target, wallet, zoom                                     | 3dicons by Vijay Verma, https://3dicons.co, colour style, dynamic angle; white background removed, resized to 128 px | CC0 1.0 |
 
 ## Avatars
 

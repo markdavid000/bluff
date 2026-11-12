@@ -1,4 +1,4 @@
-import { chipFaucetAbi } from "@bluff/contracts";
+import { chipFaucetAbi, chipTokenAbi } from "@bluff/contracts";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSendMove } from "./use-send-move";
@@ -34,9 +34,14 @@ vi.mock("@privy-io/react-auth", () => ({
   }),
   useSendTransaction: () => ({ sendTransaction: sendSponsored }),
 }));
+const simulateContract = vi.fn(
+  async (_request: { abi: readonly { type: string; name?: string }[] }) => order.push("simulate")
+);
+
 vi.mock("wagmi", () => ({
   usePublicClient: () => ({
-    simulateContract: async () => order.push("simulate"),
+    simulateContract: (request: { abi: readonly { type: string; name?: string }[] }) =>
+      simulateContract(request),
     waitForTransactionReceipt: async () => ({ status: "success" }),
   }),
   useSendTransaction: () => ({ sendTransactionAsync }),
@@ -92,5 +97,29 @@ describe("useSendMove", () => {
     await result.current(CLAIM, vi.fn());
     expect(switchChain).not.toHaveBeenCalled();
     expect(order).toEqual(["simulate", "sponsored"]);
+  });
+
+  it("can name a table's refusal even when the move goes through the chip token", async () => {
+    const { result } = renderHook(() => useSendMove());
+    await result.current(
+      {
+        address: "0x0000000000000000000000000000000000000c41",
+        abi: chipTokenAbi,
+        functionName: "confidentialTransferAndCall",
+        args: [
+          "0x0000000000000000000000000000000000000ca5",
+          `0x${"ab".repeat(32)}`,
+          "0x1234",
+          "0x",
+        ],
+      },
+      vi.fn()
+    );
+    const known = (simulateContract.mock.calls[0]?.[0].abi ?? [])
+      .filter((item) => item.type === "error")
+      .map((item) => item.name);
+    expect(known).toEqual(
+      expect.arrayContaining(["AlreadyAtTable", "WrongStatus", "InvalidBuyIn", "ClaimTooSoon"])
+    );
   });
 });

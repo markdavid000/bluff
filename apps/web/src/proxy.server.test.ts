@@ -17,9 +17,16 @@ describe("route coverage", () => {
     }
   });
 
-  it("runs the proxy on exactly the protected pages", () => {
+  it("runs the proxy on exactly the protected pages and the sign-in pages", () => {
     expect([...config.matcher].sort()).toEqual(
-      ["/play/:path*", "/profile/:path*", "/table/:path*", "/welcome/:path*"].sort()
+      [
+        "/play/:path*",
+        "/profile/:path*",
+        "/table/:path*",
+        "/welcome/:path*",
+        "/sign-in",
+        "/refresh",
+      ].sort()
     );
   });
 });

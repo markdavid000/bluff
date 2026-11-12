@@ -64,23 +64,19 @@ export function CashOutDialog({
               autoComplete="off"
               value={form.text}
               disabled={working}
-              aria-invalid={form.error !== null}
+              aria-invalid={form.invalid || undefined}
               aria-describedby={helpId}
               onChange={(event) => form.change(event.target.value)}
               className="rounded-xl border-2 border-tile-edge/50 bg-background px-4 py-3 font-game text-2xl tabular-nums focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none"
             />
-            <p
-              id={helpId}
-              aria-live="polite"
-              className={form.error ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
-            >
-              {form.error ?? chipsCopy.cashOutAmountHelp(formatChips(balance))}
+            <p id={helpId} aria-live="polite" className="text-sm text-muted-foreground">
+              {chipsCopy.cashOutAmountHelp(formatChips(balance))}
             </p>
             <div className="flex flex-wrap gap-3">
               <ActionButton
                 type="submit"
                 tone="green"
-                icon="cowrie"
+                icon="dollar"
                 sound="cowries"
                 working={working}
                 workingLabel={workingLabel}
@@ -90,6 +86,7 @@ export function CashOutDialog({
               <ActionButton
                 type="button"
                 tone="quiet"
+                icon="money-bag"
                 disabled={working || balance === 0n}
                 onClick={() => cashOut("everything")}
               >
@@ -97,7 +94,7 @@ export function CashOutDialog({
               </ActionButton>
             </div>
             <DialogClose asChild>
-              <ActionButton type="button" tone="quiet" size="small" disabled={working}>
+              <ActionButton type="button" tone="quiet" size="small" icon="back" disabled={working}>
                 {chipsCopy.close}
               </ActionButton>
             </DialogClose>

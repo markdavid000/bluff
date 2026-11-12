@@ -43,4 +43,37 @@ describe("decideRoute", () => {
       });
     }
   );
+
+  it.each(["/sign-in", "/refresh"])(
+    "sends a signed-in player away from %s before anything is drawn",
+    (page) => {
+      expect(decideRoute(page, none, valid)).toEqual({ action: "redirect", to: "/play" });
+    }
+  );
+
+  it("sends a signed-in player on to the page they asked for", () => {
+    const next = new URLSearchParams(`next=${encodeURIComponent("/play?join=12")}`);
+    expect(decideRoute("/sign-in", next, valid)).toEqual({
+      action: "redirect",
+      to: "/play?join=12",
+    });
+  });
+
+  it("never follows a next address that leads off the site", () => {
+    const next = new URLSearchParams(`next=${encodeURIComponent("https://evil.example")}`);
+    expect(decideRoute("/sign-in", next, valid)).toEqual({ action: "redirect", to: "/play" });
+  });
+
+  it("lets Google sign-in finish on the sign-in page even with an old session", () => {
+    expect(decideRoute("/sign-in", new URLSearchParams("privy_oauth_code=x"), valid)).toEqual({
+      action: "allow",
+    });
+  });
+
+  it.each([expired, invalid])(
+    "shows the sign-in page to a visitor without a valid session",
+    (session) => {
+      expect(decideRoute("/sign-in", none, session)).toEqual({ action: "allow" });
+    }
+  );
 });

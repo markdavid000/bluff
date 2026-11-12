@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { onNotice } from "@/lib/notify";
 import { ONE_CHIP } from "@/lib/chips";
 import { chipsCopy } from "../copy";
 import { CashOutDialog } from "./cash-out-dialog";
@@ -24,9 +25,22 @@ function open(props: Partial<Parameters<typeof CashOutDialog>[0]> = {}) {
   return screen.getByLabelText(chipsCopy.cashOutAmount);
 }
 
+let shown: string[] = [];
+let stop: () => void = () => undefined;
+
+function toasts() {
+  return shown;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  shown = [];
+  stop = onNotice((event) => {
+    if (event.type === "show") shown.push(event.notice.title);
+  });
 });
+
+afterEach(() => stop());
 
 describe("CashOutDialog", () => {
   it("cashes out the exact number of chips typed", () => {
@@ -41,20 +55,35 @@ describe("CashOutDialog", () => {
     expect(cashOut).toHaveBeenCalledWith("everything");
   });
 
-  it("explains an amount that is not a number of chips", () => {
+  it("asks for an amount in a short toast when none is typed", () => {
     const input = open();
-    fireEvent.change(input, { target: { value: "lots" } });
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutSome }));
+    expect(toasts()).toEqual([chipsCopy.cashOutEmpty]);
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByText(chipsCopy.cashOutInvalid)).toBeInTheDocument();
     expect(cashOut).not.toHaveBeenCalled();
   });
 
-  it("refuses more chips than the player has", () => {
+  it("asks for a number of chips in a toast, not under the box", () => {
+    const input = open();
+    fireEvent.change(input, { target: { value: "lots" } });
+    fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutSome }));
+    expect(toasts()).toEqual([chipsCopy.cashOutInvalid]);
+    expect(screen.queryByText(chipsCopy.cashOutInvalid)).not.toBeInTheDocument();
+    expect(cashOut).not.toHaveBeenCalled();
+  });
+
+  it("says how many chips to pick at most when the player asks for too many", () => {
     fireEvent.change(open(), { target: { value: "41" } });
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutSome }));
-    expect(screen.getByText(chipsCopy.cashOutTooMany("40"))).toBeInTheDocument();
+    expect(toasts()).toEqual([chipsCopy.cashOutTooMany("40")]);
     expect(cashOut).not.toHaveBeenCalled();
+  });
+
+  it("clears the warning as soon as the player types again", () => {
+    const input = open();
+    fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutSome }));
+    fireEvent.change(input, { target: { value: "5" } });
+    expect(input).not.toHaveAttribute("aria-invalid", "true");
   });
 
   it("stays open while the cash out is running", () => {

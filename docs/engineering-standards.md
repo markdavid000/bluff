@@ -155,11 +155,12 @@ Toasts go through one `notify` module in `src/lib/`. No feature calls the toast 
 | `loading` | until the action ends, then becomes the result      | an action the player started                                   |
 | `success` | about 3 seconds                                     | an action finished                                             |
 | `info`    | about 4 seconds                                     | something the player should know, including a cancelled action |
-| `error`   | until dismissed; offers **Try again** when possible | an action failed                                               |
+| `error`   | about 6 seconds; offers **Try again** when possible | an action failed, or a form needs something before it can send |
 
 - One toast per action, updated in place by id. Never a new toast per status.
 - At most three toasts visible. Duplicates collapse into one.
-- A problem tied to one input (an invalid bid) shows next to that input, not as a toast.
+- A problem with what the player typed or chose is a short `error` toast that says what to do next ("Type a number of chips, like 25"), never what they did wrong, and never red text under the field. The field is marked `aria-invalid` until the player changes it.
+- Every countdown pauses while the pointer rests on a toast and carries on when it leaves. There is no visible timer bar.
 - Every bid gets a short `info` toast naming who bid what ("Sly Fox bid 4 × five"), so a player never misses a move while looking away. A newer bid replaces the older toast instead of stacking.
 - A bluff call tells each player what it means for them: the accused sees "Kola says you are bluffing!", and everyone else sees "Kola called Sly Fox's bluff on 4 × five". The talking drum plays with it.
 - Other changes the player can already see on screen (a die count, the turn moving) do not also get a toast.

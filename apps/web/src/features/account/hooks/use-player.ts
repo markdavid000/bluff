@@ -13,6 +13,7 @@ type Address = `0x${string}`;
 export type Player =
   | { status: "loading" }
   | { status: "signed-out" }
+  | { status: "failed" }
   | {
       status: "ready";
       address: Address;
@@ -49,6 +50,7 @@ export function usePlayer(): Player & { refresh: () => Promise<unknown> } {
 
   if (!ready) return { status: "loading", refresh };
   if (!authenticated) return { status: "signed-out", refresh };
+  if (address && profile.isError) return { status: "failed", refresh };
   if (!address || profile.isPending || !profile.data) return { status: "loading", refresh };
   const [savedName, [preset]] = profile.data as [string, readonly [number, string]];
   const nickname = savedName.length > 0 ? savedName : null;
