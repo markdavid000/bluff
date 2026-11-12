@@ -61,6 +61,7 @@ interface IBluff {
         uint8 dice;
         uint8 missedTurns;
         bool isActive;
+        bool ready;
     }
 
     event TableCreated(
@@ -73,6 +74,7 @@ interface IBluff {
     );
     event PlayerJoined(uint256 indexed id, address indexed player, uint8 seat);
     event PlayerLeft(uint256 indexed id, address indexed player, bool refunded);
+    event PlayerReady(uint256 indexed id, address indexed player, bool ready);
     event HostChanged(uint256 indexed id, address indexed host);
     event TableCancelled(uint256 indexed id);
     event TableListed(uint256 indexed id);
@@ -114,6 +116,8 @@ interface IBluff {
     error NotAtTable(uint256 id);
     error NotHost(uint256 id);
     error NotEnoughPlayers(uint256 id);
+    error NotEveryoneReady(uint256 id);
+    error TableFull(uint256 id);
     error InvalidSeatCount(uint8 seatCount);
     error InvalidBuyIn(uint64 buyIn);
     error DeadlineNotPassed(uint64 deadline);
@@ -134,7 +138,7 @@ interface IBluff {
         JoinRequest calldata request
     ) external returns (uint256 id, uint64 tableBuyIn);
 
-    function startIfFull(uint256 id) external;
+    function setReady(uint256 id, bool isReady) external;
 
     function startTable(uint256 id) external;
 

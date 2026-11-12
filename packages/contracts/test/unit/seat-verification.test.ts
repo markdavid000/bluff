@@ -14,6 +14,7 @@ import {
   payToJoin,
   seatPaidTable,
 } from "../helpers/chips";
+import { readyAndStart } from "../helpers/tables";
 
 const WAITING = 1n;
 const VERIFYING = 2n;
@@ -23,16 +24,15 @@ const BUY_IN = 10n * CHIP;
 const LIMIT = 10 * 60;
 
 describe("checking paid seats", function () {
-  it("checks every payment when a paid table fills", async function () {
+  it("checks every payment when the host starts a paid table", async function () {
     const contracts = await deployGameFixture();
     const { alice, bob, bluff } = contracts;
     await claimChips(contracts.faucet, alice);
     await claimChips(contracts.faucet, bob);
     await payToCreate(contracts.chips, contracts.cashier, alice, 2, BUY_IN);
-    await expect(payToJoin(contracts.chips, contracts.cashier, bob, 1n, BUY_IN)).to.emit(
-      bluff,
-      "SeatVerificationStarted"
-    );
+    await payToJoin(contracts.chips, contracts.cashier, bob, 1n, BUY_IN);
+    await bluff.connect(bob).setReady(1, true);
+    await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "SeatVerificationStarted");
     const [table] = await bluff.getTable(1);
     expect(table.status).to.equal(VERIFYING);
     expect(await bluff.openTableCount()).to.equal(0n);
@@ -59,6 +59,7 @@ describe("checking paid seats", function () {
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
     await payToJoin(chips, cashier, bob, 1n, BUY_IN);
     await payToJoin(chips, cashier, carol, 1n, BUY_IN);
+    await readyAndStart(bluff, 1n, [alice, bob, carol]);
     await expect(confirmSeats(bluff, 1n, carol))
       .to.emit(bluff, "SeatRemoved")
       .withArgs(1n, bob.address)
@@ -79,6 +80,7 @@ describe("checking paid seats", function () {
     await payAndCall(chips, cashier, alice, BUY_IN, joinData(CREATE, 0n, 3, BUY_IN, true));
     await payToJoin(chips, cashier, bob, 1n, BUY_IN);
     await payToJoin(chips, cashier, carol, 1n, BUY_IN);
+    await readyAndStart(bluff, 1n, [alice, bob, carol]);
     await expect(confirmSeats(bluff, 1n, carol))
       .to.emit(bluff, "TableReopened")
       .and.not.to.emit(bluff, "TableListed");
@@ -91,6 +93,7 @@ describe("checking paid seats", function () {
     await claimChips(faucet, bob);
     await payToCreate(chips, cashier, alice, 2, BUY_IN);
     await payToJoin(chips, cashier, bob, 1n, BUY_IN);
+    await readyAndStart(bluff, 1n, [alice, bob]);
     await expect(confirmSeats(bluff, 1n, bob))
       .to.emit(bluff, "HostChanged")
       .withArgs(1n, bob.address);
@@ -100,6 +103,7 @@ describe("checking paid seats", function () {
     const { alice, bob, bluff, chips, cashier } = await deployGameFixture();
     await payToCreate(chips, cashier, alice, 2, BUY_IN);
     await payToJoin(chips, cashier, bob, 1n, BUY_IN);
+    await readyAndStart(bluff, 1n, [alice, bob]);
     await expect(confirmSeats(bluff, 1n, bob))
       .to.emit(bluff, "TableCancelled")
       .withArgs(1n);

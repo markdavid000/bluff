@@ -77,8 +77,8 @@ Expected length: 8 to 12 minutes; never more than about 17 (the clock plus the r
    - **Open tables:** a list of public tables waiting for players.
 5. **Waiting room.**
    - Shows the seats, the buy-in, an invite link and a 10-minute countdown.
-   - The **host** (the creator) can start once 2 players are seated.
-   - The table starts by itself when the last seat is filled.
+   - Each seated player marks themselves **Ready** or **Not ready**, shown on their avatar.
+   - The **host** (the creator) starts once 2 or more players are seated and every other player is ready. A full table never starts by itself (amended by [ADR-2026-11-12-waiting-room-and-ready](ADR-2026-11-12-waiting-room-and-ready.md)).
 6. **Game.** Rounds as in the game rules ADR, with the timings below.
 7. **Results.**
    - Shows the winner, the chips won and every player's final dice count.
@@ -141,7 +141,7 @@ The penalty for leaving a game is losing the buy-in. There is no other penalty a
 | A bid larger than the dice in play                   | Refused.                                                                                                    |
 | Not enough chips for a table                         | Join is refused; the app offers to claim practice chips if eligible.                                        |
 | A table fills while a player is joining              | Their move is refused; the app offers Play now.                                                             |
-| The host never starts a full table                   | Impossible: a full table starts by itself.                                                                  |
+| The host never starts a full table                   | After 10 minutes anyone seated may cancel it, and paid players are refunded.                                |
 | A player's move fails (network, sponsorship)         | An error toast with Try again; the turn timer keeps running, so the app warns when less than 10 s are left. |
 | A second tab or device                               | Both show the same game; moves from either count; the contract keeps one truth.                             |
 | A player in two games                                | Refused by the contract.                                                                                    |
@@ -163,7 +163,7 @@ A public game in progress can be watched read-only from the lobby: bids, dice co
           └──────────┴────────┬─────────┴──────────────┘
                               ▼
                         waiting room ── 10 min, < 2 players ──► cancelled, refunds
-                              │ full, or host starts
+                              │ everyone ready, host starts
                               ▼
                 ┌────► roll ─► peek ─► bid / raise ◄─┐ 45 s per turn
                 │                         │──────────┘

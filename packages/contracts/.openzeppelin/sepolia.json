@@ -1182,6 +1182,737 @@
           ]
         }
       }
+    },
+    "7ed640ea0732cdefc3b85a12c94c571fc6b083b0ca31b31942411e493d17e6e7": {
+      "address": "0xA10e003BfE989b4651602BC310208461bF96c322",
+      "txHash": "0xa782869dede06c811d522f9107f37651b61d2d4fb12216a3a0299df2f64d6bef",
+      "layout": {
+        "solcVersion": "0.8.27",
+        "storage": [],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IBluff)16070": {
+            "label": "contract IBluff",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC7984)10608": {
+            "label": "contract IERC7984",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_struct(Payment)15367_storage)": {
+            "label": "mapping(address => struct BluffCashier.Payment)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Payment)15367_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct BluffCashier.Payment))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_userDefinedValueType(euint64)16672)": {
+            "label": "mapping(uint256 => euint64)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(BluffCashierStorage)15387_storage": {
+            "label": "struct BluffCashier.BluffCashierStorage",
+            "members": [
+              {
+                "label": "chips",
+                "type": "t_contract(IERC7984)10608",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "bluff",
+                "type": "t_contract(IBluff)16070",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "pots",
+                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16672)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payments",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Payment)15367_storage))",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(InitializableStorage)11817_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)11339_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)11394_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)11496_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Payment)15367_storage": {
+            "label": "struct BluffCashier.Payment",
+            "members": [
+              {
+                "label": "paid",
+                "type": "t_userDefinedValueType(euint64)16672",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "paidInFull",
+                "type": "t_userDefinedValueType(ebool)16656",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_userDefinedValueType(ebool)16656": {
+            "label": "ebool",
+            "numberOfBytes": "32",
+            "underlying": "t_bytes32"
+          },
+          "t_userDefinedValueType(euint64)16672": {
+            "label": "euint64",
+            "numberOfBytes": "32",
+            "underlying": "t_bytes32"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          }
+        },
+        "namespaces": {
+          "erc7201:bluff.storage.BluffCashier": [
+            {
+              "contract": "BluffCashier",
+              "label": "chips",
+              "type": "t_contract(IERC7984)10608",
+              "src": "contracts/BluffCashier.sol:32",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "BluffCashier",
+              "label": "bluff",
+              "type": "t_contract(IBluff)16070",
+              "src": "contracts/BluffCashier.sol:33",
+              "offset": 0,
+              "slot": "1"
+            },
+            {
+              "contract": "BluffCashier",
+              "label": "pots",
+              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16672)",
+              "src": "contracts/BluffCashier.sol:34",
+              "offset": 0,
+              "slot": "2"
+            },
+            {
+              "contract": "BluffCashier",
+              "label": "payments",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Payment)15367_storage))",
+              "src": "contracts/BluffCashier.sol:35",
+              "offset": 0,
+              "slot": "3"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:29",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "27ebfc711ed83876fb556036c810935481bf10cdcf05c1cb8d452a296225af8d": {
+      "address": "0xC4bee5463fad2bEf09B80e321CeE2d7FD01B6546",
+      "txHash": "0x01b111a34c95ba6d91d0593472aa64a19dce7d285e79a9c79d9a16ac7513d305",
+      "layout": {
+        "solcVersion": "0.8.27",
+        "storage": [],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(Seat)14084_storage)dyn_storage": {
+            "label": "struct Bluff.Seat[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_userDefinedValueType(euint8)15303)dyn_storage": {
+            "label": "euint8[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IBluffCashier)15142": {
+            "label": "contract IBluffCashier",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TableStatus)14730": {
+            "label": "enum IBluff.TableStatus",
+            "members": [
+              "None",
+              "Waiting",
+              "Verifying",
+              "Playing",
+              "Revealing",
+              "Finished",
+              "Cancelled"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_array(t_struct(Seat)14084_storage)dyn_storage)": {
+            "label": "mapping(uint256 => struct Bluff.Seat[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+            "label": "mapping(uint256 => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Table)14071_storage)": {
+            "label": "mapping(uint256 => struct Bluff.Table)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(BluffStorage)14115_storage": {
+            "label": "struct Bluff.BluffStorage",
+            "members": [
+              {
+                "label": "cashier",
+                "type": "t_contract(IBluffCashier)15142",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "nextTableId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tables",
+                "type": "t_mapping(t_uint256,t_struct(Table)14071_storage)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "seats",
+                "type": "t_mapping(t_uint256,t_array(t_struct(Seat)14084_storage)dyn_storage)",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "tableOf",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "openTables",
+                "type": "t_struct(UintSet)13696_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "ready",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_struct(InitializableStorage)10954_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)10622_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)10677_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)10779_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Seat)14084_storage": {
+            "label": "struct Bluff.Seat",
+            "members": [
+              {
+                "label": "player",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "dice",
+                "type": "t_uint8",
+                "offset": 20,
+                "slot": "0"
+              },
+              {
+                "label": "missedTurns",
+                "type": "t_uint8",
+                "offset": 21,
+                "slot": "0"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 22,
+                "slot": "0"
+              },
+              {
+                "label": "currentDice",
+                "type": "t_array(t_userDefinedValueType(euint8)15303)dyn_storage",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Set)13319_storage": {
+            "label": "struct EnumerableSet.Set",
+            "members": [
+              {
+                "label": "_values",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_positions",
+                "type": "t_mapping(t_bytes32,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Table)14071_storage": {
+            "label": "struct Bluff.Table",
+            "members": [
+              {
+                "label": "host",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(TableStatus)14730",
+                "offset": 20,
+                "slot": "0"
+              },
+              {
+                "label": "isPrivate",
+                "type": "t_bool",
+                "offset": 21,
+                "slot": "0"
+              },
+              {
+                "label": "seatCount",
+                "type": "t_uint8",
+                "offset": 22,
+                "slot": "0"
+              },
+              {
+                "label": "playerCount",
+                "type": "t_uint8",
+                "offset": 23,
+                "slot": "0"
+              },
+              {
+                "label": "dicePerPlayer",
+                "type": "t_uint8",
+                "offset": 24,
+                "slot": "0"
+              },
+              {
+                "label": "diceInPlay",
+                "type": "t_uint8",
+                "offset": 25,
+                "slot": "0"
+              },
+              {
+                "label": "turn",
+                "type": "t_uint8",
+                "offset": 26,
+                "slot": "0"
+              },
+              {
+                "label": "roundStarter",
+                "type": "t_uint8",
+                "offset": 27,
+                "slot": "0"
+              },
+              {
+                "label": "bidQuantity",
+                "type": "t_uint8",
+                "offset": 28,
+                "slot": "0"
+              },
+              {
+                "label": "bidFace",
+                "type": "t_uint8",
+                "offset": 29,
+                "slot": "0"
+              },
+              {
+                "label": "bidder",
+                "type": "t_uint8",
+                "offset": 30,
+                "slot": "0"
+              },
+              {
+                "label": "caller",
+                "type": "t_uint8",
+                "offset": 31,
+                "slot": "0"
+              },
+              {
+                "label": "round",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "buyIn",
+                "type": "t_uint64",
+                "offset": 4,
+                "slot": "1"
+              },
+              {
+                "label": "createdAt",
+                "type": "t_uint64",
+                "offset": 12,
+                "slot": "1"
+              },
+              {
+                "label": "startedAt",
+                "type": "t_uint64",
+                "offset": 20,
+                "slot": "1"
+              },
+              {
+                "label": "deadline",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(UintSet)13696_storage": {
+            "label": "struct EnumerableSet.UintSet",
+            "members": [
+              {
+                "label": "_inner",
+                "type": "t_struct(Set)13319_storage",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          },
+          "t_userDefinedValueType(euint8)15303": {
+            "label": "euint8",
+            "numberOfBytes": "32",
+            "underlying": "t_bytes32"
+          }
+        },
+        "namespaces": {
+          "erc7201:bluff.storage.Bluff": [
+            {
+              "contract": "Bluff",
+              "label": "cashier",
+              "type": "t_contract(IBluffCashier)15142",
+              "src": "contracts/Bluff.sol:58",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Bluff",
+              "label": "nextTableId",
+              "type": "t_uint256",
+              "src": "contracts/Bluff.sol:59",
+              "offset": 0,
+              "slot": "1"
+            },
+            {
+              "contract": "Bluff",
+              "label": "tables",
+              "type": "t_mapping(t_uint256,t_struct(Table)14071_storage)",
+              "src": "contracts/Bluff.sol:60",
+              "offset": 0,
+              "slot": "2"
+            },
+            {
+              "contract": "Bluff",
+              "label": "seats",
+              "type": "t_mapping(t_uint256,t_array(t_struct(Seat)14084_storage)dyn_storage)",
+              "src": "contracts/Bluff.sol:61",
+              "offset": 0,
+              "slot": "3"
+            },
+            {
+              "contract": "Bluff",
+              "label": "tableOf",
+              "type": "t_mapping(t_address,t_uint256)",
+              "src": "contracts/Bluff.sol:62",
+              "offset": 0,
+              "slot": "4"
+            },
+            {
+              "contract": "Bluff",
+              "label": "openTables",
+              "type": "t_struct(UintSet)13696_storage",
+              "src": "contracts/Bluff.sol:63",
+              "offset": 0,
+              "slot": "5"
+            },
+            {
+              "contract": "Bluff",
+              "label": "ready",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))",
+              "src": "contracts/Bluff.sol:64",
+              "offset": 0,
+              "slot": "7"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:29",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
     }
   }
 }

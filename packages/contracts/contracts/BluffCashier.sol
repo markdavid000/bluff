@@ -68,7 +68,6 @@ contract BluffCashier is
         IBluff.JoinRequest memory request = abi.decode(data, (IBluff.JoinRequest));
         (uint256 id, uint64 tableBuyIn) = $.bluff.seatPaidPlayer(from, request);
         ebool paidInFull = _recordPayment($, id, from, amount, tableBuyIn);
-        $.bluff.startIfFull(id);
         return FHE.allowTransient(paidInFull, msg.sender);
     }
 
@@ -136,7 +135,7 @@ contract BluffCashier is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {

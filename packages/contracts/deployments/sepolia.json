@@ -8,13 +8,13 @@
   "contracts": {
     "Bluff": {
       "proxy": "0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e",
-      "implementation": "0x32BadacDF5791eCc1386aAa8b3cFBF5B27D96109",
-      "version": "1.0.0"
+      "implementation": "0xC4bee5463fad2bEf09B80e321CeE2d7FD01B6546",
+      "version": "1.1.0"
     },
     "BluffCashier": {
       "proxy": "0x4837497FEf56758e1bE765062a1504303bDC5EEe",
-      "implementation": "0xB8A3BA88d47cA1BBD5B530c0CC04145F8714Fe94",
-      "version": "1.0.0"
+      "implementation": "0xA10e003BfE989b4651602BC310208461bF96c322",
+      "version": "1.1.0"
     },
     "ChipFaucet": {
       "proxy": "0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC",

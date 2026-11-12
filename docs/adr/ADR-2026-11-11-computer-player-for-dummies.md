@@ -8,7 +8,7 @@ How you can play Bluff when nobody else is around: against the computer.
 
 ## How it works for you
 
-- In the lobby, press **Quick game**. A table is set up and the computer, called **Baba Dice**, sits down opposite you. The game starts by itself.
+- In the lobby, press **Quick game**. A table is set up and the computer, called **Baba Dice**, sits down opposite you and says it is ready. Press **Start the game** to begin.
 - If you press **Play now** and nobody joins within 30 seconds, the game offers to let you play the computer instead.
 - Baba Dice always shows a "Computer" badge, so you know who you're playing.
 

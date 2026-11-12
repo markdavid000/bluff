@@ -56,8 +56,17 @@ describe("explainProblem", () => {
       "AlreadyAtTable",
       "ClaimTooSoon",
       "InvalidAvatar",
+      "TableFull",
+      "NotEveryoneReady",
     ];
     for (const name of players) expect(errorCopy.reasons).toHaveProperty(name);
+  });
+
+  it("says a table filled up in plain words", () => {
+    expect(explainProblem(reverted(bluffAbi, "TableFull", [4n]))).toEqual({
+      kind: "failed",
+      reason: errorCopy.reasons.TableFull,
+    });
   });
 
   it("treats a player cancelling in their wallet as cancelled, not an error", () => {

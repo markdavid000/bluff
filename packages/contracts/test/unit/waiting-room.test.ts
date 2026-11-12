@@ -107,6 +107,8 @@ describe("waiting room", function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(2, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
+      await bluff.connect(alice).startTable(1);
       await time.increase(LOBBY_LIMIT + 1);
       await expect(bluff.connect(alice).cancelTable(1))
         .to.be.revertedWithCustomError(bluff, "WrongStatus")
@@ -117,6 +119,7 @@ describe("waiting room", function () {
       const { alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(4, false);
       await bluff.connect(bob).joinFreeTable(1);
+      await bluff.connect(bob).setReady(1, true);
       await time.increase(LOBBY_LIMIT + 1);
       await bluff.connect(alice).startTable(1);
       expect((await bluff.getTable(1))[0].status).to.equal(PLAYING);

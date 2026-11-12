@@ -127,7 +127,11 @@ describe("a full game on Sepolia", function () {
       send(() => bluff.connect(host).createFreeTable(2, false))
     );
     const id = await bluff.tableOf(host.address, atLastBlock());
-    await timed("free: join and roll", () => send(() => bluff.connect(guest).joinFreeTable(id)));
+    await timed("free: join", () => send(() => bluff.connect(guest).joinFreeTable(id)));
+    await timed("free: guest ready", () => send(() => bluff.connect(guest).setReady(id, true)));
+    await timed("free: host starts and rolls", () =>
+      send(() => bluff.connect(host).startTable(id))
+    );
     expect((await table(bluff, id)).status).to.equal(PLAYING);
     const dice = await bluff.diceOf(id, host.address, atLastBlock());
     const first = await timed("free: peek at own dice", () =>
@@ -155,6 +159,10 @@ describe("a full game on Sepolia", function () {
     const id = await bluff.tableOf(host.address, atLastBlock());
     await timed("paid: pay and join", () =>
       send(() => payAndCall(chips, cashier, guest, BUY_IN, joinData(JOIN, id, 0, 0n, false)))
+    );
+    await timed("paid: guest ready", () => send(() => bluff.connect(guest).setReady(id, true)));
+    await timed("paid: host starts the check", () =>
+      send(() => bluff.connect(host).startTable(id))
     );
     expect((await table(bluff, id)).status).to.equal(VERIFYING);
     await revealAndSettle(bluff, id, host, true);
