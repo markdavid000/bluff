@@ -18,7 +18,9 @@ The game itself is finished and running on the practice network. Now we build th
 
 **Practice chips, as the game really works.** You can claim 100 free chips once a day. The how-to-play page will be corrected to match.
 
-**Winning and cashing out.** When you win a game with chips at stake, the pot goes straight into your chip balance. There's nothing to press. **Cash out** turns your chips back into the practice dollars they were made from, which then show in any wallet. Here they're practice money; on the real network the same button would pay out real dollars.
+**Winning and cashing out.** When you win a game with chips at stake, the pot goes straight into your chip balance. There's nothing to press. **Cash out** turns your chips back into the practice dollars they were made from, which then show in any wallet. Here they're practice money; on the real network the same button would pay out real dollars. Your chip count is private, but practice dollars are public. Once you cash out, the chips card shows your practice dollars and links to a public page listing every cash out. If a cash out is interrupted halfway, the app offers to finish it, and pressing **Try again** never takes your chips twice.
+
+**Only your wallet ever signs.** If you sign in with Google or email, the app uses the wallet it made for you, even if another wallet such as MetaMask is installed in your browser. You never see a wallet pop-up. If you sign in with your own wallet, it asks you once to sign a free permission to see your chips, and switches to the game's network if needed.
 
 **Building before the website host comes back.** Our hosting account is paused until late November. Until then, every piece is tested on our own machines, and it goes online the moment hosting returns.
 

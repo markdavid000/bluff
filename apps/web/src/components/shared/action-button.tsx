@@ -7,6 +7,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { SoundName } from "@/config/sounds";
 import { useSound } from "@/hooks/use-sound";
+import { Cowrie } from "./cowrie";
 import { GameIcon, type GameIconName } from "./game-icon";
 import { SpinningDie } from "./spinning-die";
 
@@ -45,7 +46,7 @@ type ActionButtonProps = Omit<ComponentProps<"button">, "children"> &
     children: ReactNode;
     working?: boolean;
     workingLabel?: ReactNode;
-    icon?: GameIconName;
+    icon?: GameIconName | "cowrie";
     sound?: SoundName;
   };
 
@@ -92,7 +93,11 @@ export function ActionButton({
               </>
             ) : (
               <>
-                {icon && <GameIcon name={icon} size={iconSize} />}
+                {icon === "cowrie" ? (
+                  <Cowrie size={iconSize} />
+                ) : icon ? (
+                  <GameIcon name={icon} size={iconSize} />
+                ) : null}
                 {children}
               </>
             )}

@@ -16,3 +16,9 @@ export const gameTransport = fallback(
   ],
   { rank: false }
 );
+
+export const historyTransport = http(PUBLIC_SEPOLIA_RPC, { retryCount: 2, timeout: 10_000 });
+
+export function publicRecordOfDollars(account: `0x${string}`): string {
+  return `${gameChain.blockExplorers.default.url}/token/${contracts.dollars}?a=${account}`;
+}
