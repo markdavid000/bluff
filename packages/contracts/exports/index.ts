@@ -1,6 +1,13 @@
 import sepolia from "../deployments/sepolia.json";
 
-export { bluffAbi, bluffCashierAbi, chipFaucetAbi, chipTokenAbi, dollarTokenAbi } from "./abis";
+export {
+  bluffAbi,
+  bluffCashierAbi,
+  bluffInvitesAbi,
+  chipFaucetAbi,
+  chipTokenAbi,
+  dollarTokenAbi,
+} from "./abis";
 
 type Address = `0x${string}`;
 
@@ -10,6 +17,7 @@ export interface BluffDeployment {
   dollars: Address;
   bluff: Address;
   cashier: Address;
+  invites: Address;
   faucet: Address;
 }
 
@@ -24,5 +32,6 @@ export const sepoliaDeployment: BluffDeployment = {
   dollars: asAddress(sepolia.dollars),
   bluff: asAddress(sepolia.contracts.Bluff.proxy),
   cashier: asAddress(sepolia.contracts.BluffCashier.proxy),
+  invites: asAddress(sepolia.contracts.BluffInvites.proxy),
   faucet: asAddress(sepolia.contracts.ChipFaucet.proxy),
 };

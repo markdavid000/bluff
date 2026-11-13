@@ -108,6 +108,7 @@ interface IBluff {
     event TurnPassed(uint256 indexed id, uint8 turn, uint64 deadline);
     event GameEnded(uint256 indexed id, EndReason reason, address[] winners);
     event CashierSet(address indexed cashier);
+    event InvitesSet(address indexed invites);
 
     error ZeroAddress();
     error TableNotFound(uint256 id);
@@ -128,6 +129,8 @@ interface IBluff {
     error BidNotHigher(uint8 quantity, uint8 face, uint8 currentQuantity, uint8 currentFace);
     error NotCashier(address caller);
     error CashierAlreadySet();
+    error InvitesAlreadySet();
+    error NotInvited(uint256 id);
 
     function createFreeTable(uint8 seatCount, bool isPrivate) external returns (uint256 id);
 
@@ -162,6 +165,8 @@ interface IBluff {
 
     function setCashier(address cashierAddress) external;
 
+    function setInvites(address invitesAddress) external;
+
     function pause() external;
 
     function unpause() external;
@@ -179,6 +184,8 @@ interface IBluff {
     function revealHandles(uint256 id) external view returns (bytes32[] memory);
 
     function cashier() external view returns (address);
+
+    function invites() external view returns (address);
 
     function version() external pure returns (string memory);
 }

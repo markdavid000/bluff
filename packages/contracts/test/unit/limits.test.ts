@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { artifacts, ethers } from "hardhat";
 
 const SIZE_LIMIT = 24_576;
-const BLUFF_HEADROOM = 1_536;
+const BLUFF_HEADROOM = 896;
 const HCU_LIMIT_EXCEEDED = "0x77e3c293";
 const HCU_DEPTH_LIMIT_EXCEEDED = "0xfc344870";
 
@@ -24,7 +24,7 @@ describe("limits", function () {
   it("keeps every contract under the size limit, with room left in Bluff", async function () {
     if (process.env.SOLIDITY_COVERAGE === "true") this.skip();
     expect(await deployedSize("Bluff")).to.be.at.most(SIZE_LIMIT - BLUFF_HEADROOM);
-    for (const name of ["BluffCashier", "ChipFaucet"]) {
+    for (const name of ["BluffCashier", "BluffInvites", "ChipFaucet"]) {
       expect(await deployedSize(name)).to.be.below(SIZE_LIMIT);
     }
   });

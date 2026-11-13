@@ -2,6 +2,7 @@ import { ethers, upgrades } from "hardhat";
 import type {
   Bluff,
   BluffCashier,
+  BluffInvites,
   ChipFaucet,
   MockConfidentialUSDT,
   MockUSDT,
@@ -35,11 +36,18 @@ export async function deployGameFixture() {
   )) as unknown as BluffCashier;
   await (await bluff.connect(owner).setCashier(await cashier.getAddress())).wait();
 
+  const invites = (await upgrades.deployProxy(
+    await ethers.getContractFactory("BluffInvites"),
+    [owner.address, await bluff.getAddress()],
+    { kind: "uups" }
+  )) as unknown as BluffInvites;
+  await (await bluff.connect(owner).setInvites(await invites.getAddress())).wait();
+
   const faucet = (await upgrades.deployProxy(
     await ethers.getContractFactory("ChipFaucet"),
     [owner.address, await chips.getAddress(), await dollars.getAddress()],
     { kind: "uups" }
   )) as unknown as ChipFaucet;
 
-  return { owner, alice, bob, carol, dollars, chips, bluff, cashier, faucet };
+  return { owner, alice, bob, carol, dollars, chips, bluff, cashier, invites, faucet };
 }

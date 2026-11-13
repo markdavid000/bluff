@@ -180,13 +180,14 @@ packages/contracts/
 ├── contracts/
 │   ├── Bluff.sol             the game: tables, turns, bids, calls, reveals, endings; holds no chips
 │   ├── BluffCashier.sol      every chip: pay-and-join, payments, refunds, payouts
+│   ├── BluffInvites.sol      private tables' encrypted invite codes and who is invited
 │   ├── ChipFaucet.sol        daily practice chips and nicknames
-│   ├── interfaces/           external interfaces (IBluff, token interfaces)
+│   ├── interfaces/           external interfaces (IBluff, IBluffCashier, IBluffInvites, tokens)
 │   ├── libraries/            pure rule logic: BidRules, TableRules, NicknameRules
 │   └── mocks/                contracts that exist only for tests
 ├── config/                   chip token addresses per network
 ├── deployments/              proxy and implementation addresses per network
-├── tasks/                    Hardhat tasks: deploy, upgrade, accounts
+├── tasks/                    Hardhat tasks: deploy, deploy-invites, link-invites, upgrade, accounts
 ├── scripts/                  checks for this package: coverage gate, Slither
 └── test/
     ├── fixtures.ts           deploys what each test needs
@@ -196,7 +197,8 @@ packages/contracts/
 
 - Every external function, event, error and encrypted value is listed in [`contracts.md`](contracts.md).
 - `Bluff` and `BluffCashier` only accept their linking calls from each other (see [ADR-2026-11-11-bluff-cashier](adr/ADR-2026-11-11-bluff-cashier.md)). A player pays and joins through the chip token, which calls the cashier; the cashier seats the player in `Bluff`; `Bluff` tells the cashier whom to refund or pay.
-- `Bluff` is compiled with 50 optimizer runs (a per-file override in `hardhat.config.ts`) to keep at least 2 KB under the 24,576-byte contract size limit for future fixes. Every other contract uses 800.
+- `BluffInvites` only accepts new codes from `Bluff`, and `Bluff` asks it whether a player is invited before seating anyone at a private table (see [ADR-2026-11-13-private-tables-and-table-ids](adr/ADR-2026-11-13-private-tables-and-table-ids.md)).
+- `Bluff` is compiled with 50 optimizer runs (a per-file override in `hardhat.config.ts`). `limits.test.ts` keeps at least 896 bytes under the 24,576-byte contract size limit for future fixes, a margin the maintainer lowered when private tables were added. Every other contract uses 800.
 - One contract per file, named after the contract.
 - Rule logic that does not touch storage goes in a library so it can be tested on its own.
 - The contract is the source of truth for every rule. The web app may check a bid early to give instant feedback, but the contract decides.

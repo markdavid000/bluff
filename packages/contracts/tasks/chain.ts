@@ -1,5 +1,6 @@
 import type { ContractTransactionResponse } from "ethers";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import type { ProxyName, ProxyRecord } from "./deployments";
 
 const LIVE_CONFIRMATIONS = 2;
 const IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
@@ -29,7 +30,7 @@ export async function implementationAt(
 
 export async function versionAt(
   hre: HardhatRuntimeEnvironment,
-  name: "Bluff" | "BluffCashier" | "ChipFaucet",
+  name: ProxyName,
   proxy: string,
   blockTag: number
 ): Promise<string> {
@@ -52,4 +53,22 @@ export async function landedImplementation(
     await new Promise((resolve) => setTimeout(resolve, UPGRADE_CHECK_DELAY_MS));
   }
   throw new Error(`${proxy} does not point at ${expected} yet; the upgrade did not land.`);
+}
+
+export async function deployProxy(
+  hre: HardhatRuntimeEnvironment,
+  name: ProxyName,
+  args: unknown[]
+): Promise<ProxyRecord> {
+  const proxy = await hre.upgrades.deployProxy(await hre.ethers.getContractFactory(name), args, {
+    kind: "uups",
+  });
+  await proxy.waitForDeployment();
+  const block = await confirmedBlock(hre, proxy.deploymentTransaction());
+  const proxyAddress = await proxy.getAddress();
+  return {
+    proxy: proxyAddress,
+    implementation: await implementationAt(hre, proxyAddress, block),
+    version: await versionAt(hre, name, proxyAddress, block),
+  };
 }

@@ -90,10 +90,11 @@ describe("confidentiality", function () {
   });
 
   it("keeps paid-in-full flags private before the table fills", async function () {
-    const { alice, chips, cashier, faucet } = await deployGameFixture();
+    const { alice, bluff, chips, cashier, faucet } = await deployGameFixture();
     await claimChips(faucet, alice);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    const [flag] = await cashier.paymentHandles(1, [alice.address]);
+    const id = await bluff.tableOf(alice.address);
+    const [flag] = await cashier.paymentHandles(id, [alice.address]);
     expect(await canPublicDecrypt(flag)).to.equal(false);
     expect(await canUserDecrypt(FhevmType.ebool, flag, await cashier.getAddress(), alice)).to.equal(
       true

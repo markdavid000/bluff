@@ -10,10 +10,11 @@ describe("rounds", function () {
   it("starts round 1 with the host on turn and a 45 second deadline", async function () {
     const { alice, bob, bluff } = await deployGameFixture();
     await bluff.connect(alice).createFreeTable(2, false);
-    await bluff.connect(bob).joinFreeTable(1);
-    await bluff.connect(bob).setReady(1, true);
-    await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "RoundStarted");
-    const [table] = await bluff.getTable(1);
+    const id = await bluff.tableOf(alice.address);
+    await bluff.connect(bob).joinFreeTable(id);
+    await bluff.connect(bob).setReady(id, true);
+    await expect(bluff.connect(alice).startTable(id)).to.emit(bluff, "RoundStarted");
+    const [table] = await bluff.getTable(id);
     expect(table.round).to.equal(1n);
     expect(table.roundStarter).to.equal(0n);
     expect(table.turn).to.equal(0n);

@@ -3,8 +3,14 @@ import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signer
 import { expect } from "chai";
 import type { ContractTransactionResponse } from "ethers";
 import { ethers, fhevm } from "hardhat";
-import { readDeployment } from "../../tasks/deployments";
-import type { Bluff, BluffCashier, ChipFaucet, MockConfidentialUSDT } from "../../types";
+import { readDeployment, recordedProxy } from "../../tasks/deployments";
+import type {
+  Bluff,
+  BluffCashier,
+  BluffInvites,
+  ChipFaucet,
+  MockConfidentialUSDT,
+} from "../../types";
 import { CHIP, CREATE, JOIN, joinData, payAndCall } from "../helpers/chips";
 
 const BUY_IN = 10n * CHIP;
@@ -85,6 +91,7 @@ describe("a full game on Sepolia", function () {
   let guest: HardhatEthersSigner;
   let bluff: Bluff;
   let cashier: BluffCashier;
+  let invites: BluffInvites;
   let faucet: ChipFaucet;
   let chips: MockConfidentialUSDT;
 
@@ -97,6 +104,10 @@ describe("a full game on Sepolia", function () {
       "BluffCashier",
       record.contracts.BluffCashier.proxy
     )) as unknown as BluffCashier;
+    invites = (await ethers.getContractAt(
+      "BluffInvites",
+      recordedProxy(record, "BluffInvites").proxy
+    )) as unknown as BluffInvites;
     faucet = (await ethers.getContractAt(
       "ChipFaucet",
       record.contracts.ChipFaucet.proxy
@@ -172,5 +183,58 @@ describe("a full game on Sepolia", function () {
     await revealAndSettle(bluff, id, guest, false);
     await timed("paid: leave, winner paid", () => send(() => bluff.connect(guest).leaveTable(id)));
     expect((await table(bluff, id)).status).to.equal(FINISHED);
+  });
+
+  it("keeps a private table to players who prove the invite code", async function () {
+    await timed("private: create table", () =>
+      send(() => bluff.connect(host).createFreeTable(2, true))
+    );
+    const id = await bluff.tableOf(host.address, atLastBlock());
+    await caughtUp();
+    const refused = await bluff
+      .connect(guest)
+      .joinFreeTable.staticCall(id)
+      .then(
+        () => "",
+        (error: { data?: string }) => bluff.interface.parseError(error.data ?? "0x")?.name ?? ""
+      );
+    expect(refused).to.equal("NotInvited");
+
+    const address = String(invites.target);
+    const code = await timed("private: host reads the code", () =>
+      withRetry(async () =>
+        fhevm.userDecryptEuint(
+          FhevmType.euint64,
+          await invites.codeOf(id, atLastBlock()),
+          address,
+          host
+        )
+      )
+    );
+    async function attempt(guess: bigint, label: string) {
+      const input = await fhevm.createEncryptedInput(address, guest.address).add64(guess).encrypt();
+      await timed(`private: ${label} try`, () =>
+        send(() => invites.connect(guest).tryCode(id, input.handles[0], input.inputProof))
+      );
+      const handle = await invites.attemptOf(id, guest.address, atLastBlock());
+      const result = await timed(`private: ${label} public reveal`, () =>
+        withRetry(() => fhevm.publicDecrypt([handle]))
+      );
+      await timed(`private: ${label} confirm`, () =>
+        send(() =>
+          invites
+            .connect(guest)
+            .confirmCode(id, guest.address, result.abiEncodedClearValues, result.decryptionProof)
+        )
+      );
+    }
+    await attempt(code + 1n, "wrong");
+    expect(await invites.isInvited(id, guest.address, atLastBlock())).to.equal(false);
+    await attempt(code, "right");
+    expect(await invites.isInvited(id, guest.address, atLastBlock())).to.equal(true);
+    await timed("private: join", () => send(() => bluff.connect(guest).joinFreeTable(id)));
+    expect(await bluff.tableOf(guest.address, atLastBlock())).to.equal(id);
+    await timed("private: leave", () => send(() => bluff.connect(guest).leaveTable(id)));
+    await send(() => bluff.connect(host).leaveTable(id));
   });
 });

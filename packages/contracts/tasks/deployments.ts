@@ -14,12 +14,18 @@ export interface DeploymentRecord {
   deployedAt: string;
   chips: string;
   dollars: string;
-  contracts: Record<"Bluff" | "BluffCashier" | "ChipFaucet", ProxyRecord>;
+  contracts: Record<"Bluff" | "BluffCashier" | "ChipFaucet", ProxyRecord> &
+    Partial<Record<"BluffInvites", ProxyRecord>>;
 }
 
 export type ProxyName = keyof DeploymentRecord["contracts"];
 
-export const PROXY_NAMES: readonly ProxyName[] = ["Bluff", "BluffCashier", "ChipFaucet"];
+export const PROXY_NAMES: readonly ProxyName[] = [
+  "Bluff",
+  "BluffCashier",
+  "BluffInvites",
+  "ChipFaucet",
+];
 
 const DEPLOYMENTS_DIRECTORY = path.join(__dirname, "..", "deployments");
 
@@ -33,6 +39,14 @@ export function readDeployment(network: string): DeploymentRecord {
     throw new Error(`No deployment recorded for ${network}. Run the deploy task first.`);
   }
   return JSON.parse(readFileSync(file, "utf8")) as DeploymentRecord;
+}
+
+export function recordedProxy(record: DeploymentRecord, name: ProxyName): ProxyRecord {
+  const entry = record.contracts[name];
+  if (!entry) {
+    throw new Error(`${name} is not recorded on ${record.network}. Run deploy-invites first.`);
+  }
+  return entry;
 }
 
 export function writeDeployment(record: DeploymentRecord): string {
