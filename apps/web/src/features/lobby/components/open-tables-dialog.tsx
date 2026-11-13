@@ -35,9 +35,9 @@ export function OpenTablesDialog({
         if (!busy) onOpenChange(next);
       }}
     >
-      <DialogContent aria-describedby={undefined} className="max-w-5xl">
-        <PatternFrame>
-          <div className="flex flex-col gap-5">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-6xl">
+        <PatternFrame roomy>
+          <div className="flex flex-col gap-8">
             <div className="flex items-center justify-between gap-4">
               <DialogTitle>{lobbyCopy.openTables}</DialogTitle>
               <DialogClose asChild>
@@ -48,7 +48,7 @@ export function OpenTablesDialog({
             </div>
             {openTables.status === "ready" ? (
               openTables.tables.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 py-2 text-center">
+                <div className="flex flex-col items-center gap-6 py-4 text-center">
                   <EmptyTablesArt className="w-full max-w-sm" />
                   <p className="font-game text-2xl">{lobbyCopy.noOpenTables}</p>
                   <div className="flex flex-wrap justify-center gap-3">
@@ -67,7 +67,7 @@ export function OpenTablesDialog({
                   </div>
                 </div>
               ) : (
-                <ul className="grid max-h-[60dvh] gap-4 overflow-y-auto p-1 pb-3 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="grid max-h-[60dvh] gap-5 overflow-y-auto p-1 pb-3 sm:grid-cols-2 lg:grid-cols-3">
                   {openTables.tables.map((table) => (
                     <OpenTableCard
                       key={table.id.toString()}

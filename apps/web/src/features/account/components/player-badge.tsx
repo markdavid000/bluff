@@ -3,6 +3,7 @@
 import { ActionButton } from "@/components/shared/action-button";
 import { Avatar } from "@/components/shared/avatar";
 import { PatternFrame } from "@/components/shared/pattern-band";
+import { ScreenControls } from "@/components/shared/screen-controls";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { accountCopy } from "../copy";
 import { usePlayerBadge } from "../hooks/use-player-badge";
@@ -38,14 +39,15 @@ export function PlayerBadge() {
       <DialogTrigger asChild>
         <ActionButton tone="quiet" size="small" aria-label={accountCopy.openPlayer(player.name)}>
           <Avatar src={player.avatarSrc} size={30} />
-          <span className="font-game text-lg">{player.name}</span>
+          <span className="hidden font-game text-lg sm:inline">{player.name}</span>
         </ActionButton>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined}>
-        <PatternFrame>
-          <div className="flex flex-col items-center gap-4 py-2 text-center">
+        <PatternFrame roomy>
+          <div className="flex flex-col items-center gap-6 text-center">
             <Avatar src={player.avatarSrc} size={112} />
             <DialogTitle>{player.name}</DialogTitle>
+            <ScreenControls className="sm:hidden" />
             <ActionButton
               tone="quiet"
               icon="back"

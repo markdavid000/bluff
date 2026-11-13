@@ -1,6 +1,7 @@
 import { chipFaucetAbi, chipTokenAbi } from "@bluff/contracts";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { forgetBlocks, newestBlock } from "@/lib/block-clock";
 import { useSendMove } from "./use-send-move";
 
 vi.mock("@/config/env", () => ({
@@ -42,7 +43,7 @@ vi.mock("wagmi", () => ({
   usePublicClient: () => ({
     simulateContract: (request: { abi: readonly { type: string; name?: string }[] }) =>
       simulateContract(request),
-    waitForTransactionReceipt: async () => ({ status: "success" }),
+    waitForTransactionReceipt: async () => ({ status: "success", blockNumber: 4242n }),
   }),
   useSendTransaction: () => ({ sendTransactionAsync }),
   useConnection: () => ({ chainId: walletChainId }),
@@ -121,5 +122,12 @@ describe("useSendMove", () => {
     expect(known).toEqual(
       expect.arrayContaining(["AlreadyAtTable", "WrongStatus", "InvalidBuyIn", "ClaimTooSoon"])
     );
+  });
+
+  it("moves the block clock to the block its move landed in", async () => {
+    forgetBlocks();
+    const { result } = renderHook(() => useSendMove());
+    await result.current(CLAIM, vi.fn());
+    expect(newestBlock()).toBe(4242n);
   });
 });

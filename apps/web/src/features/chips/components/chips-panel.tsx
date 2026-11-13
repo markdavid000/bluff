@@ -16,9 +16,9 @@ export function ChipsPanel() {
   const { balance, claim, cashOut } = panel;
 
   return (
-    <PatternFrame className="w-full">
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
+    <PatternFrame roomy className="w-full">
+      <section className="flex flex-col gap-8">
+        <div className="flex items-center gap-5">
           <Cowrie size={56} />
           <div className="flex flex-col">
             <DialogTitle className="font-game text-lg text-muted-foreground">
@@ -62,7 +62,7 @@ export function ChipsPanel() {
           {chipsCopy.hiddenNote} {chipsCopy.practiceNote}
         </DialogDescription>
         {cashOut.dollars !== undefined && cashOut.dollars > 0n ? (
-          <div className="flex flex-col gap-1 rounded-xl bg-muted/60 px-4 py-3">
+          <div className="flex flex-col gap-2 rounded-xl bg-muted/60 px-5 py-4">
             <p aria-live="polite" className="font-game text-lg">
               <CountingAmount
                 amount={cashOut.dollars}

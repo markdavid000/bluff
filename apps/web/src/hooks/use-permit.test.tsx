@@ -21,6 +21,7 @@ let stored = false;
 let walletClientType = "privy";
 let walletChainId: number | undefined = 11155111;
 let connectedAddress: string | undefined = "0x1";
+let connectionStatus = "connected";
 
 const sdk = {};
 
@@ -28,7 +29,11 @@ vi.mock("@privy-io/react-auth", () => ({
   usePrivy: () => ({ user: { wallet: { address: "0x1", walletClientType } } }),
 }));
 vi.mock("wagmi", () => ({
-  useConnection: () => ({ chainId: walletChainId, address: connectedAddress }),
+  useConnection: () => ({
+    chainId: walletChainId,
+    address: connectedAddress,
+    status: connectionStatus,
+  }),
   useSwitchChain: () => ({ mutateAsync: switchChain }),
 }));
 vi.mock("@zama-fhe/sdk/query", () => ({
@@ -71,6 +76,7 @@ beforeEach(() => {
   walletClientType = "privy";
   walletChainId = 11155111;
   connectedAddress = "0x1";
+  connectionStatus = "connected";
   sign.mockResolvedValue(undefined);
   switchChain.mockImplementation(async ({ chainId }: { chainId: number }) => {
     walletChainId = chainId;
@@ -143,5 +149,21 @@ describe("usePermit", () => {
     await waitFor(() => expect(result.current.granting).toBe(false));
     expect(sign).not.toHaveBeenCalled();
     expect(result.current.status).toBe("checking");
+  });
+
+  it("waits for the wallet to finish reconnecting before signing", async () => {
+    connectionStatus = "reconnecting";
+    const queryClient = new QueryClient();
+    const { result, rerender } = render(true, queryClient);
+    await waitFor(() =>
+      expect(queryClient.getQueryState([...HAS_PERMIT, "0x1"])?.status).toBe("success")
+    );
+    await act(() => new Promise((settle) => setTimeout(settle, 20)));
+    expect(sign).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("checking");
+    connectionStatus = "connected";
+    rerender();
+    await waitFor(() => expect(result.current.status).toBe("granted"));
+    expect(sign).toHaveBeenCalledOnce();
   });
 });

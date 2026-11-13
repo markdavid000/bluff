@@ -1,23 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
 import { tableCopy } from "../../copy";
+import { BoardPlaceholder, LazyBoardScene } from "./lazy-board";
 import { PREVIEW_CHIPS_EACH, PREVIEW_SEATS, usePreviewBoard } from "../../hooks/use-preview-board";
-
-const BoardScene = dynamic(() => import("./board-scene").then((module) => module.BoardScene), {
-  ssr: false,
-  loading: () => <BoardPlaceholder />,
-});
-
-function BoardPlaceholder() {
-  return (
-    <div className="flex aspect-square w-full items-center justify-center font-game text-lg text-muted-foreground">
-      {tableCopy.loadingBoard}
-    </div>
-  );
-}
 
 export function BoardPreview() {
   const board = usePreviewBoard();
@@ -26,7 +13,7 @@ export function BoardPreview() {
     <div className="flex w-full flex-col gap-5">
       <div className="mx-auto w-full max-w-[760px]">
         {board.colors ? (
-          <BoardScene
+          <LazyBoardScene
             colors={board.colors}
             seats={PREVIEW_SEATS}
             throwState={board.throwState}

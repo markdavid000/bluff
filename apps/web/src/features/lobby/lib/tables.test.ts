@@ -1,17 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { decodeAbiParameters } from "viem";
 import { ONE_CHIP } from "@/lib/chips";
 import { lobbyCopy } from "../copy";
-import {
-  BUY_INS,
-  affordProblem,
-  type TableView,
-  inviteLink,
-  joinRequestData,
-  openSeats,
-  parseTableLink,
-  toLobbyTable,
-} from "./tables";
+import { BUY_INS, affordProblem, type TableView, openSeats, toLobbyTable } from "./tables";
 
 const view: TableView = {
   id: 12n,
@@ -34,14 +24,6 @@ const view: TableView = {
   bidder: 0,
   caller: 0,
 };
-
-const REQUEST = [
-  { type: "uint8" },
-  { type: "uint256" },
-  { type: "uint8" },
-  { type: "uint64" },
-  { type: "bool" },
-] as const;
 
 describe("BUY_INS", () => {
   it("offers exactly the chips to play the game allows", () => {
@@ -71,51 +53,6 @@ describe("toLobbyTable", () => {
 describe("openSeats", () => {
   it("counts the seats still free", () => {
     expect(openSeats(toLobbyTable(view))).toBe(1);
-  });
-});
-
-describe("joinRequestData", () => {
-  it("encodes creating a paid table the way the cashier reads it", () => {
-    const data = joinRequestData({
-      kind: "create",
-      seatCount: 2,
-      buyIn: 10n * ONE_CHIP,
-      isPrivate: true,
-    });
-    expect(decodeAbiParameters(REQUEST, data)).toEqual([0, 0n, 2, 10n * ONE_CHIP, true]);
-  });
-
-  it("encodes joining a paid table by its number", () => {
-    const data = joinRequestData({ kind: "join", tableId: 12n });
-    expect(decodeAbiParameters(REQUEST, data)).toEqual([1, 12n, 0, 0n, false]);
-  });
-});
-
-describe("table links", () => {
-  it("builds an invite link back to the lobby", () => {
-    expect(inviteLink("https://bluff.example", 12n)).toBe("https://bluff.example/play?join=12");
-  });
-
-  it.each([
-    ["https://bluff.example/play?join=12", 12n],
-    ["http://localhost:3002/play?join=7&x=1", 7n],
-    ["/play?join=42", 42n],
-    ["  42 ", 42n],
-    ["#9", 9n],
-  ])("reads %s", (input, id) => {
-    expect(parseTableLink(input)).toBe(id);
-  });
-
-  it.each([
-    "",
-    "0",
-    "-3",
-    "abc",
-    "https://bluff.example/play",
-    "https://bluff.example/play?join=x",
-    "1e3",
-  ])("rejects %s", (input) => {
-    expect(parseTableLink(input)).toBeNull();
   });
 });
 

@@ -38,4 +38,20 @@ describe("usePlayer", () => {
     const { result } = renderHook(() => usePlayer());
     expect(result.current).toMatchObject({ status: "ready", nickname: "Dave", avatar: 3 });
   });
+
+  it("never shows the last account's name while another account's profile loads", () => {
+    profile = {
+      isPending: false,
+      isError: false,
+      isPlaceholderData: true,
+      data: ["Dave", [3, ""]],
+    };
+    expect(renderHook(() => usePlayer()).result.current.status).toBe("loading");
+  });
+
+  it("reports a profile in the wrong shape as a failure instead of guessing", () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    profile = { isPending: false, isError: false, data: ["Dave"] };
+    expect(renderHook(() => usePlayer()).result.current.status).toBe("failed");
+  });
 });

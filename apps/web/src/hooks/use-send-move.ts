@@ -11,6 +11,7 @@ import {
 } from "viem";
 import { usePublicClient, useSendTransaction } from "wagmi";
 import { gameChain } from "@/config/chain";
+import { seeBlock } from "@/lib/block-clock";
 import { MoveNotReadyError } from "@/lib/errors";
 import { useEnsureGameChain } from "./use-game-chain";
 
@@ -68,6 +69,7 @@ export function useSendMove() {
     report("waiting");
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(`The move ${hash} did not go through.`);
+    seeBlock(receipt.blockNumber);
     return receipt;
   };
 }

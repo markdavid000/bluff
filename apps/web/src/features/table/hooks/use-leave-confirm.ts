@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-export function useLeaveConfirm({ needed, leave }: { needed: boolean; leave: () => void }) {
+export function useLeaveConfirm(leave: () => void) {
   const [asking, setAsking] = useState(false);
   return {
     asking,
     setAsking,
-    request: () => (needed ? setAsking(true) : leave()),
+    ask: () => setAsking(true),
     confirm: () => {
       setAsking(false);
       leave();

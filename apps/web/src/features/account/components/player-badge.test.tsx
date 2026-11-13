@@ -4,6 +4,11 @@ import { accountCopy } from "../copy";
 import { PlayerBadge } from "./player-badge";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
+vi.mock("@/components/shared/screen-controls", () => ({
+  ScreenControls: ({ className }: { className?: string }) => (
+    <div role="group" aria-label="Screen controls" className={className} />
+  ),
+}));
 
 const signOut = vi.fn();
 let open = false;
@@ -64,5 +69,13 @@ describe("PlayerBadge", () => {
     expect(screen.getByRole("dialog", { name: "Dave #4E31" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: accountCopy.signOut }));
     expect(signOut).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the header small on phones: the face only, with night mode and sounds moved into the card", () => {
+    player = ready;
+    open = true;
+    render(<PlayerBadge />);
+    expect(screen.getByText("Dave #4E31", { selector: "span" })).toHaveClass("hidden", "sm:inline");
+    expect(screen.getByRole("group", { name: "Screen controls" })).toHaveClass("sm:hidden");
   });
 });

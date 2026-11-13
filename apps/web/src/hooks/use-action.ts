@@ -13,23 +13,23 @@ export const BUSY_AFTER_MS = 15_000;
 export type ActionStatus =
   { kind: "idle" } | { kind: MoveStep } | { kind: "done" } | { kind: "failed"; reason: string };
 
-interface ActionOptions<Args extends unknown[]> {
+interface ActionOptions<Args extends unknown[], Result> {
   id: string;
   working: string;
   done?: string;
   quiet?: boolean;
-  run: (report: (step: MoveStep) => void, ...args: Args) => Promise<unknown>;
-  onDone?: () => void;
+  run: (report: (step: MoveStep) => void, ...args: Args) => Promise<Result>;
+  onDone?: (result: Result) => void;
 }
 
-export function useAction<Args extends unknown[]>({
+export function useAction<Args extends unknown[], Result = unknown>({
   id,
   working,
   done,
   quiet = false,
   run,
   onDone,
-}: ActionOptions<Args>) {
+}: ActionOptions<Args, Result>) {
   const [status, setStatus] = useState<ActionStatus>({ kind: "idle" });
   const timers = useRef<number[]>([]);
   const shownAt = useRef<number | null>(null);
@@ -64,13 +64,13 @@ export function useAction<Args extends unknown[]>({
       );
     }
     try {
-      await run((step) => setStatus({ kind: step }), ...args);
+      const result = await run((step) => setStatus({ kind: step }), ...args);
       clearTimers();
       afterMinimum(() => {
         setStatus({ kind: "done" });
         if (!quiet && done) notify.success(done, { id });
         else if (shownAt.current !== null) notify.dismiss(id);
-        onDone?.();
+        onDone?.(result);
       });
     } catch (error) {
       clearTimers();

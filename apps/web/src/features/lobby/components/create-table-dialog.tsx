@@ -50,9 +50,9 @@ export function CreateTableDialog({
       }}
     >
       <DialogContent>
-        <PatternFrame>
+        <PatternFrame roomy>
           <form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-8"
             onSubmit={(event) => {
               event.preventDefault();
               onCreate(form.seatCount, form.isPrivate);
@@ -60,16 +60,16 @@ export function CreateTableDialog({
           >
             <DialogTitle>{lobbyCopy.createTitle}</DialogTitle>
             <DialogDescription className="sr-only">{lobbyCopy.createTable}</DialogDescription>
-            <fieldset role="radiogroup" className="flex flex-col gap-2" disabled={working}>
-              <legend className="mb-2 font-game text-lg">{lobbyCopy.seats}</legend>
-              <div className="flex flex-wrap gap-2">
+            <fieldset role="radiogroup" className="flex flex-col gap-3" disabled={working}>
+              <legend className="mb-3 font-game text-lg">{lobbyCopy.seats}</legend>
+              <div className="flex flex-wrap gap-3">
                 {SEAT_COUNTS.map((count) => {
                   const checked = form.seatCount === count;
                   return (
                     <label
                       key={count}
                       className={cn(
-                        "flex cursor-pointer flex-col rounded-xl border-2 px-3 py-2 select-none has-focus-visible:ring-4 has-focus-visible:ring-ring/60",
+                        "flex cursor-pointer flex-col gap-0.5 rounded-xl border-2 px-5 py-3 select-none has-focus-visible:ring-4 has-focus-visible:ring-ring/60",
                         checked
                           ? "border-seat-yellow-edge bg-seat-yellow text-seat-yellow-foreground"
                           : "border-tile-edge/50 bg-tile text-tile-foreground"
@@ -102,7 +102,7 @@ export function CreateTableDialog({
                 onChange={form.togglePrivate}
                 className="mt-1 size-5 accent-seat-green"
               />
-              <span className="flex flex-col">
+              <span className="flex flex-col gap-1">
                 <label htmlFor={privateId} className="font-game text-base">
                   {lobbyCopy.private}
                 </label>

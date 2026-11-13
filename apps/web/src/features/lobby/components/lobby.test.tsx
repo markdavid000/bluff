@@ -27,12 +27,10 @@ const sitDown = {
   join: vi.fn(),
   playNow: vi.fn(),
   creating: false,
-  joining: false,
   findingSeat: false,
   working: false,
   confirmInWallet: false,
 };
-const leaveTable = { leave: vi.fn(), leaving: false, confirmInWallet: false };
 
 type Lobby = Record<string, unknown>;
 
@@ -43,10 +41,6 @@ const base: Lobby = {
   problemFor: () => null,
   openTables: { status: "ready", tables: [] },
   myTableId: { status: "ready", id: null },
-  myTable: { status: "none" },
-  invited: null,
-  invitedProblem: null,
-  dismissInvite: vi.fn(),
   joinLink: { text: "", invalid: false, change: vi.fn(), submit: vi.fn() },
   createOpen: false,
   setCreateOpen: vi.fn(),
@@ -54,17 +48,15 @@ const base: Lobby = {
   setTablesOpen: vi.fn(),
   createFromTables: vi.fn(),
   sitDown,
-  leaveTable,
   playNow: vi.fn(),
   createTable: vi.fn(),
-  copyInvite: vi.fn(),
 };
 
 let lobby: Lobby = base;
 vi.mock("../hooks/use-lobby", () => ({ useLobby: () => lobby }));
 
 function show() {
-  render(<Lobby greeting={<h1>Ready to play, Brave Otter?</h1>} invite={null} />);
+  render(<Lobby greeting={<h1>Ready to play, Brave Otter?</h1>} />);
 }
 
 beforeEach(() => {
@@ -126,91 +118,14 @@ describe("Lobby", () => {
     expect(screen.queryByText(lobbyCopy.tableName("12"))).not.toBeInTheDocument();
   });
 
-  it("shows the player's own table, with the invite link and a way to leave", () => {
-    lobby = {
-      ...base,
-      myTableId: { status: "ready", id: 12n },
-      myTable: {
-        status: "ready",
-        seated: { table: table(12n, 1, 3), players: [ACCOUNT], status: 1 },
-      },
-    };
+  it("sends a seated player back to their table instead of offering another seat", () => {
+    lobby = { ...base, myTableId: { status: "ready", id: 12n } };
     show();
     expect(screen.queryByRole("button", { name: lobbyCopy.playNow })).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(lobbyCopy.waitingFor(2));
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.copyInvite }));
-    expect(base.copyInvite).toHaveBeenCalledWith(12n);
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leave }));
-    expect(leaveTable.leave).toHaveBeenCalledWith(12n);
-  });
-
-  it("says everyone is here, not that it waits for nobody, when a waiting table is full", () => {
-    lobby = {
-      ...base,
-      myTableId: { status: "ready", id: 12n },
-      myTable: {
-        status: "ready",
-        seated: { table: table(12n, 2, 2), players: [ACCOUNT], status: 1 },
-      },
-    };
-    show();
-    expect(screen.getByRole("status")).toHaveTextContent(lobbyCopy.everyoneHere);
-    expect(screen.queryByText(lobbyCopy.waitingFor(0))).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: lobbyCopy.copyInvite })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leave }));
-    expect(leaveTable.leave).toHaveBeenCalledWith(12n);
-  });
-
-  it("lets a player leave a game that has started, but asks first", () => {
-    lobby = {
-      ...base,
-      myTableId: { status: "ready", id: 12n },
-      myTable: {
-        status: "ready",
-        seated: { table: { ...table(12n, 2, 2), waiting: false }, players: [ACCOUNT], status: 3 },
-      },
-    };
-    show();
-    expect(screen.queryByRole("button", { name: lobbyCopy.copyInvite })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leave }));
-    expect(leaveTable.leave).not.toHaveBeenCalled();
-    const dialog = screen.getByRole("dialog", { name: lobbyCopy.leaveConfirmTitle });
-    expect(dialog).toHaveTextContent(lobbyCopy.leaveWarning);
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.stay }));
-    expect(leaveTable.leave).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leave }));
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.leaveConfirm }));
-    expect(leaveTable.leave).toHaveBeenCalledWith(12n);
-  });
-
-  it("offers the table from an invite link", () => {
-    lobby = {
-      ...base,
-      invited: {
-        id: 9n,
-        read: {
-          status: "ready",
-          seated: { table: table(9n, 1, 2), players: [ACCOUNT], status: 1 },
-        },
-      },
-    };
-    show();
-    expect(screen.getByText(lobbyCopy.invitedTitle("9"))).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.join }));
-    expect(sitDown.join).toHaveBeenCalledWith({ kind: "join", tableId: 9n, buyIn: 0n });
-  });
-
-  it("explains an invite to a table that has filled up", () => {
-    lobby = {
-      ...base,
-      invited: {
-        id: 9n,
-        read: { status: "ready", seated: { table: table(9n, 2, 2), players: [], status: 1 } },
-      },
-      invitedProblem: lobbyCopy.invitedFull,
-    };
-    show();
-    expect(screen.getByText(lobbyCopy.invitedFull)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: lobbyCopy.join })).toBeDisabled();
+    expect(screen.getByText(lobbyCopy.seatedAt("12"))).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: lobbyCopy.backToTable })).toHaveAttribute(
+      "href",
+      "/table/12"
+    );
   });
 });
