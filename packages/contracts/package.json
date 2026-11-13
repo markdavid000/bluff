@@ -15,6 +15,8 @@
     "deploy:sepolia": "hardhat deploy --network sepolia",
     "coverage:check": "node scripts/check-coverage.mjs",
     "deploy:local": "hardhat deploy --network localhost",
+    "deploy-invites:sepolia": "hardhat deploy-invites --network sepolia",
+    "link-invites:sepolia": "hardhat link-invites --network sepolia",
     "upgrade:sepolia": "hardhat upgrade --network sepolia",
     "slither": "./scripts/slither.sh",
     "validate-layout:sepolia": "hardhat validate-layout --network sepolia"

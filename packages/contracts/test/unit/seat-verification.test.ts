@@ -2,6 +2,7 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { fhevm } from "hardhat";
 import { deployGameFixture } from "../fixtures";
+import { proveCode } from "../helpers/invites";
 import {
   CHIP,
   CREATE,
@@ -30,13 +31,14 @@ describe("checking paid seats", function () {
     await claimChips(contracts.faucet, alice);
     await claimChips(contracts.faucet, bob);
     await payToCreate(contracts.chips, contracts.cashier, alice, 2, BUY_IN);
-    await payToJoin(contracts.chips, contracts.cashier, bob, 1n, BUY_IN);
-    await bluff.connect(bob).setReady(1, true);
-    await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "SeatVerificationStarted");
-    const [table] = await bluff.getTable(1);
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(contracts.chips, contracts.cashier, bob, id, BUY_IN);
+    await bluff.connect(bob).setReady(id, true);
+    await expect(bluff.connect(alice).startTable(id)).to.emit(bluff, "SeatVerificationStarted");
+    const [table] = await bluff.getTable(id);
     expect(table.status).to.equal(VERIFYING);
     expect(await bluff.openTableCount()).to.equal(0n);
-    expect(await bluff.revealHandles(1)).to.have.length(2);
+    expect(await bluff.revealHandles(id)).to.have.length(2);
   });
 
   it("starts the game when everyone paid in full", async function () {
@@ -57,16 +59,17 @@ describe("checking paid seats", function () {
     await claimChips(faucet, alice);
     await claimChips(faucet, carol);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    await payToJoin(chips, cashier, carol, 1n, BUY_IN);
-    await readyAndStart(bluff, 1n, [alice, bob, carol]);
-    await expect(confirmSeats(bluff, 1n, carol))
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    await payToJoin(chips, cashier, carol, id, BUY_IN);
+    await readyAndStart(bluff, id, [alice, bob, carol]);
+    await expect(confirmSeats(bluff, id, carol))
       .to.emit(bluff, "SeatRemoved")
-      .withArgs(1n, bob.address)
+      .withArgs(id, bob.address)
       .and.to.emit(bluff, "TableReopened")
       .and.to.emit(bluff, "TableListed")
-      .withArgs(1n);
-    const [table, seats] = await bluff.getTable(1);
+      .withArgs(id);
+    const [table, seats] = await bluff.getTable(id);
     expect(table.status).to.equal(WAITING);
     expect(table.deadline - BigInt(await time.latest())).to.equal(BigInt(LIMIT));
     expect(seats.map((seat) => seat.player)).to.deep.equal([alice.address, carol.address]);
@@ -74,14 +77,17 @@ describe("checking paid seats", function () {
   });
 
   it("reopens a private table without listing it", async function () {
-    const { alice, bob, carol, bluff, chips, cashier, faucet } = await deployGameFixture();
+    const { alice, bob, carol, bluff, invites, chips, cashier, faucet } = await deployGameFixture();
     await claimChips(faucet, alice);
     await claimChips(faucet, carol);
     await payAndCall(chips, cashier, alice, BUY_IN, joinData(CREATE, 0n, 3, BUY_IN, true));
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    await payToJoin(chips, cashier, carol, 1n, BUY_IN);
-    await readyAndStart(bluff, 1n, [alice, bob, carol]);
-    await expect(confirmSeats(bluff, 1n, carol))
+    const id = await bluff.tableOf(alice.address);
+    await proveCode(invites, id, alice, bob);
+    await proveCode(invites, id, alice, carol);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    await payToJoin(chips, cashier, carol, id, BUY_IN);
+    await readyAndStart(bluff, id, [alice, bob, carol]);
+    await expect(confirmSeats(bluff, id, carol))
       .to.emit(bluff, "TableReopened")
       .and.not.to.emit(bluff, "TableListed");
     expect(await bluff.openTableCount()).to.equal(0n);
@@ -92,22 +98,24 @@ describe("checking paid seats", function () {
     const { alice, bob, bluff, chips, cashier, faucet } = contracts;
     await claimChips(faucet, bob);
     await payToCreate(chips, cashier, alice, 2, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    await readyAndStart(bluff, 1n, [alice, bob]);
-    await expect(confirmSeats(bluff, 1n, bob))
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    await readyAndStart(bluff, id, [alice, bob]);
+    await expect(confirmSeats(bluff, id, bob))
       .to.emit(bluff, "HostChanged")
-      .withArgs(1n, bob.address);
+      .withArgs(id, bob.address);
   });
 
   it("closes the table when nobody paid", async function () {
     const { alice, bob, bluff, chips, cashier } = await deployGameFixture();
     await payToCreate(chips, cashier, alice, 2, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    await readyAndStart(bluff, 1n, [alice, bob]);
-    await expect(confirmSeats(bluff, 1n, bob))
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    await readyAndStart(bluff, id, [alice, bob]);
+    await expect(confirmSeats(bluff, id, bob))
       .to.emit(bluff, "TableCancelled")
-      .withArgs(1n);
-    expect((await bluff.getTable(1))[0].status).to.equal(CANCELLED);
+      .withArgs(id);
+    expect((await bluff.getTable(id))[0].status).to.equal(CANCELLED);
   });
 
   it("accepts a check only once and refuses a forged one", async function () {

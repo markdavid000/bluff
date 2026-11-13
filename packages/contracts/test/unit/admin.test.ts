@@ -5,10 +5,14 @@ import { deployGameFixture } from "../fixtures";
 describe("admin", function () {
   describe("initialisation", function () {
     it("sets owners, links and versions, unpaused", async function () {
-      const { owner, chips, dollars, bluff, cashier, faucet } = await deployGameFixture();
+      const { owner, chips, dollars, bluff, cashier, invites, faucet } = await deployGameFixture();
       expect(await bluff.owner()).to.equal(owner.address);
       expect(await bluff.cashier()).to.equal(await cashier.getAddress());
-      expect(await bluff.version()).to.equal("1.1.0");
+      expect(await bluff.invites()).to.equal(await invites.getAddress());
+      expect(await bluff.version()).to.equal("1.2.0");
+      expect(await invites.owner()).to.equal(owner.address);
+      expect(await invites.bluff()).to.equal(await bluff.getAddress());
+      expect(await invites.version()).to.equal("1.0.0");
       expect(await bluff.paused()).to.equal(false);
       expect(await cashier.owner()).to.equal(owner.address);
       expect(await cashier.chips()).to.equal(await chips.getAddress());
@@ -77,8 +81,8 @@ describe("admin", function () {
 
   describe("pausing", function () {
     it("lets only the owner pause and unpause, with events", async function () {
-      const { owner, alice, bluff, cashier, faucet } = await deployGameFixture();
-      for (const contract of [bluff, cashier, faucet]) {
+      const { owner, alice, bluff, cashier, invites, faucet } = await deployGameFixture();
+      for (const contract of [bluff, cashier, invites, faucet]) {
         await expect(contract.connect(alice).pause())
           .to.be.revertedWithCustomError(contract, "OwnableUnauthorizedAccount")
           .withArgs(alice.address);
@@ -101,32 +105,34 @@ describe("admin", function () {
     it("stops new tables and joins while paused, and only those", async function () {
       const { owner, alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
+      const id = await bluff.tableOf(alice.address);
       await bluff.connect(owner).pause();
       await expect(bluff.connect(bob).createFreeTable(2, false)).to.be.revertedWithCustomError(
         bluff,
         "EnforcedPause"
       );
-      await expect(bluff.connect(bob).joinFreeTable(1)).to.be.revertedWithCustomError(
+      await expect(bluff.connect(bob).joinFreeTable(id)).to.be.revertedWithCustomError(
         bluff,
         "EnforcedPause"
       );
-      await expect(bluff.connect(alice).leaveTable(1)).to.emit(bluff, "PlayerLeft");
+      await expect(bluff.connect(alice).leaveTable(id)).to.emit(bluff, "PlayerLeft");
     });
 
     it("lets a waiting table start while paused", async function () {
       const { owner, alice, bob, bluff } = await deployGameFixture();
       await bluff.connect(alice).createFreeTable(3, false);
-      await bluff.connect(bob).joinFreeTable(1);
-      await bluff.connect(bob).setReady(1, true);
+      const id = await bluff.tableOf(alice.address);
+      await bluff.connect(bob).joinFreeTable(id);
+      await bluff.connect(bob).setReady(id, true);
       await bluff.connect(owner).pause();
-      await expect(bluff.connect(alice).startTable(1)).to.emit(bluff, "GameStarted");
+      await expect(bluff.connect(alice).startTable(id)).to.emit(bluff, "GameStarted");
     });
   });
 
   describe("ownership", function () {
     it("moves only when the new owner accepts", async function () {
-      const { owner, alice, bob, bluff, cashier, faucet } = await deployGameFixture();
-      for (const contract of [bluff, cashier, faucet]) {
+      const { owner, alice, bob, bluff, cashier, invites, faucet } = await deployGameFixture();
+      for (const contract of [bluff, cashier, invites, faucet]) {
         await expect(contract.connect(owner).transferOwnership(alice.address))
           .to.emit(contract, "OwnershipTransferStarted")
           .withArgs(owner.address, alice.address);

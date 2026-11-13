@@ -14,6 +14,7 @@ import {
   payToCreate,
   payToJoin,
 } from "../helpers/chips";
+import { nextTableId } from "../helpers/table-ids";
 
 const WAITING = 1n;
 const BUY_IN = 10n * CHIP;
@@ -22,15 +23,16 @@ describe("pay and join", function () {
   it("creates a paid table and keeps exactly the buy-in", async function () {
     const { alice, chips, bluff, cashier, faucet } = await deployGameFixture();
     await claimChips(faucet, alice);
+    const id = await nextTableId(bluff, alice);
     await expect(payToCreate(chips, cashier, alice, 3, BUY_IN))
       .to.emit(bluff, "TableCreated")
-      .withArgs(1n, alice.address, 3, 3, BUY_IN, false)
+      .withArgs(id, alice.address, 3, 3, BUY_IN, false)
       .and.to.emit(cashier, "PaymentRecorded");
-    const [table] = await bluff.getTable(1);
+    const [table] = await bluff.getTable(id);
     expect(table.status).to.equal(WAITING);
     expect(table.buyIn).to.equal(BUY_IN);
     expect(await chipBalance(chips, alice)).to.equal(90n * CHIP);
-    const paid = await cashier.paymentOf(1, alice.address);
+    const paid = await cashier.paymentOf(id, alice.address);
     expect(
       await fhevm.userDecryptEuint(FhevmType.euint64, paid, await cashier.getAddress(), alice)
     ).to.equal(BUY_IN);
@@ -41,9 +43,10 @@ describe("pay and join", function () {
     await claimChips(faucet, alice);
     await claimChips(faucet, bob);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await expect(payToJoin(chips, cashier, bob, 1n, BUY_IN))
+    const id = await bluff.tableOf(alice.address);
+    await expect(payToJoin(chips, cashier, bob, id, BUY_IN))
       .to.emit(bluff, "PlayerJoined")
-      .withArgs(1n, bob.address, 1);
+      .withArgs(id, bob.address, 1);
     expect(await chipBalance(chips, bob)).to.equal(90n * CHIP);
   });
 
@@ -51,36 +54,39 @@ describe("pay and join", function () {
     const { alice, bob, carol, chips, bluff, cashier, faucet } = await deployGameFixture();
     for (const player of [alice, bob, carol]) await claimChips(faucet, player);
     await payToCreate(chips, cashier, alice, 2, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    await expect(payToJoin(chips, cashier, carol, 1n, BUY_IN))
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    await expect(payToJoin(chips, cashier, carol, id, BUY_IN))
       .to.be.revertedWithCustomError(bluff, "TableFull")
-      .withArgs(1n);
+      .withArgs(id);
     expect(await chipBalance(chips, carol)).to.equal(100n * CHIP);
-    expect((await bluff.getTable(1))[0].playerCount).to.equal(2n);
+    expect((await bluff.getTable(id))[0].playerCount).to.equal(2n);
   });
 
   it("hands back a payment that is not exactly the buy-in, and records nothing paid", async function () {
     const { alice, bob, carol, chips, bluff, cashier, faucet } = await deployGameFixture();
     for (const player of [alice, bob, carol]) await claimChips(faucet, player);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, 5n * CHIP);
-    await payToJoin(chips, cashier, carol, 1n, 25n * CHIP);
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, 5n * CHIP);
+    await payToJoin(chips, cashier, carol, id, 25n * CHIP);
     for (const player of [bob, carol]) {
       expect(await chipBalance(chips, player)).to.equal(100n * CHIP);
-      const paid = await cashier.paymentOf(1, player.address);
+      const paid = await cashier.paymentOf(id, player.address);
       expect(
         await fhevm.userDecryptEuint(FhevmType.euint64, paid, await cashier.getAddress(), player)
       ).to.equal(0n);
-      expect(await bluff.tableOf(player.address)).to.equal(1n);
+      expect(await bluff.tableOf(player.address)).to.equal(id);
     }
   });
 
   it("seats a player with no chips but records nothing paid", async function () {
-    const { alice, bob, chips, cashier, faucet } = await deployGameFixture();
+    const { alice, bob, chips, bluff, cashier, faucet } = await deployGameFixture();
     await claimChips(faucet, alice);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-    const paid = await cashier.paymentOf(1, bob.address);
+    const id = await bluff.tableOf(alice.address);
+    await payToJoin(chips, cashier, bob, id, BUY_IN);
+    const paid = await cashier.paymentOf(id, bob.address);
     expect(
       await fhevm.userDecryptEuint(FhevmType.euint64, paid, await cashier.getAddress(), bob)
     ).to.equal(0n);
@@ -101,12 +107,14 @@ describe("pay and join", function () {
     await claimChips(faucet, alice);
     await claimChips(faucet, bob);
     await bluff.connect(alice).createFreeTable(3, false);
-    await expect(payToJoin(chips, cashier, bob, 1n, BUY_IN))
+    const free = await bluff.tableOf(alice.address);
+    await expect(payToJoin(chips, cashier, bob, free, BUY_IN))
       .to.be.revertedWithCustomError(bluff, "InvalidBuyIn")
       .withArgs(0n);
-    await bluff.connect(alice).leaveTable(1);
+    await bluff.connect(alice).leaveTable(free);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await expect(bluff.connect(bob).joinFreeTable(2))
+    const paid = await bluff.tableOf(alice.address);
+    await expect(bluff.connect(bob).joinFreeTable(paid))
       .to.be.revertedWithCustomError(bluff, "InvalidBuyIn")
       .withArgs(BUY_IN);
   });
@@ -129,9 +137,10 @@ describe("pay and join", function () {
     const { alice, chips, bluff, cashier, faucet } = await deployGameFixture();
     await claimChips(faucet, alice);
     await payToCreate(chips, cashier, alice, 3, BUY_IN);
-    await expect(payAndCall(chips, cashier, alice, BUY_IN, joinData(JOIN, 1n, 0, 0n, false)))
+    const id = await bluff.tableOf(alice.address);
+    await expect(payAndCall(chips, cashier, alice, BUY_IN, joinData(JOIN, id, 0, 0n, false)))
       .to.be.revertedWithCustomError(bluff, "AlreadyAtTable")
-      .withArgs(1n);
+      .withArgs(id);
     expect(await chipBalance(chips, alice)).to.equal(90n * CHIP);
   });
 

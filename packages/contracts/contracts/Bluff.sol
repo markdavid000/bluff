@@ -11,6 +11,7 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IBluff} from "./interfaces/IBluff.sol";
 import {IBluffCashier} from "./interfaces/IBluffCashier.sol";
+import {IBluffInvites} from "./interfaces/IBluffInvites.sol";
 import {BidRules} from "./libraries/BidRules.sol";
 import {TableRules} from "./libraries/TableRules.sol";
 
@@ -62,6 +63,7 @@ contract Bluff is
         mapping(address player => uint256 tableId) tableOf;
         EnumerableSet.UintSet openTables;
         mapping(uint256 tableId => mapping(address player => bool)) ready;
+        IBluffInvites invites;
     }
 
     bytes32 private constant _BLUFF_STORAGE_LOCATION =
@@ -262,6 +264,14 @@ contract Bluff is
         emit CashierSet(cashierAddress);
     }
 
+    function setInvites(address invitesAddress) external onlyOwner {
+        BluffStorage storage $ = _getBluffStorage();
+        if (address($.invites) != address(0)) revert InvitesAlreadySet();
+        if (invitesAddress == address(0)) revert ZeroAddress();
+        $.invites = IBluffInvites(invitesAddress);
+        emit InvitesSet(invitesAddress);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -324,8 +334,12 @@ contract Bluff is
         return address(_getBluffStorage().cashier);
     }
 
+    function invites() external view returns (address) {
+        return address(_getBluffStorage().invites);
+    }
+
     function version() external pure virtual returns (string memory) {
-        return "1.1.0";
+        return "1.2.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
@@ -341,7 +355,9 @@ contract Bluff is
     ) private returns (uint256 id) {
         if (!TableRules.isValidSeatCount(seatCount)) revert InvalidSeatCount(seatCount);
         _requireNotAtTable($, host);
-        id = ++$.nextTableId;
+        do {
+            id = uint48(uint256(keccak256(abi.encode(block.prevrandao, host, ++$.nextTableId))));
+        } while (id == 0 || $.tables[id].status != TableStatus.None);
         Table storage table = $.tables[id];
         table.host = host;
         table.status = TableStatus.Waiting;
@@ -353,6 +369,7 @@ contract Bluff is
         table.deadline = uint64(block.timestamp) + TableRules.LOBBY_LIMIT;
         if (!isPrivate) _list($, id);
         emit TableCreated(id, host, seatCount, table.dicePerPlayer, buyIn, isPrivate);
+        if (isPrivate) $.invites.newCode(id, host);
         _seatPlayer($, id, host);
     }
 
@@ -676,6 +693,7 @@ contract Bluff is
     ) private view returns (Table storage table) {
         table = _requireStatus($, id, TableStatus.Waiting);
         if (table.playerCount == table.seatCount) revert TableFull(id);
+        if (table.isPrivate && !$.invites.isInvited(id, player)) revert NotInvited(id);
         _requireNotAtTable($, player);
     }
 

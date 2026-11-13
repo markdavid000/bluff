@@ -107,16 +107,18 @@ describe("bidding", function () {
   it("refuses bids before the game starts", async function () {
     const { alice, bluff } = await deployGameFixture();
     await bluff.connect(alice).createFreeTable(3, false);
-    await expect(bluff.connect(alice).placeBid(1, 1, 2))
+    const id = await bluff.tableOf(alice.address);
+    await expect(bluff.connect(alice).placeBid(id, 1, 2))
       .to.be.revertedWithCustomError(bluff, "WrongStatus")
-      .withArgs(1n, WAITING);
+      .withArgs(id, WAITING);
   });
 
   it("refuses bids on an unknown table", async function () {
     const { alice, bluff } = await deployGameFixture();
-    await expect(bluff.connect(alice).placeBid(3, 1, 2))
+    const unknown = 2n ** 48n;
+    await expect(bluff.connect(alice).placeBid(unknown, 1, 2))
       .to.be.revertedWithCustomError(bluff, "TableNotFound")
-      .withArgs(3n);
+      .withArgs(unknown);
   });
 
   it("keeps the game playing while bids go round", async function () {

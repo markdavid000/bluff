@@ -11,6 +11,7 @@ import "solidity-coverage";
 
 import "./tasks/accounts";
 import "./tasks/deploy";
+import "./tasks/invites";
 import "./tasks/upgrade";
 import "./tasks/validate-layout";
 

@@ -25,10 +25,11 @@ describe("payouts and refunds", function () {
       await claimChips(faucet, alice);
       await claimChips(faucet, bob);
       await payToCreate(chips, cashier, alice, 3, BUY_IN);
-      await payToJoin(chips, cashier, bob, 1n, BUY_IN);
-      await expect(bluff.connect(bob).leaveTable(1))
+      const id = await bluff.tableOf(alice.address);
+      await payToJoin(chips, cashier, bob, id, BUY_IN);
+      await expect(bluff.connect(bob).leaveTable(id))
         .to.emit(bluff, "PlayerLeft")
-        .withArgs(1n, bob.address, true)
+        .withArgs(id, bob.address, true)
         .and.to.emit(cashier, "Refunded");
       expect(await chipBalance(chips, bob)).to.equal(100n * CHIP);
     });
@@ -38,9 +39,10 @@ describe("payouts and refunds", function () {
       await claimChips(faucet, alice);
       await claimChips(faucet, bob);
       await payToCreate(chips, cashier, alice, 3, BUY_IN);
-      await payToJoin(chips, cashier, bob, 1n, BUY_IN);
+      const id = await bluff.tableOf(alice.address);
+      await payToJoin(chips, cashier, bob, id, BUY_IN);
       await time.increase(LOBBY_LIMIT + 1);
-      await bluff.connect(alice).cancelTable(1);
+      await bluff.connect(alice).cancelTable(id);
       expect(await chipBalance(chips, alice)).to.equal(100n * CHIP);
       expect(await chipBalance(chips, bob)).to.equal(100n * CHIP);
     });

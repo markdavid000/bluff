@@ -7,6 +7,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCES = [
   ["bluffAbi", "contracts/Bluff.sol/Bluff.json"],
   ["bluffCashierAbi", "contracts/BluffCashier.sol/BluffCashier.json"],
+  ["bluffInvitesAbi", "contracts/BluffInvites.sol/BluffInvites.json"],
   ["chipFaucetAbi", "contracts/ChipFaucet.sol/ChipFaucet.json"],
   ["chipTokenAbi", "contracts/mocks/MockConfidentialUSDT.sol/MockConfidentialUSDT.json"],
   ["dollarTokenAbi", "contracts/mocks/MockUSDT.sol/MockUSDT.json"],

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { existsSync, rmSync } from "node:fs";
 import path from "node:path";
 import hre from "hardhat";
-import { readDeployment } from "../../tasks/deployments";
+import { type DeploymentRecord, readDeployment, writeDeployment } from "../../tasks/deployments";
 
 const RECORD = path.join(__dirname, "..", "..", "deployments", "hardhat.json");
 
@@ -20,14 +20,20 @@ describe("tasks", function () {
     rmSync(RECORD, { force: true });
   });
 
-  it("deploys both proxies against mock chips and records them", async function () {
+  it("deploys every proxy against mock chips, links them and records them", async function () {
     await hre.run("deploy");
     expect(existsSync(RECORD)).to.equal(true);
     const record = readDeployment("hardhat");
     expect(record.chainId).to.equal(31337);
-    const versions = { Bluff: "1.1.0", BluffCashier: "1.1.0", ChipFaucet: "1.1.0" } as const;
-    for (const name of ["Bluff", "BluffCashier", "ChipFaucet"] as const) {
+    const versions = {
+      Bluff: "1.2.0",
+      BluffCashier: "1.1.0",
+      BluffInvites: "1.0.0",
+      ChipFaucet: "1.1.0",
+    } as const;
+    for (const name of ["Bluff", "BluffCashier", "BluffInvites", "ChipFaucet"] as const) {
       const entry = record.contracts[name];
+      if (!entry) throw new Error(`${name} was not recorded.`);
       expect(entry.version).to.equal(versions[name]);
       expect(await hre.upgrades.erc1967.getImplementationAddress(entry.proxy)).to.equal(
         entry.implementation
@@ -35,6 +41,12 @@ describe("tasks", function () {
     }
     const bluff = await hre.ethers.getContractAt("Bluff", record.contracts.Bluff.proxy);
     expect(await bluff.cashier()).to.equal(record.contracts.BluffCashier.proxy);
+    expect(await bluff.invites()).to.equal(record.contracts.BluffInvites?.proxy);
+    const invites = await hre.ethers.getContractAt(
+      "BluffInvites",
+      record.contracts.BluffInvites?.proxy ?? ""
+    );
+    expect(await invites.bluff()).to.equal(record.contracts.Bluff.proxy);
     const cashier = await hre.ethers.getContractAt(
       "BluffCashier",
       record.contracts.BluffCashier.proxy
@@ -49,7 +61,40 @@ describe("tasks", function () {
     await hre.run("upgrade", { contract: "Bluff" });
     const after = readDeployment("hardhat");
     expect(after.contracts.Bluff.proxy).to.equal(before.contracts.Bluff.proxy);
-    expect(after.contracts.Bluff.version).to.equal("1.1.0");
+    expect(after.contracts.Bluff.version).to.equal("1.2.0");
+  });
+
+  it("adds BluffInvites beside a deployed Bluff, then links them, once each", async function () {
+    await hre.run("deploy");
+    const full = readDeployment("hardhat");
+    const [deployer] = await hre.ethers.getSigners();
+    const unlinked = await hre.upgrades.deployProxy(
+      await hre.ethers.getContractFactory("Bluff"),
+      [deployer.address],
+      { kind: "uups" }
+    );
+    const withoutInvites: DeploymentRecord = {
+      ...full,
+      contracts: {
+        Bluff: { ...full.contracts.Bluff, proxy: await unlinked.getAddress() },
+        BluffCashier: full.contracts.BluffCashier,
+        ChipFaucet: full.contracts.ChipFaucet,
+      },
+    };
+    writeDeployment(withoutInvites);
+    await expectFailure(hre.run("link-invites"), "BluffInvites is not recorded on hardhat");
+
+    await hre.run("deploy-invites");
+    const recorded = readDeployment("hardhat").contracts.BluffInvites;
+    if (!recorded) throw new Error("BluffInvites was not recorded.");
+    expect(recorded.version).to.equal("1.0.0");
+    const bluff = await hre.ethers.getContractAt("Bluff", await unlinked.getAddress());
+    expect(await bluff.invites()).to.equal(hre.ethers.ZeroAddress);
+
+    await hre.run("link-invites");
+    expect(await bluff.invites()).to.equal(recorded.proxy);
+    await expectFailure(hre.run("deploy-invites"), "BluffInvites is already recorded");
+    await expectFailure(hre.run("link-invites"), "InvitesAlreadySet");
   });
 
   it("refuses an unknown contract name", async function () {
