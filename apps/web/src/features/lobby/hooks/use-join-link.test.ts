@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onNotice } from "@/lib/notify";
 import { lobbyCopy } from "../copy";
+import { tableLink } from "@/lib/table-links";
 import { useJoinLink } from "./use-join-link";
 
 const push = vi.fn();
@@ -47,6 +48,14 @@ describe("useJoinLink", () => {
     expect(push).toHaveBeenCalledWith("/table/12");
     expect(result.current.text).toBe("");
     expect(shown).toEqual([]);
+  });
+
+  it("keeps a private table's code when going to the table", () => {
+    const { result } = renderHook(() => useJoinLink());
+    const link = tableLink("http://localhost:3002", 12n, 98765n);
+    act(() => result.current.change(link));
+    act(() => result.current.submit());
+    expect(push).toHaveBeenCalledWith(link.replace("http://localhost:3002", ""));
   });
 
   it("clears the warning as soon as the player types again", () => {

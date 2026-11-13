@@ -5,6 +5,7 @@ export const errorCopy = {
   generic: "Something went wrong. Please try again.",
   networkBusy: "The network is busy. Please try again in a moment.",
   noWallet: "Your seat is still getting ready. Please try again in a moment.",
+  inviteNotWorking: "That invite link doesn't work. Ask the host for a new one.",
   reasons: {
     AlreadyAtTable: "You are already at a table. Finish or leave it first.",
     BidNotHigher: "Your bid has to be higher than the last one.",
@@ -18,6 +19,9 @@ export const errorCopy = {
     NotEnoughPlayers: "Wait for at least one more player.",
     NotEveryoneReady: "Wait until everyone at the table is ready.",
     TableFull: "That table just filled up. Try another one, or start your own.",
+    NotInvited: "This table is private. Ask the host for the invite link.",
+    TooManyTries: "That's too many tries for this table. Ask the host for a new link.",
+    NoCode: "This table can't take an invite. Try another table.",
     NotHost: "Only the host can do that.",
     NotYourTurn: "It is not your turn yet.",
     TableNotFound: "That table does not exist.",

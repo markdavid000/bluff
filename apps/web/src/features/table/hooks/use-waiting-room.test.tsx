@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
+import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import type { Table } from "../lib/table-view";
 import { useWaitingRoom } from "./use-waiting-room";
@@ -20,6 +21,11 @@ let tableRead: Record<string, unknown> = {};
 let balance: Record<string, unknown> = { status: "ready", amount: 100n * ONE_CHIP };
 const sendMove = vi.fn();
 const takeSeat = vi.fn();
+const proveInvite = vi.fn();
+const unlock = vi.fn();
+let inviteCode: Record<string, unknown> = { status: "ready", code: null };
+const inviteAsked: Record<string, unknown>[] = [];
+let linkCode: bigint | null = null;
 const replace = vi.fn();
 const router = { replace };
 
@@ -41,6 +47,14 @@ vi.mock("@/hooks/use-player-profiles", () => ({
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
+vi.mock("@/hooks/use-prove-invite", () => ({ useProveInvite: () => proveInvite }));
+vi.mock("./use-invite-code", () => ({
+  useInviteCode: (args: Record<string, unknown>) => {
+    inviteAsked.push(args);
+    return inviteCode;
+  },
+}));
+vi.mock("./use-link-invite", () => ({ useLinkInvite: () => linkCode }));
 vi.mock("./use-table", () => ({ useTable: () => tableRead }));
 vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
 vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
@@ -90,6 +104,9 @@ beforeEach(() => {
     readAt: 100n,
   };
   sendMove.mockResolvedValue({ blockNumber: 101n });
+  inviteCode = { status: "ready", code: null };
+  inviteAsked.length = 0;
+  linkCode = null;
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
@@ -221,6 +238,116 @@ describe("useWaitingRoom", () => {
         readAt: 1n,
       };
       expect(viewOf(render().result).joinProblem).toBe(tableCopy.notEnough("25"));
+    });
+  });
+
+  describe("at a private table", () => {
+    const CODE = 98765n;
+
+    function stubClipboard() {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+      return writeText;
+    }
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "clipboard");
+    });
+
+    function privateTable(seats: [string, boolean][] = [[HOST, false]]) {
+      tableRead = { status: "ready", table: table(seats, { isPrivate: true }), readAt: 1n };
+    }
+
+    it("tells a visitor without the invite to ask the host, and offers no join", () => {
+      me = STRANGER;
+      privateTable();
+      expect(viewOf(render().result).joinProblem).toBe(tableCopy.privateTable);
+    });
+
+    it("proves the invite before taking the seat, and says which it's doing", async () => {
+      me = STRANGER;
+      privateTable();
+      linkCode = CODE;
+      let finishProving: () => void = () => undefined;
+      proveInvite.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishProving = resolve;
+          })
+      );
+      takeSeat.mockResolvedValue(12n);
+      const { result } = render();
+      expect(viewOf(result).joinProblem).toBeNull();
+      act(() => viewOf(result).join());
+      await waitFor(() =>
+        expect(proveInvite).toHaveBeenCalledWith(12n, CODE, expect.any(Function))
+      );
+      expect(viewOf(result).joinStep).toBe("invite");
+      expect(takeSeat).not.toHaveBeenCalled();
+      await act(async () => finishProving());
+      await waitFor(() =>
+        expect(takeSeat).toHaveBeenCalledWith(
+          { kind: "join", tableId: 12n, buyIn: 0n },
+          expect.any(Function)
+        )
+      );
+    });
+
+    it("never takes a seat when the invite doesn't work", async () => {
+      me = STRANGER;
+      privateTable();
+      linkCode = CODE;
+      proveInvite.mockRejectedValue(new Error("wrong code"));
+      const { result } = render();
+      act(() => viewOf(result).join());
+      await waitFor(() => expect(viewOf(result).joining).toBe(false));
+      expect(takeSeat).not.toHaveBeenCalled();
+    });
+
+    it("only asks for the code for players at the table", () => {
+      me = STRANGER;
+      privateTable();
+      render();
+      expect(inviteAsked.at(-1)).toMatchObject({ id: 12n, isPrivate: true, canRead: false });
+      me = HOST;
+      render();
+      expect(inviteAsked.at(-1)).toMatchObject({ id: 12n, isPrivate: true, canRead: true });
+    });
+
+    it("copies the host's invite with the code", async () => {
+      me = HOST;
+      privateTable();
+      inviteCode = { status: "ready", code: CODE };
+      const writeText = stubClipboard();
+      const { result } = render();
+      expect(viewOf(result).invite).toBe("ready");
+      act(() => viewOf(result).copyInvite());
+      await waitFor(() =>
+        expect(writeText).toHaveBeenCalledWith(tableLink(window.location.origin, 12n, CODE))
+      );
+    });
+
+    it("unlocks the invite first when hidden values aren't unlocked yet", () => {
+      me = HOST;
+      privateTable();
+      inviteCode = { status: "locked", unlock, unlocking: false };
+      const writeText = stubClipboard();
+      const { result } = render();
+      expect(viewOf(result).invite).toBe("locked");
+      act(() => viewOf(result).copyInvite());
+      expect(unlock).toHaveBeenCalledOnce();
+      expect(writeText).not.toHaveBeenCalled();
+    });
+
+    it("copies nothing while the invite is still on its way", () => {
+      me = HOST;
+      privateTable();
+      inviteCode = { status: "loading" };
+      const writeText = stubClipboard();
+      const { result } = render();
+      expect(viewOf(result).invite).toBe("loading");
+      act(() => viewOf(result).copyInvite());
+      expect(writeText).not.toHaveBeenCalled();
     });
   });
 });

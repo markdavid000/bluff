@@ -41,6 +41,7 @@ describe("toLobbyTable", () => {
       seatCount: 3,
       playerCount: 2,
       buyIn: 25n * ONE_CHIP,
+      createdAt: 1_700_000_000_000,
       closesAt: 1_700_000_600_000,
     });
   });

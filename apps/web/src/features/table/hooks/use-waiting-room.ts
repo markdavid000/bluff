@@ -13,6 +13,7 @@ import { useFollowChain } from "@/hooks/use-block-clock";
 import { useChipBalance } from "@/hooks/use-chip-balance";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
+import { useProveInvite } from "@/hooks/use-prove-invite";
 import { useSendMove } from "@/hooks/use-send-move";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
@@ -22,6 +23,8 @@ import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { type Role, nextStep } from "../lib/next-step";
 import { type Table, freeSeats, notReady } from "../lib/table-view";
+import { useInviteCode } from "./use-invite-code";
+import { useLinkInvite } from "./use-link-invite";
 import { useTable } from "./use-table";
 import { useTableEvents } from "./use-table-events";
 import { useTableKeeper } from "./use-table-keeper";
@@ -57,6 +60,11 @@ export function useWaitingRoom(id: bigint) {
   useTableEvents({ id, me, nameOf });
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
+  const proveInvite = useProveInvite();
+  const seated = table !== null && roleOf(table, me) !== "visitor";
+  const invite = useInviteCode({ id, isPrivate: table?.isPrivate ?? false, canRead: seated });
+  const linkCode = useLinkInvite();
+  const [joinStep, setJoinStep] = useState<"invite" | "seat">("seat");
   const balance = useChipBalance({ working: tableCopy.gettingReady });
   const now = useNow(TICK_MS, table !== null && table.deadline > 0);
   useTableKeeper({ table, me, now });
@@ -127,7 +135,14 @@ export function useWaitingRoom(id: bigint) {
   const join = useAction({
     id: "join",
     working: tableCopy.joining,
-    run: (report, buyIn: bigint) => takeSeat({ kind: "join", tableId: id, buyIn }, report),
+    run: async (report, buyIn: bigint, code: bigint | null) => {
+      if (code !== null) {
+        setJoinStep("invite");
+        await proveInvite(id, code, report);
+      }
+      setJoinStep("seat");
+      return takeSeat({ kind: "join", tableId: id, buyIn }, report);
+    },
     onDone: () => {
       invalidateBalanceQueries(queryClient, contracts.chips);
       void queryClient.invalidateQueries({ queryKey: ["readContract"] });
@@ -185,11 +200,13 @@ export function useWaitingRoom(id: bigint) {
           ? tableCopy.started
           : freeSeats(table) === 0
             ? tableCopy.full
-            : unaffordable === "show-chips"
-              ? tableCopy.showChipsFirst
-              : unaffordable === "too-few"
-                ? tableCopy.notEnough(formatChips(table.buyIn))
-                : null,
+            : table.isPrivate && linkCode === null
+              ? tableCopy.privateTable
+              : unaffordable === "show-chips"
+                ? tableCopy.showChipsFirst
+                : unaffordable === "too-few"
+                  ? tableCopy.notEnough(formatChips(table.buyIn))
+                  : null,
       busy,
       confirm,
       toggling: ready.working,
@@ -197,13 +214,19 @@ export function useWaitingRoom(id: bigint) {
       leaving: leave.working,
       closing: close.working,
       joining: join.working,
+      joinStep,
+      invite: invite.status,
+      unlockingInvite: invite.status === "locked" && invite.unlocking,
       toggleReady: () => ready.start(!(mine?.ready ?? false)),
       start: start.start,
       leave: leave.start,
       close: close.start,
-      join: () => join.start(table.buyIn),
+      join: () => join.start(table.buyIn, table.isPrivate ? linkCode : null),
       copyInvite: () => {
-        navigator.clipboard.writeText(tableLink(window.location.origin, id)).then(
+        if (invite.status === "locked") return invite.unlock();
+        if (invite.status === "failed") return invite.retry();
+        if (invite.status !== "ready") return;
+        navigator.clipboard.writeText(tableLink(window.location.origin, id, invite.code)).then(
           () => notify.success(tableCopy.inviteCopied, { id: "invite" }),
           (error: unknown) => {
             console.error("The invite link could not be copied.", error);

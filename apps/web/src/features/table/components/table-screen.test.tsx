@@ -80,6 +80,9 @@ function room(overrides: Room = {}): Room {
     leaving: false,
     closing: false,
     joining: false,
+    joinStep: "seat",
+    invite: "ready",
+    unlockingInvite: false,
     ...actions,
     ...overrides,
   };
@@ -203,6 +206,42 @@ describe("TableScreen", () => {
       show(room({ role: "visitor", joinProblem: problem }));
       expect(screen.getByText(problem)).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: tableCopy.join })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("private tables", () => {
+    it("tells a visitor without the invite to ask the host", () => {
+      show(room({ role: "visitor", joinProblem: tableCopy.privateTable }));
+      expect(screen.getByText(tableCopy.privateTable)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: tableCopy.join })).not.toBeInTheDocument();
+    });
+
+    it("says it's checking the invite while a visitor joins", () => {
+      show(room({ role: "visitor", joining: true, busy: true, joinStep: "invite" }));
+      expect(screen.getByRole("button", { name: tableCopy.checkingInvite })).toBeInTheDocument();
+    });
+
+    it("says it's taking the seat once the invite is proven", () => {
+      show(room({ role: "visitor", joining: true, busy: true, joinStep: "seat" }));
+      expect(screen.getByRole("button", { name: tableCopy.joining })).toBeInTheDocument();
+    });
+
+    it("holds the invite buttons while the invite is on its way", () => {
+      show(room({ invite: "loading" }));
+      expect(screen.getByRole("button", { name: tableCopy.gettingInvite })).toBeDisabled();
+      expect(screen.getByRole("button", { name: tableCopy.copyInvite })).toBeDisabled();
+    });
+
+    it("offers to show the invite when hidden values are still locked", () => {
+      show(room({ invite: "locked" }));
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.unlockInvite }));
+      expect(actions.copyInvite).toHaveBeenCalled();
+    });
+
+    it("offers to try again when the invite couldn't be fetched", () => {
+      show(room({ invite: "failed" }));
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.tryAgain }));
+      expect(actions.copyInvite).toHaveBeenCalled();
     });
   });
 

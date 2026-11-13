@@ -32,6 +32,7 @@ function table(id: bigint, players: number, seats: number, buyIn: bigint): Lobby
     seatCount: seats,
     playerCount: players,
     buyIn,
+    createdAt: Number(id) * 1000,
     closesAt: 0,
   };
 }
@@ -64,6 +65,12 @@ describe("pickTableToJoin", () => {
     ];
     expect(pickTableToJoin(tables, 0n)?.id).toBe(2n);
     expect(pickTableToJoin(tables, 10n * ONE_CHIP)?.id).toBe(3n);
+  });
+
+  it("breaks a tie by joining the table that has waited longest, whatever its number", () => {
+    const older = { ...table(900n, 1, 2, 0n), createdAt: 1_000 };
+    const newer = { ...table(5n, 1, 2, 0n), createdAt: 2_000 };
+    expect(pickTableToJoin([newer, older], 0n)?.id).toBe(900n);
   });
 
   it("finds nothing when no table matches or has a free seat", () => {

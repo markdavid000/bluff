@@ -1,4 +1,4 @@
-import { chipFaucetAbi, bluffAbi } from "@bluff/contracts";
+import { bluffAbi, bluffInvitesAbi, chipFaucetAbi } from "@bluff/contracts";
 import {
   ContractFunctionExecutionError,
   ContractFunctionRevertedError,
@@ -9,10 +9,10 @@ import {
 import { RelayerRequestFailedError, SigningRejectedError } from "@zama-fhe/sdk";
 import { describe, expect, it } from "vitest";
 import { errorCopy } from "./copy";
-import { MoveNotReadyError, explainProblem } from "./errors";
+import { InviteNotWorkingError, MoveNotReadyError, explainProblem } from "./errors";
 
 function reverted(
-  abi: typeof bluffAbi | typeof chipFaucetAbi,
+  abi: typeof bluffAbi | typeof chipFaucetAbi | typeof bluffInvitesAbi,
   errorName: string,
   args: unknown[] = []
 ) {
@@ -58,8 +58,29 @@ describe("explainProblem", () => {
       "InvalidAvatar",
       "TableFull",
       "NotEveryoneReady",
+      "NotInvited",
+      "TooManyTries",
+      "NoCode",
     ];
     for (const name of players) expect(errorCopy.reasons).toHaveProperty(name);
+  });
+
+  it("tells a player without the invite to ask the host", () => {
+    expect(explainProblem(reverted(bluffAbi, "NotInvited", [4n]))).toEqual({
+      kind: "failed",
+      reason: errorCopy.reasons.NotInvited,
+    });
+    expect(explainProblem(reverted(bluffInvitesAbi, "TooManyTries", [4n]))).toEqual({
+      kind: "failed",
+      reason: errorCopy.reasons.TooManyTries,
+    });
+  });
+
+  it("says an invite link that doesn't work, in plain words", () => {
+    expect(explainProblem(new InviteNotWorkingError())).toEqual({
+      kind: "failed",
+      reason: errorCopy.inviteNotWorking,
+    });
   });
 
   it("says a table filled up in plain words", () => {

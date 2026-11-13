@@ -19,7 +19,7 @@ export function pickTableToJoin(tables: LobbyTable[], buyIn: bigint): LobbyTable
   const matching = tables.filter(
     (table) => table.waiting && table.buyIn === buyIn && openSeats(table) > 0
   );
-  matching.sort((a, b) => openSeats(a) - openSeats(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  matching.sort((a, b) => openSeats(a) - openSeats(b) || a.createdAt - b.createdAt);
   return matching[0] ?? null;
 }
 

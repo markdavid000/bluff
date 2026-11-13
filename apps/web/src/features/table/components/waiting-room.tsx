@@ -7,6 +7,7 @@ import { tableCopy } from "../copy";
 import type { useWaitingRoom } from "../hooks/use-waiting-room";
 import { seatLayout } from "../lib/seat-layout";
 import { BoardPlaceholder, LazyBoardScene } from "./board/lazy-board";
+import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
 
@@ -51,7 +52,7 @@ export function WaitingRoom({ room }: { room: Room }) {
                   updating={seat.isMe && room.toggling}
                 />
               ) : waiting ? (
-                <InviteSeat onInvite={room.copyInvite} />
+                <InviteSeat onInvite={room.copyInvite} waiting={room.invite === "loading"} />
               ) : null}
             </div>
           );
@@ -106,9 +107,11 @@ export function WaitingRoom({ room }: { room: Room }) {
           </ActionButton>
         ) : null}
         {waiting && room.freeSeats > 0 ? (
-          <ActionButton tone="blue" icon="copy" onClick={room.copyInvite}>
-            {tableCopy.copyInvite}
-          </ActionButton>
+          <CopyInviteButton
+            invite={room.invite}
+            unlocking={room.unlockingInvite}
+            onPress={room.copyInvite}
+          />
         ) : null}
         {room.timeUp ? (
           <ActionButton

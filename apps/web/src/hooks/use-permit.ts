@@ -11,7 +11,7 @@ import { MoveNotReadyError } from "@/lib/errors";
 import { useAction } from "./use-action";
 import { useEnsureGameChain } from "./use-game-chain";
 
-const HIDDEN_VALUE_CONTRACTS = [contracts.chips, contracts.bluff];
+const HIDDEN_VALUE_CONTRACTS = [contracts.chips, contracts.bluff, contracts.invites];
 
 type PermitStatus = "checking" | "needed" | "granted";
 
