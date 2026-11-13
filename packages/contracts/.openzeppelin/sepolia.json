@@ -2679,6 +2679,263 @@
           ]
         }
       }
+    },
+    "7ec1187816a8ff17e8f9018c650f7096114eb2ecbd72e760e59ce662779ef49c": {
+      "address": "0x7a9637Be08c5E8002B38db785F3F4DE0F809975B",
+      "txHash": "0x57bc9034ce50f89fd80ee9de21f9e5eb7f6f71ee1814d2f0b3d54a3732b9ca22",
+      "layout": {
+        "solcVersion": "0.8.27",
+        "storage": [],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IBluff)16259": {
+            "label": "contract IBluff",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint8)": {
+            "label": "mapping(address => uint8)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_userDefinedValueType(ebool)16955)": {
+            "label": "mapping(address => ebool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+            "label": "mapping(uint256 => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint8))": {
+            "label": "mapping(uint256 => mapping(address => uint8))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))": {
+            "label": "mapping(uint256 => mapping(address => ebool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)": {
+            "label": "mapping(uint256 => euint64)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(BluffInvitesStorage)15589_storage": {
+            "label": "struct BluffInvites.BluffInvitesStorage",
+            "members": [
+              {
+                "label": "bluff",
+                "type": "t_contract(IBluff)16259",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "codes",
+                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "attempts",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "tries",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint8))",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "invited",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(InitializableStorage)11817_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)11339_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)11394_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)11496_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          },
+          "t_userDefinedValueType(ebool)16955": {
+            "label": "ebool",
+            "numberOfBytes": "32",
+            "underlying": "t_bytes32"
+          },
+          "t_userDefinedValueType(euint64)16971": {
+            "label": "euint64",
+            "numberOfBytes": "32",
+            "underlying": "t_bytes32"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          }
+        },
+        "namespaces": {
+          "erc7201:bluff.storage.BluffInvites": [
+            {
+              "contract": "BluffInvites",
+              "label": "bluff",
+              "type": "t_contract(IBluff)16259",
+              "src": "contracts/BluffInvites.sol:16",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "BluffInvites",
+              "label": "codes",
+              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+              "src": "contracts/BluffInvites.sol:17",
+              "offset": 0,
+              "slot": "1"
+            },
+            {
+              "contract": "BluffInvites",
+              "label": "attempts",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))",
+              "src": "contracts/BluffInvites.sol:18",
+              "offset": 0,
+              "slot": "2"
+            },
+            {
+              "contract": "BluffInvites",
+              "label": "tries",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint8))",
+              "src": "contracts/BluffInvites.sol:19",
+              "offset": 0,
+              "slot": "3"
+            },
+            {
+              "contract": "BluffInvites",
+              "label": "invited",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))",
+              "src": "contracts/BluffInvites.sol:20",
+              "offset": 0,
+              "slot": "4"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:29",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
     }
   }
 }

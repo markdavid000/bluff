@@ -76,7 +76,7 @@ contract BluffInvites is IBluffInvites, Initializable, UUPSUpgradeable, Ownable2
         $.attempts[id][player] = ebool.wrap(0);
         if (abi.decode(clearValues, (bool))) {
             $.invited[id][player] = true;
-            FHE.allow($.codes[id], player);
+            $.codes[id] = FHE.allow($.codes[id], player);
             emit Invited(id, player);
         } else {
             emit CodeRejected(id, player);

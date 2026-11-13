@@ -23,7 +23,7 @@
     },
     "BluffInvites": {
       "proxy": "0x5bACDa7BACa6f67754122F49b59B404471C3F140",
-      "implementation": "0x4642baD2100Af550Eb79395f6b088fE3c07c78E2",
+      "implementation": "0x7a9637Be08c5E8002B38db785F3F4DE0F809975B",
       "version": "1.0.0"
     }
   }

@@ -94,7 +94,12 @@ describe("tasks", function () {
     await hre.run("link-invites");
     expect(await bluff.invites()).to.equal(recorded.proxy);
     await expectFailure(hre.run("deploy-invites"), "BluffInvites is already recorded");
-    await expectFailure(hre.run("link-invites"), "InvitesAlreadySet");
+    const relink = await hre.run("link-invites").then(
+      () => undefined,
+      (error: { data?: string }) => error
+    );
+    expect(bluff.interface.parseError(relink?.data ?? "0x")?.name).to.equal("InvitesAlreadySet");
+    expect(await bluff.invites()).to.equal(recorded.proxy);
   });
 
   it("refuses an unknown contract name", async function () {

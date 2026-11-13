@@ -68,6 +68,7 @@ Tables now get random numbers instead of counting up, so links can't be guessed.
     1. `BluffInvites` deployed: proxy `0x5bACDa7BACa6f67754122F49b59B404471C3F140`, implementation `0x4642baD2100Af550Eb79395f6b088fE3c07c78E2`, verified on Etherscan.
     2. `Bluff` 1.1.0 → 1.2.0 at implementation `0xCbC9448B8eC8F5c00216c4686628CBf0bf232b32`, verified on Etherscan. The proxy is unchanged.
     3. Linked straight after.
+    4. **Re-upgraded `BluffInvites`.** Slither in CI flagged one medium finding: `confirmCode` ignored the handle returned by `FHE.allow`. The fix stores the returned handle, as every other access grant in our contracts does, so behaviour is unchanged. The proxy was then upgraded, with the maintainer's approval, to implementation `0x7a9637Be08c5E8002B38db785F3F4DE0F809975B`, verified on Etherscan, so the live code matches this branch. It stays at 1.0.0 because the first build was never released. The live private-table game passed again against it.
   - **Read back:** versions, owners, the links both ways, unpaused, and an old table still readable. `validate-layout:sepolia` passes for all four contracts.
   - **Live scenario (`test:sepolia`):** 3 passing, 6 minutes in all.
     - **Free and paid games** played as before.
