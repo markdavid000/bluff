@@ -1,6 +1,12 @@
 "use client";
 
-import { bluffAbi, bluffCashierAbi, chipFaucetAbi, chipTokenAbi } from "@bluff/contracts";
+import {
+  bluffAbi,
+  bluffCashierAbi,
+  bluffInvitesAbi,
+  chipFaucetAbi,
+  chipTokenAbi,
+} from "@bluff/contracts";
 import { usePrivy, useSendTransaction as usePrivySend, useWallets } from "@privy-io/react-auth";
 import {
   type Abi,
@@ -24,7 +30,7 @@ export interface ContractCall {
 
 const GAME_ERRORS: Abi = [
   ...new Map(
-    [...bluffAbi, ...bluffCashierAbi, ...chipFaucetAbi, ...chipTokenAbi]
+    [...bluffAbi, ...bluffCashierAbi, ...bluffInvitesAbi, ...chipFaucetAbi, ...chipTokenAbi]
       .filter((item) => item.type === "error")
       .map((item) => [item.name, item])
   ).values(),

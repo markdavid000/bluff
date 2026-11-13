@@ -14,6 +14,12 @@ export class MoveNotReadyError extends Error {
   }
 }
 
+export class InviteNotWorkingError extends Error {
+  constructor() {
+    super("The invite code did not match the table's code.");
+  }
+}
+
 export type ActionProblem =
   { kind: "cancelled"; reason: string } | { kind: "failed"; reason: string };
 
@@ -27,6 +33,9 @@ const USER_CANCELLED_CODES = new Set([4001, "ACTION_REJECTED"]);
 
 export function explainProblem(error: unknown): ActionProblem {
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
+  if (error instanceof InviteNotWorkingError) {
+    return { kind: "failed", reason: errorCopy.inviteNotWorking };
+  }
   if (error instanceof SigningRejectedError)
     return { kind: "cancelled", reason: errorCopy.cancelled };
   if (error instanceof RelayerRequestFailedError || isRetryable(error)) {

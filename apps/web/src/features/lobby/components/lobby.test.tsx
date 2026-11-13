@@ -18,6 +18,7 @@ function table(id: bigint, players: number, seats: number, buyIn = 0n): LobbyTab
     seatCount: seats,
     playerCount: players,
     buyIn,
+    createdAt: Number(id) * 1000,
     closesAt: 0,
   };
 }

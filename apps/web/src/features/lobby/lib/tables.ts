@@ -19,6 +19,7 @@ export interface LobbyTable {
   seatCount: number;
   playerCount: number;
   buyIn: bigint;
+  createdAt: number;
   closesAt: number;
 }
 
@@ -31,6 +32,7 @@ export function toLobbyTable(view: TableView): LobbyTable {
     seatCount: view.seatCount,
     playerCount: view.playerCount,
     buyIn: view.buyIn,
+    createdAt: Number(view.createdAt) * 1000,
     closesAt: Number(view.deadline) * 1000,
   };
 }

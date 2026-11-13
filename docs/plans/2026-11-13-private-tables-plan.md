@@ -4,7 +4,7 @@ Built on [ADR-2026-11-13-private-tables-and-table-ids](../adr/ADR-2026-11-13-pri
 
 ## What players get
 
-- **Table links can't be guessed.** New tables get random numbers of up to 15 digits, like `/table/482915736201844`.
+- **Table links can't be guessed.** New tables get random numbers of up to 15 digits, like `/table/182915736201844`.
 - **Private tables need the invite link.**
   - **Hosts:** create a private table as before. **Copy invite link** copies `/table/<number>#<code>`, and it still works after a reload.
   - **Players already at the table** can copy the same link.
@@ -143,7 +143,7 @@ Notes:
 
 ```
  ┌──────────────────────────────────────────┐
- │              Table 482915736201844        │
+ │              Table 182915736201844        │
  │            (😀)(👳)  2 of 4 players        │
  │                    Free                    │
  │  This table is private. Ask the host for   │

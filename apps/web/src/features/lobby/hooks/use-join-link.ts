@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { notify } from "@/lib/notify";
-import { parseTableLink, tablePath } from "@/lib/table-links";
+import { parseInvite, tableLink } from "@/lib/table-links";
 import { lobbyCopy } from "../copy";
 
 export function useJoinLink() {
@@ -19,8 +19,8 @@ export function useJoinLink() {
       setText(value);
     },
     submit: () => {
-      const id = parseTableLink(text);
-      if (id === null) {
+      const invite = parseInvite(text);
+      if (invite === null) {
         setInvalid(true);
         notify.error(text.trim() === "" ? lobbyCopy.linkEmpty : lobbyCopy.linkInvalid, {
           id: "join-link",
@@ -28,7 +28,7 @@ export function useJoinLink() {
         return;
       }
       setText("");
-      router.push(tablePath(id));
+      router.push(tableLink("", invite.id, invite.code));
     },
   };
 }

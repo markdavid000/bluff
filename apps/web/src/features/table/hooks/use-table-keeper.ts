@@ -8,6 +8,7 @@ import { usePublicClient } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
 import { useSendMove } from "@/hooks/use-send-move";
 import { MoveNotReadyError } from "@/lib/errors";
+import { keepTrying } from "@/lib/keep-trying";
 import { notify } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { type KeeperAction, keeperDuty } from "../lib/keeper-duty";
@@ -17,10 +18,6 @@ const RETRY_MS = 15_000;
 const REVEAL_DEADLINE_MS = 30_000;
 const REVEAL_RETRY_MS = 3_000;
 const FAILURES_BEFORE_NOTICE = 2;
-
-function pause(milliseconds: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-}
 
 export function useTableKeeper({
   table,
@@ -41,16 +38,11 @@ export function useTableKeeper({
   const dueAt = duty ? Math.max(duty.dueAt, retryAt) : 0;
   const id = table?.id ?? null;
 
-  async function reveal(handles: readonly Hex[]) {
-    const deadline = Date.now() + REVEAL_DEADLINE_MS;
-    for (;;) {
-      try {
-        return await decryptPublic([...handles]);
-      } catch (error) {
-        if (Date.now() + REVEAL_RETRY_MS > deadline) throw error;
-        await pause(REVEAL_RETRY_MS);
-      }
-    }
+  function reveal(handles: readonly Hex[]) {
+    return keepTrying(() => decryptPublic([...handles]), {
+      forMs: REVEAL_DEADLINE_MS,
+      everyMs: REVEAL_RETRY_MS,
+    });
   }
 
   async function stillDue(tableId: bigint, expected: KeeperAction) {

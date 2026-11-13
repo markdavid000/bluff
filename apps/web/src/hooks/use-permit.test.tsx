@@ -94,7 +94,7 @@ describe("usePermit", () => {
     rerender();
     await waitFor(() => expect(result.current.status).toBe("granted"));
     expect(sign).toHaveBeenCalledOnce();
-    expect(sign.mock.calls[0]?.[0]).toHaveLength(2);
+    expect(sign.mock.calls[0]?.[0]).toHaveLength(3);
   });
 
   it("waits for a tap before asking a player's own wallet", async () => {
