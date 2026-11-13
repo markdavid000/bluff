@@ -1,0 +1,226 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ONE_CHIP } from "@/lib/chips";
+import { tableCopy } from "../copy";
+import type { Table } from "../lib/table-view";
+import { useWaitingRoom } from "./use-waiting-room";
+
+vi.mock("@/config/env", () => ({
+  publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
+}));
+
+const HOST = "0x0000000000000000000000000000000000001a2b";
+const KOLA = "0x0000000000000000000000000000000000003c4d";
+const STRANGER = "0x0000000000000000000000000000000000009f9f";
+
+let me = KOLA;
+let tableRead: Record<string, unknown> = {};
+let balance: Record<string, unknown> = { status: "ready", amount: 100n * ONE_CHIP };
+const sendMove = vi.fn();
+const takeSeat = vi.fn();
+const replace = vi.fn();
+const router = { replace };
+
+vi.mock("@privy-io/react-auth", () => ({
+  usePrivy: () => ({ user: { wallet: { address: me } } }),
+}));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
+vi.mock("@zama-fhe/sdk/query", () => ({ invalidateBalanceQueries: vi.fn() }));
+vi.mock("@/hooks/use-block-clock", () => ({ useFollowChain: vi.fn() }));
+vi.mock("@/hooks/use-chip-balance", () => ({ useChipBalance: () => balance }));
+vi.mock("@/hooks/use-player-profiles", () => ({
+  usePlayerProfiles: () => ({
+    status: "ready",
+    profileOf: (address: string) => ({
+      name: address === KOLA ? "Kola #3C4D" : "Dave #1A2B",
+      avatarSrc: "/a.svg",
+    }),
+  }),
+}));
+vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
+vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
+vi.mock("./use-table", () => ({ useTable: () => tableRead }));
+vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
+vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
+
+function table(seats: [string, boolean][], overrides: Partial<Table> = {}): Table {
+  return {
+    id: 12n,
+    host: HOST,
+    status: "waiting",
+    isPrivate: false,
+    seatCount: 3,
+    buyIn: 0n,
+    deadline: Date.now() + 600_000,
+    seats: seats.map(([player, ready]) => ({
+      player: player as `0x${string}`,
+      ready,
+      isHost: player === HOST,
+      isActive: true,
+    })),
+    ...overrides,
+  };
+}
+
+function render() {
+  const queryClient = new QueryClient();
+  function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  }
+  return renderHook(() => useWaitingRoom(12n), { wrapper: Wrapper });
+}
+
+function viewOf(result: { current: ReturnType<typeof useWaitingRoom> }) {
+  const view = result.current.view;
+  if (!view) throw new Error("Expected the waiting room.");
+  return view;
+}
+
+beforeEach(() => {
+  me = KOLA;
+  balance = { status: "ready", amount: 100n * ONE_CHIP };
+  tableRead = {
+    status: "ready",
+    table: table([
+      [HOST, false],
+      [KOLA, false],
+    ]),
+    readAt: 100n,
+  };
+  sendMove.mockResolvedValue({ blockNumber: 101n });
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+});
+
+describe("useWaitingRoom", () => {
+  it("has no room to show until the table is read", () => {
+    tableRead = { status: "loading" };
+    expect(render().result.current.view).toBeNull();
+  });
+
+  it("knows the host, a guest and a visitor apart", () => {
+    me = HOST;
+    expect(viewOf(render().result).role).toBe("host");
+    me = KOLA;
+    expect(viewOf(render().result).role).toBe("guest");
+    me = STRANGER;
+    expect(viewOf(render().result).role).toBe("visitor");
+  });
+
+  it("holds the host's start until everyone else is ready", () => {
+    me = HOST;
+    expect(viewOf(render().result).canStart).toBe(false);
+    tableRead = {
+      status: "ready",
+      table: table([
+        [HOST, false],
+        [KOLA, true],
+      ]),
+      readAt: 100n,
+    };
+    expect(viewOf(render().result).canStart).toBe(true);
+  });
+
+  it("flips the player's own mark at once, and keeps it until the table catches up", async () => {
+    const { result, rerender } = render();
+    act(() => viewOf(result).toggleReady());
+    expect(viewOf(result).myReady).toBe(true);
+    expect(sendMove).toHaveBeenCalledWith(
+      expect.objectContaining({ functionName: "setReady", args: [12n, true] }),
+      expect.any(Function)
+    );
+    await waitFor(() => expect(viewOf(result).toggling).toBe(false));
+    expect(viewOf(result).myReady).toBe(true);
+    tableRead = {
+      status: "ready",
+      table: table([
+        [HOST, false],
+        [KOLA, true],
+      ]),
+      readAt: 101n,
+    };
+    rerender();
+    expect(viewOf(result).myReady).toBe(true);
+  });
+
+  it("puts the mark back when the move fails", async () => {
+    sendMove.mockRejectedValue(new Error("rejected"));
+    const { result } = render();
+    act(() => viewOf(result).toggleReady());
+    expect(viewOf(result).myReady).toBe(true);
+    await waitFor(() => expect(viewOf(result).myReady).toBe(false));
+  });
+
+  it("names who the room is waiting for", () => {
+    me = HOST;
+    expect(viewOf(render().result).line).toBe(tableCopy.waitingOn("Kola #3C4D"));
+  });
+
+  it("takes the player back to the lobby after leaving", async () => {
+    const { result } = render();
+    act(() => viewOf(result).leave());
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+  });
+
+  describe("for a visitor", () => {
+    beforeEach(() => {
+      me = STRANGER;
+    });
+
+    it("joins a free table with room", async () => {
+      takeSeat.mockResolvedValue(12n);
+      const { result } = render();
+      expect(viewOf(result).joinProblem).toBeNull();
+      act(() => viewOf(result).join());
+      await waitFor(() =>
+        expect(takeSeat).toHaveBeenCalledWith(
+          { kind: "join", tableId: 12n, buyIn: 0n },
+          expect.any(Function)
+        )
+      );
+    });
+
+    it("says when the table is full or has started", () => {
+      tableRead = {
+        status: "ready",
+        table: table(
+          [
+            [HOST, false],
+            [KOLA, false],
+          ],
+          { seatCount: 2 }
+        ),
+        readAt: 1n,
+      };
+      expect(viewOf(render().result).joinProblem).toBe(tableCopy.full);
+      tableRead = {
+        status: "ready",
+        table: table(
+          [
+            [HOST, false],
+            [KOLA, false],
+          ],
+          { status: "playing" }
+        ),
+        readAt: 1n,
+      };
+      expect(viewOf(render().result).joinProblem).toBe(tableCopy.started);
+    });
+
+    it("says how many chips a paid table needs", () => {
+      balance = { status: "ready", amount: 10n * ONE_CHIP };
+      tableRead = {
+        status: "ready",
+        table: table([[HOST, false]], { buyIn: 25n * ONE_CHIP }),
+        readAt: 1n,
+      };
+      expect(viewOf(render().result).joinProblem).toBe(tableCopy.notEnough("25"));
+    });
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ONE_CHIP, formatChips, parseChips } from "./chips";
+import { ONE_CHIP, formatChips, parseChips, whyUnaffordable } from "./chips";
 
 describe("formatChips", () => {
   it.each([
@@ -31,4 +31,24 @@ describe("parseChips", () => {
       expect(parseChips(input)).toBeNull();
     }
   );
+});
+
+describe("whyUnaffordable", () => {
+  it("lets anyone sit at a free table, even before their chips show", () => {
+    expect(whyUnaffordable(0n, { status: "unknown" })).toBeNull();
+  });
+
+  it("asks to show the chips before playing for chips", () => {
+    expect(whyUnaffordable(10n * ONE_CHIP, { status: "unknown" })).toBe("show-chips");
+  });
+
+  it("says when the player has too few chips", () => {
+    expect(whyUnaffordable(25n * ONE_CHIP, { status: "ready", amount: 24n * ONE_CHIP })).toBe(
+      "too-few"
+    );
+  });
+
+  it("allows a player with exactly enough", () => {
+    expect(whyUnaffordable(25n * ONE_CHIP, { status: "ready", amount: 25n * ONE_CHIP })).toBeNull();
+  });
 });

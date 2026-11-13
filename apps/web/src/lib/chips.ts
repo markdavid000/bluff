@@ -21,3 +21,14 @@ export function parseChips(input: string): bigint | null {
   const amount = BigInt(whole) * ONE_CHIP + BigInt(fraction.padEnd(CHIP_DECIMALS, "0"));
   return amount > 0n ? amount : null;
 }
+
+export type KnownBalance = { status: "ready"; amount: bigint } | { status: "unknown" };
+
+export function whyUnaffordable(
+  buyIn: bigint,
+  balance: KnownBalance
+): "show-chips" | "too-few" | null {
+  if (buyIn === 0n) return null;
+  if (balance.status !== "ready") return "show-chips";
+  return balance.amount >= buyIn ? null : "too-few";
+}

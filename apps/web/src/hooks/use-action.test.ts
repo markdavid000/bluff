@@ -45,6 +45,18 @@ describe("useAction", () => {
     expect(notices).toEqual([]);
   });
 
+  it("hands what the move produced to the caller once it is done", async () => {
+    const onDone = vi.fn();
+    const { result } = renderHook(() =>
+      useAction({ id: "seat", working: "Joining…", run: async () => 12n, onDone })
+    );
+    act(() => result.current.start());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(MIN_SHOWN_MS);
+    });
+    expect(onDone).toHaveBeenCalledWith(12n);
+  });
+
   it("shows no message for a move that ends within 300 ms", async () => {
     const move = deferred();
     const { result } = renderHook(() =>

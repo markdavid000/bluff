@@ -51,8 +51,14 @@ export function usePlayer(): Player & { refresh: () => Promise<unknown> } {
   if (!ready) return { status: "loading", refresh };
   if (!authenticated) return { status: "signed-out", refresh };
   if (address && profile.isError) return { status: "failed", refresh };
-  if (!address || profile.isPending || !profile.data) return { status: "loading", refresh };
-  const [savedName, [preset]] = profile.data as [string, readonly [number, string]];
+  if (!address || profile.isPending || profile.isPlaceholderData || !profile.data)
+    return { status: "loading", refresh };
+  const [savedName, avatar]: readonly unknown[] = profile.data;
+  if (typeof savedName !== "string" || !Array.isArray(avatar) || typeof avatar[0] !== "number") {
+    console.error("The player's name or face came back in an unexpected shape.");
+    return { status: "failed", refresh };
+  }
+  const preset = avatar[0];
   const nickname = savedName.length > 0 ? savedName : null;
   return {
     status: "ready",

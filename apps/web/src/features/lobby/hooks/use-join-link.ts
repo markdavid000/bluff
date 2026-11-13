@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { notify } from "@/lib/notify";
+import { parseTableLink, tablePath } from "@/lib/table-links";
 import { lobbyCopy } from "../copy";
-import { parseTableLink } from "../lib/tables";
 
-export function useJoinLink({ onFound }: { onFound: (id: bigint) => void }) {
+export function useJoinLink() {
+  const router = useRouter();
   const [text, setText] = useState("");
   const [invalid, setInvalid] = useState(false);
 
@@ -26,7 +28,7 @@ export function useJoinLink({ onFound }: { onFound: (id: bigint) => void }) {
         return;
       }
       setText("");
-      onFound(id);
+      router.push(tablePath(id));
     },
   };
 }

@@ -18,8 +18,9 @@ type PermitStatus = "checking" | "needed" | "granted";
 export function usePermit({ working, automatic }: { working: string; automatic: boolean }) {
   const { user } = usePrivy();
   const embedded = user?.wallet?.walletClientType === "privy";
-  const { address: signer } = useConnection();
+  const { address: signer, status: connection } = useConnection();
   const signerIsPlayer =
+    connection === "connected" &&
     Boolean(signer && user?.wallet) &&
     signer?.toLowerCase() === user?.wallet?.address.toLowerCase();
   const sdk = useZamaSDK();

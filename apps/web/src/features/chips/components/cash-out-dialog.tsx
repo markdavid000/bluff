@@ -45,33 +45,37 @@ export function CashOutDialog({
       }}
     >
       <DialogContent>
-        <PatternFrame>
+        <PatternFrame roomy>
           <form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-8"
             onSubmit={(event) => {
               event.preventDefault();
               form.submit(cashOut);
             }}
           >
-            <DialogTitle>{chipsCopy.cashOutTitle}</DialogTitle>
-            <DialogDescription>{chipsCopy.cashOutHelp}</DialogDescription>
-            <label htmlFor={inputId} className="font-game text-lg">
-              {chipsCopy.cashOutAmount}
-            </label>
-            <input
-              id={inputId}
-              inputMode="decimal"
-              autoComplete="off"
-              value={form.text}
-              disabled={working}
-              aria-invalid={form.invalid || undefined}
-              aria-describedby={helpId}
-              onChange={(event) => form.change(event.target.value)}
-              className="rounded-xl border-2 border-tile-edge/50 bg-background px-4 py-3 font-game text-2xl tabular-nums focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none"
-            />
-            <p id={helpId} aria-live="polite" className="text-sm text-muted-foreground">
-              {chipsCopy.cashOutAmountHelp(formatChips(balance))}
-            </p>
+            <div className="flex flex-col gap-2">
+              <DialogTitle>{chipsCopy.cashOutTitle}</DialogTitle>
+              <DialogDescription>{chipsCopy.cashOutHelp}</DialogDescription>
+            </div>
+            <div className="flex flex-col gap-3">
+              <label htmlFor={inputId} className="font-game text-lg">
+                {chipsCopy.cashOutAmount}
+              </label>
+              <input
+                id={inputId}
+                inputMode="decimal"
+                autoComplete="off"
+                value={form.text}
+                disabled={working}
+                aria-invalid={form.invalid || undefined}
+                aria-describedby={helpId}
+                onChange={(event) => form.change(event.target.value)}
+                className="rounded-xl border-2 border-tile-edge/50 bg-background px-4 py-3 font-game text-2xl tabular-nums focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none"
+              />
+              <p id={helpId} aria-live="polite" className="text-sm text-muted-foreground">
+                {chipsCopy.cashOutAmountHelp(formatChips(balance))}
+              </p>
+            </div>
             <div className="flex flex-wrap gap-3">
               <ActionButton
                 type="submit"

@@ -140,7 +140,7 @@ The planned features:
 | `landing`  | The front page that explains the game                                                    |
 | `account`  | Signing in with Google or email, or with an own wallet                                   |
 | `lobby`    | Creating, finding and joining tables                                                     |
-| `table`    | Playing: own dice, bids, calling a bluff, the reveal, the results                        |
+| `table`    | `/table/[id]`: the waiting room, joining by link, then own dice, bids, calls, results    |
 | `chips`    | Chip balance, getting practice chips, cashing out                                        |
 | `fairness` | The "How is this fair?" panel                                                            |
 | `design`   | The `/design` sample page from the design pass; removed once real screens use its pieces |
