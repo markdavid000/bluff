@@ -9,7 +9,7 @@ library TableRules {
 
     uint64 internal constant CHIP_UNIT = 1e6;
     uint64 internal constant LOBBY_LIMIT = 10 minutes;
-    uint64 internal constant TURN_LIMIT = 45 seconds;
+    uint64 internal constant TURN_LIMIT = 75 seconds;
     uint64 internal constant VERIFICATION_LIMIT = 10 minutes;
     uint64 internal constant STUCK_REVEAL_LIMIT = 10 minutes;
     uint64 internal constant GAME_CLOCK = 15 minutes;
@@ -18,8 +18,8 @@ library TableRules {
         return seatCount >= MIN_SEATS && seatCount <= MAX_SEATS;
     }
 
-    function dicePerPlayer(uint8 seatCount) internal pure returns (uint8) {
-        return DICE_BUDGET - seatCount;
+    function dicePerPlayer(uint8 players) internal pure returns (uint8) {
+        return DICE_BUDGET - players;
     }
 
     function isValidBuyIn(uint64 buyIn) internal pure returns (bool) {

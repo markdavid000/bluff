@@ -28,7 +28,7 @@ Your dice are hidden from everyone else. Nobody, not even us, can see them until
 
 ## Your turn
 
-You have **30 seconds**. Do one of two things:
+You have **60 seconds**. Do one of two things:
 
 **Raise.** Guess something bigger than the last guess:
 

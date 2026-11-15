@@ -8,7 +8,7 @@ export const lobbyCopy = {
   createTitle: "Create a table",
   seats: "Players",
   seatCount: (count: number) => `${count} players`,
-  dicePerPlayer: (dice: number) => `${dice} dice each`,
+  dicePerPlayer: (dice: number) => `${dice} dice each when full`,
   private: "Only people with the link",
   privateHelp: "The table stays off the open list. Share the link to fill it.",
   createWorking: "Setting up your table…",

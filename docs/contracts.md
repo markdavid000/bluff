@@ -25,16 +25,16 @@ On Sepolia the chip token is Zama's `cUSDTMock` (`0x4E7B06D78965594eB5EF5414c357
 
 ### Player actions
 
-| Function                                | Caller                | Allowed when                                    | Does                                                                                                              |
-| --------------------------------------- | --------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                      | Creates a free table; the creator takes seat 0 and hosts. A private table gets an invite code. Returns the id.    |
-| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused  | Takes the next seat; a private table needs the player invited. A full table waits for its host.                   |
-| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark.                   |
-| `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready | Starts a free game, or the payment check of a paid one. Otherwise reverts with `NotEveryoneReady`.                |
-| `leaveTable(id)`                        | seated player         | any open status                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left. |
-| `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed                   | Cancels and refunds everyone.                                                                                     |
-| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                                       | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                   |
-| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists                         | Makes every die of the round publicly decryptable; status `Revealing`.                                            |
+| Function                                | Caller                | Allowed when                                    | Does                                                                                                                                                                       |
+| --------------------------------------- | --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                      | Creates a free table; the creator takes seat 0 and hosts. A private table gets an invite code. Returns the id.                                                             |
+| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused  | Takes the next seat; a private table needs the player invited. A full table waits for its host.                                                                            |
+| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark.                                                                            |
+| `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready | Starts a free game, or the payment check of a paid one. Dice are dealt by the players who start: 6 minus the player count each. Otherwise reverts with `NotEveryoneReady`. |
+| `leaveTable(id)`                        | seated player         | any open status                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left.                                                          |
+| `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed                   | Cancels and refunds everyone.                                                                                                                                              |
+| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                                       | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                                                                            |
+| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists                         | Makes every die of the round publicly decryptable; status `Revealing`.                                                                                                     |
 
 ### Anyone-can-call actions
 
@@ -195,7 +195,7 @@ Slither runs on every pull request and fails on medium or higher. These lower fi
 | Finding                   | Where                                               | Why it is accepted                                                                       |
 | ------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `assembly`                | every `_get…Storage()`                              | The ERC-7201 accessor needs it; it is the only assembly allowed.                         |
-| `timestamp`               | deadlines, the faucet                               | Limits are 45 seconds or more; block producers can shift time by seconds.                |
+| `timestamp`               | deadlines, the faucet                               | Limits are 75 seconds or more; block producers can shift time by seconds.                |
 | `reentrancy-events`       | `settleReveal`, `confirmSeats`                      | The external call is Zama's KMS verifier, which is the check itself and must come first. |
 | `calls-loop`              | refunds and payouts                                 | At most 4 iterations, calling only our own cashier and the chip token.                   |
 | `unindexed-event-address` | OpenZeppelin's `Paused`, `Unpaused`, `AdminChanged` | Inherited events, not ours.                                                              |

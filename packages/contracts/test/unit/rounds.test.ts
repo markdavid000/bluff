@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { decryptDice } from "../helpers/dice";
-import { startFreeGame } from "../helpers/tables";
+import { readyAndStart, startFreeGame } from "../helpers/tables";
 import { deployGameFixture } from "../fixtures";
 
-const TURN_LIMIT = 45n;
+const TURN_LIMIT = 75n;
 
 describe("rounds", function () {
-  it("starts round 1 with the host on turn and a 45 second deadline", async function () {
+  it("starts round 1 with the host on turn and a 75 second deadline", async function () {
     const { alice, bob, bluff } = await deployGameFixture();
     await bluff.connect(alice).createFreeTable(2, false);
     const id = await bluff.tableOf(alice.address);
@@ -43,6 +43,21 @@ describe("rounds", function () {
       }
     });
   }
+
+  it("deals by the players who start, not the seats", async function () {
+    const { alice, bob, bluff } = await deployGameFixture();
+    await (await bluff.connect(alice).createFreeTable(4, false)).wait();
+    const id = await bluff.tableOf(alice.address);
+    expect((await bluff.getTable(id))[0].dicePerPlayer).to.equal(2n);
+    await (await bluff.connect(bob).joinFreeTable(id)).wait();
+    await readyAndStart(bluff, id, [alice, bob]);
+    const [table, seats] = await bluff.getTable(id);
+    expect(table.dicePerPlayer).to.equal(4n);
+    expect(table.diceInPlay).to.equal(8n);
+    expect(seats[0].dice).to.equal(4n);
+    expect(seats[1].dice).to.equal(4n);
+    expect(await decryptDice(bluff, id, bob)).to.have.length(4);
+  });
 
   it("rolls values across every face over many games", async function () {
     const { bluff } = await deployGameFixture();

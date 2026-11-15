@@ -10,8 +10,8 @@ contract RulesHarness {
         return TableRules.isValidSeatCount(seatCount);
     }
 
-    function dicePerPlayer(uint8 seatCount) external pure returns (uint8) {
-        return TableRules.dicePerPlayer(seatCount);
+    function dicePerPlayer(uint8 players) external pure returns (uint8) {
+        return TableRules.dicePerPlayer(players);
     }
 
     function isValidBuyIn(uint64 buyIn) external pure returns (bool) {

@@ -24,6 +24,22 @@ describe("leaving a game", function () {
     await expect(bluff.connect(alice).createFreeTable(2, false)).to.emit(bluff, "TableCreated");
   });
 
+  it("keeps a leaver's seat at their next table when the old game ends", async function () {
+    const { alice, bob, carol, bluff } = await deployGameFixture();
+    const first = await startFreeGame(bluff, [alice, bob, carol]);
+    await (await bluff.connect(alice).leaveTable(first)).wait();
+    await (await bluff.connect(alice).createFreeTable(2, false)).wait();
+    const next = await bluff.tableOf(alice.address);
+    await (await bluff.connect(bob).leaveTable(first)).wait();
+    expect((await bluff.getTable(first))[0].status).to.equal(FINISHED);
+    expect(await bluff.tableOf(alice.address)).to.equal(next);
+    expect(await bluff.tableOf(carol.address)).to.equal(0n);
+    await expect(bluff.connect(alice).createFreeTable(2, false))
+      .to.be.revertedWithCustomError(bluff, "AlreadyAtTable")
+      .withArgs(next);
+    await expect(bluff.connect(alice).leaveTable(next)).to.emit(bluff, "PlayerLeft");
+  });
+
   it("does not move the turn when someone else is playing", async function () {
     const { alice, bob, carol, bluff } = await deployGameFixture();
     const id = await startFreeGame(bluff, [alice, bob, carol]);

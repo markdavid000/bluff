@@ -452,6 +452,7 @@ contract Bluff is
         table.startedAt = uint64(block.timestamp);
         emit GameStarted(id, table.startedAt, table.startedAt + TableRules.GAME_CLOCK);
         Seat[] storage seats = $.seats[id];
+        table.dicePerPlayer = TableRules.dicePerPlayer(uint8(seats.length));
         for (uint256 i = 0; i < seats.length; ++i) {
             seats[i].dice = table.dicePerPlayer;
         }
@@ -556,12 +557,16 @@ contract Bluff is
         Seat[] storage seats = $.seats[id];
         address[] memory winners = _winners($, id, reason);
         for (uint256 i = 0; i < seats.length; ++i) {
-            delete $.tableOf[seats[i].player];
+            _freeSeat($, id, seats[i].player);
         }
         table.status = TableStatus.Finished;
         table.deadline = 0;
         emit GameEnded(id, reason, winners);
         if (table.buyIn != 0) $.cashier.payOut(id, winners);
+    }
+
+    function _freeSeat(BluffStorage storage $, uint256 id, address player) private {
+        if ($.tableOf[player] == id) delete $.tableOf[player];
     }
 
     function _refundAll(BluffStorage storage $, uint256 id) private {
@@ -575,7 +580,7 @@ contract Bluff is
     function _cancel(BluffStorage storage $, uint256 id) private {
         Seat[] storage seats = $.seats[id];
         for (uint256 i = 0; i < seats.length; ++i) {
-            delete $.tableOf[seats[i].player];
+            _freeSeat($, id, seats[i].player);
         }
         $.tables[id].status = TableStatus.Cancelled;
         _unlist($, id);
