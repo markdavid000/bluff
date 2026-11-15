@@ -84,7 +84,7 @@ function game(overrides: Partial<Table> = {}): Table {
     isPrivate: false,
     seatCount: 2,
     buyIn: 0n,
-    deadline: NOW + 45_000,
+    deadline: NOW + 75_000,
     ...NO_GAME,
     diceInPlay: 8,
     startedAt: NOW - 60_000,
@@ -266,8 +266,11 @@ describe("useGame", () => {
     );
   });
 
-  it("shows 30 seconds for a turn while the contract allows 45, and warns at ten", () => {
-    expect(viewOf(render().result).turnLeft).toBe(30_000);
+  it("shows 60 seconds for a turn while the contract allows 75, and warns at ten", () => {
+    expect(viewOf(render().result).turnLeft).toBe(60_000);
+    expect(viewOf(render().result).turnFraction).toBe(1);
+    show(game({ deadline: NOW + 45_000 }));
+    expect(viewOf(render().result).turnFraction).toBe(0.5);
     show(game({ deadline: NOW + 24_000 }));
     const view = viewOf(render().result);
     expect(view.turnLeft).toBe(9_000);
