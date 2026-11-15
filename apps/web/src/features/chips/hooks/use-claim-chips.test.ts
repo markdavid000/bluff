@@ -13,11 +13,14 @@ const sendMove = vi.fn();
 const refetch = vi.fn();
 const invalidateBalanceQueries = vi.fn();
 let nextClaimAt: bigint | undefined;
+let readFailed = false;
 
 vi.mock("@privy-io/react-auth", () => ({
   usePrivy: () => ({ user: { wallet: { address: "0x1" } } }),
 }));
-vi.mock("wagmi", () => ({ useReadContract: () => ({ data: nextClaimAt, refetch }) }));
+vi.mock("wagmi", () => ({
+  useReadContract: () => ({ data: nextClaimAt, isError: readFailed, refetch }),
+}));
 vi.mock("@zama-fhe/sdk/query", () => ({
   invalidateBalanceQueries: (...args: unknown[]) => invalidateBalanceQueries(...args),
 }));
@@ -39,6 +42,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  readFailed = false;
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -47,6 +51,15 @@ describe("useClaimChips", () => {
   it("is loading until the next claim time is known", () => {
     nextClaimAt = undefined;
     expect(render().result.current.status).toBe("loading");
+  });
+
+  it("offers to try again when the next claim time can't be read", () => {
+    nextClaimAt = undefined;
+    readFailed = true;
+    const claim = render().result.current;
+    if (claim.status !== "failed") throw new Error("Expected a failure.");
+    claim.retry();
+    expect(refetch).toHaveBeenCalledOnce();
   });
 
   it("counts down to the next claim", () => {

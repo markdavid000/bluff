@@ -3,18 +3,26 @@
 import { useState } from "react";
 import { useChipBalance } from "@/hooks/use-chip-balance";
 import { chipsCopy } from "../copy";
-import { useClaimChips } from "./use-claim-chips";
-import { usePendingCashOut } from "./use-pending-cash-out";
+import { useChipsPanel } from "./use-chips-panel";
 
 export function useChipBalanceButton() {
   const [open, setOpen] = useState(false);
   const balance = useChipBalance({ working: chipsCopy.showingChips, automaticPermit: true });
-  const claim = useClaimChips();
-  const pending = usePendingCashOut();
+  const panel = useChipsPanel();
+  const { claim, cashOut } = panel;
+  const claiming = claim.status === "ready" && claim.working;
+  const workingLabel = claiming
+    ? claim.confirmInWallet
+      ? chipsCopy.confirmInWallet
+      : chipsCopy.claimWorking
+    : chipsCopy.cashOutWorking;
   return {
     balance,
+    panel,
     open,
     setOpen,
-    needsYou: claim.status === "ready" || Boolean(pending.data),
+    busy: claiming || cashOut.working,
+    workingLabel,
+    needsYou: claim.status === "ready" || panel.resume !== null,
   };
 }

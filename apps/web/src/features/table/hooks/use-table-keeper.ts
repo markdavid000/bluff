@@ -71,7 +71,9 @@ export function useTableKeeper({
   async function send(tableId: bigint, chosen: KeeperAction) {
     if (!publicClient) throw new MoveNotReadyError();
     if (!(await stillDue(tableId, chosen))) return;
-    if (chosen !== "confirmSeats") return sendIfStillDue(tableId, chosen, [tableId]);
+    if (chosen !== "confirmSeats" && chosen !== "settleReveal") {
+      return sendIfStillDue(tableId, chosen, [tableId]);
+    }
     const handles = await publicClient.readContract({
       address: contracts.bluff,
       abi: bluffAbi,

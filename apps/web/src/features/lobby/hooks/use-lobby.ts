@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useChipBalance } from "@/hooks/use-chip-balance";
+import { useMyTableId } from "@/hooks/use-my-table-id";
 import type { KnownBalance } from "@/lib/chips";
 import { lobbyCopy } from "../copy";
 import { BUY_INS, type SeatCount, affordProblem } from "../lib/tables";
 import { useJoinLink } from "./use-join-link";
-import { useMyTableId } from "./use-my-table-id";
-import { useOpenTables } from "./use-open-tables";
+import { useLatestOpenTables, useOpenTables } from "./use-open-tables";
 import { useSitDown } from "./use-sit-down";
 
 export function useLobby() {
@@ -22,9 +22,9 @@ export function useLobby() {
       ? { status: "ready", amount: balance.amount }
       : { status: "unknown" };
   const openTables = useOpenTables();
+  const latestOpenTables = useLatestOpenTables();
   const myTableId = useMyTableId();
   const sitDown = useSitDown();
-  const tables = openTables.status === "ready" ? openTables.tables : [];
 
   return {
     buyIn,
@@ -43,7 +43,7 @@ export function useLobby() {
       setCreateOpen(true);
     },
     sitDown,
-    playNow: () => sitDown.playNow(tables, buyIn),
+    playNow: () => sitDown.playNow(latestOpenTables, buyIn),
     createTable: (seatCount: SeatCount, isPrivate: boolean) =>
       sitDown.create({ kind: "create", seatCount, buyIn, isPrivate }),
   };

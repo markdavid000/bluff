@@ -8,9 +8,10 @@ import { formatChips } from "@/lib/chips";
 import { chipsCopy } from "../copy";
 import { useChipBalanceButton } from "../hooks/use-chip-balance-button";
 import { ChipsPanel } from "./chips-panel";
+import { holdOpenWhile } from "@/lib/hold-open";
 
 export function ChipBalance() {
-  const { balance, open, setOpen, needsYou } = useChipBalanceButton();
+  const { balance, panel, open, setOpen, busy, workingLabel, needsYou } = useChipBalanceButton();
 
   if (balance.status === "hidden") {
     return (
@@ -29,7 +30,7 @@ export function ChipBalance() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={holdOpenWhile(busy, workingLabel, setOpen)}>
       <DialogTrigger asChild>
         <button
           type="button"
@@ -47,7 +48,10 @@ export function ChipBalance() {
           ) : balance.status === "failed" ? (
             <span className="font-game text-base">{chipsCopy.tryAgain}</span>
           ) : (
-            <span role="status" className="h-5 w-16 animate-pulse rounded-md bg-muted">
+            <span
+              role="status"
+              className="h-5 w-16 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+            >
               <span className="sr-only">{chipsCopy.balanceLoading}</span>
             </span>
           )}
@@ -61,7 +65,7 @@ export function ChipBalance() {
         </button>
       </DialogTrigger>
       <DialogContent>
-        <ChipsPanel />
+        <ChipsPanel panel={panel} />
       </DialogContent>
     </Dialog>
   );

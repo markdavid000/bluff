@@ -29,7 +29,6 @@ describe("noticeFor", () => {
       tableCopy.removedForNotPaying("Kola #3C4D"),
     ],
     [{ eventName: "TableCancelled", args: {} }, tableCopy.tableClosed],
-    [{ eventName: "SeatVerificationStarted", args: {} }, tableCopy.checkingPaid],
     [{ eventName: "TableReopened", args: {} }, tableCopy.openAgain],
     [{ eventName: "GameStarted", args: {} }, tableCopy.gameStarting],
   ])("tells the table about %o", (event, words) => {
@@ -53,5 +52,43 @@ describe("noticeFor", () => {
 
   it("stays quiet about moves that are not about who is at the table", () => {
     expect(notice({ eventName: "BidPlaced", args: { player: KOLA } })).toBeNull();
+  });
+
+  describe("in a game", () => {
+    const ADA = "0x0000000000000000000000000000000000005e6f";
+    const names = (address: string) =>
+      address.toLowerCase() === KOLA
+        ? "Kola #3C4D"
+        : address.toLowerCase() === ADA
+          ? "Ada #5E6F"
+          : "Me";
+
+    it("leaves bids and calls to the table itself, without passing toasts", () => {
+      expect(noticeFor({ eventName: "BidPlaced", args: { player: KOLA } }, ME, names)).toBeNull();
+      expect(noticeFor({ eventName: "BluffCalled", args: { player: KOLA } }, ME, names)).toBeNull();
+    });
+
+    it("says who ran out of time, and when it was you", () => {
+      expect(noticeFor({ eventName: "TurnTimedOut", args: { player: KOLA } }, ME, names)).toBe(
+        tableCopy.ranOutOfTime("Kola #3C4D")
+      );
+      expect(noticeFor({ eventName: "TurnTimedOut", args: { player: ME } }, ME, names)).toBe(
+        tableCopy.youRanOutOfTime
+      );
+    });
+
+    it("says who is out of the game, and when it was you", () => {
+      expect(noticeFor({ eventName: "PlayerEliminated", args: { player: KOLA } }, ME, names)).toBe(
+        tableCopy.isOut("Kola #3C4D")
+      );
+      expect(noticeFor({ eventName: "PlayerEliminated", args: { player: ME } }, ME, names)).toBe(
+        tableCopy.youAreOut
+      );
+    });
+
+    it("leaves round results and the end of the game to their own tiles", () => {
+      expect(noticeFor({ eventName: "RoundSettled", args: {} }, ME, names)).toBeNull();
+      expect(noticeFor({ eventName: "GameEnded", args: {} }, ME, names)).toBeNull();
+    });
   });
 });

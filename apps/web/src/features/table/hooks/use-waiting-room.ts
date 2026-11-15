@@ -11,6 +11,7 @@ import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useFollowChain } from "@/hooks/use-block-clock";
 import { useChipBalance } from "@/hooks/use-chip-balance";
+import { useMyTableId } from "@/hooks/use-my-table-id";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useProveInvite } from "@/hooks/use-prove-invite";
@@ -27,6 +28,7 @@ import { useInviteCode } from "./use-invite-code";
 import { useLinkInvite } from "./use-link-invite";
 import { useTable } from "./use-table";
 import { useTableEvents } from "./use-table-events";
+import { useWorkingNotice } from "./use-working-notice";
 import { useTableKeeper } from "./use-table-keeper";
 
 const TICK_MS = 1_000;
@@ -58,6 +60,7 @@ export function useWaitingRoom(id: bigint) {
     (profiles.status === "ready" ? profiles.profileOf(address)?.name : undefined) ??
     displayName(null, address, tableCopy.unnamed);
   useTableEvents({ id, me, nameOf });
+  useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
   const proveInvite = useProveInvite();
@@ -65,6 +68,7 @@ export function useWaitingRoom(id: bigint) {
   const invite = useInviteCode({ id, isPrivate: table?.isPrivate ?? false, canRead: seated });
   const linkCode = useLinkInvite();
   const [joinStep, setJoinStep] = useState<"invite" | "seat">("seat");
+  const myTable = useMyTableId();
   const balance = useChipBalance({ working: tableCopy.gettingReady });
   const now = useNow(TICK_MS, table !== null && table.deadline > 0);
   useTableKeeper({ table, me, now });
@@ -200,13 +204,15 @@ export function useWaitingRoom(id: bigint) {
           ? tableCopy.started
           : freeSeats(table) === 0
             ? tableCopy.full
-            : table.isPrivate && linkCode === null
-              ? tableCopy.privateTable
-              : unaffordable === "show-chips"
-                ? tableCopy.showChipsFirst
-                : unaffordable === "too-few"
-                  ? tableCopy.notEnough(formatChips(table.buyIn))
-                  : null,
+            : myTable.status === "ready" && myTable.id !== null && myTable.id !== table.id
+              ? tableCopy.seatedElsewhere
+              : table.isPrivate && linkCode === null
+                ? tableCopy.privateTable
+                : unaffordable === "show-chips"
+                  ? tableCopy.showChipsFirst
+                  : unaffordable === "too-few"
+                    ? tableCopy.notEnough(formatChips(table.buyIn))
+                    : null,
       busy,
       confirm,
       toggling: ready.working,

@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { errorCopy } from "@/lib/copy";
+import { type Notice, onNotice } from "@/lib/notify";
 import { lobbyCopy } from "../copy";
 import { CreateTableDialog } from "./create-table-dialog";
 
@@ -54,9 +56,17 @@ describe("CreateTableDialog", () => {
     expect(screen.getByText(lobbyCopy.notEnough("50"))).toBeInTheDocument();
   });
 
-  it("stays open while the table is being set up", () => {
+  it("stays open while the table is being set up, and says so when the player tries to close it", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
     open(null, true);
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     expect(onOpenChange).not.toHaveBeenCalled();
+    expect(shown.map((notice) => notice.title)).toEqual([
+      errorCopy.stillGoing(lobbyCopy.createWorking),
+    ]);
+    stop();
   });
 });

@@ -8,6 +8,7 @@ vi.mock("@/config/env", () => ({
 }));
 
 const replace = vi.fn();
+const loadPage = vi.fn();
 const createWallet = vi.fn(
   () =>
     new Promise<{ address: string }>((resolve) =>
@@ -16,6 +17,7 @@ const createWallet = vi.fn(
 );
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
+vi.mock("@/lib/load-page", () => ({ loadPage: (path: string) => loadPage(path) }));
 vi.mock("wagmi", () => ({ usePublicClient: () => ({ readContract: async () => "" }) }));
 vi.mock("../lib/session-client", () => ({ openSession: async () => true }));
 vi.mock("@privy-io/react-auth", () => ({
@@ -40,7 +42,7 @@ describe("making a player's wallet", () => {
       useSignIn(undefined);
       useWalletKeeper();
     });
-    await waitFor(() => expect(replace).toHaveBeenCalledOnce());
+    await waitFor(() => expect(loadPage).toHaveBeenCalledOnce());
     expect(createWallet).toHaveBeenCalledOnce();
   });
 });

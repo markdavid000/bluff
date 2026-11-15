@@ -13,7 +13,7 @@ const claim = vi.fn();
 const resume = vi.fn();
 const setCashOutOpen = vi.fn();
 
-type Panel = Record<string, unknown>;
+type Panel = Parameters<typeof ChipsPanel>[0]["panel"];
 
 const base: Panel = {
   balance: { status: "ready", amount: 150n * ONE_CHIP },
@@ -30,17 +30,16 @@ const base: Panel = {
   setCashOutOpen,
   canCashOut: true,
   resume: null,
+  pendingRetry: null,
 };
 
 let panel: Panel = base;
-
-vi.mock("../hooks/use-chips-panel", () => ({ useChipsPanel: () => panel }));
 
 function showPanel() {
   render(
     <Dialog open>
       <DialogContent>
-        <ChipsPanel />
+        <ChipsPanel panel={panel} />
       </DialogContent>
     </Dialog>
   );
@@ -109,8 +108,27 @@ describe("ChipsPanel", () => {
     expect(screen.getByRole("button", { name: chipsCopy.cashOut })).toBeDisabled();
   });
 
+  it("offers to try again when the free chips can't be checked", () => {
+    const retry = vi.fn();
+    panel = { ...base, claim: { status: "failed", retry } };
+    showPanel();
+    expect(screen.getByText(chipsCopy.claimProblem)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: chipsCopy.tryAgain }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
+
+  it("holds cash outs and offers to try again when an unfinished one can't be checked", () => {
+    const pendingRetry = vi.fn();
+    panel = { ...base, canCashOut: false, pendingRetry };
+    showPanel();
+    expect(screen.getByText(chipsCopy.pendingProblem)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: chipsCopy.cashOut })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: chipsCopy.tryAgain }));
+    expect(pendingRetry).toHaveBeenCalledOnce();
+  });
+
   it("shows cashed out practice dollars and where anyone can see them", () => {
-    panel = { ...base, cashOut: { ...(base.cashOut as object), dollars: 25_000_000n } };
+    panel = { ...base, cashOut: { ...base.cashOut, dollars: 25_000_000n } };
     showPanel();
     expect(screen.getAllByText(chipsCopy.dollars("25"))).not.toHaveLength(0);
     const record = screen.getByRole("link", { name: chipsCopy.seeCashOuts });

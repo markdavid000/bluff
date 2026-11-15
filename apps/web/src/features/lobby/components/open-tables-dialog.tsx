@@ -8,6 +8,7 @@ import type { OpenTables } from "../hooks/use-open-tables";
 import type { LobbyTable } from "../lib/tables";
 import { EmptyTablesArt } from "./empty-tables-art";
 import { OpenTableCard } from "./open-table-card";
+import { holdOpenWhile } from "@/lib/hold-open";
 
 export function OpenTablesDialog({
   open,
@@ -15,6 +16,7 @@ export function OpenTablesDialog({
   openTables,
   problemFor,
   busy,
+  busyLabel,
   onJoin,
   onPlayNow,
   onCreate,
@@ -24,17 +26,13 @@ export function OpenTablesDialog({
   openTables: OpenTables;
   problemFor: (buyIn: bigint) => string | null;
   busy: boolean;
+  busyLabel: string;
   onJoin: (table: LobbyTable) => void;
   onPlayNow: () => void;
   onCreate: () => void;
 }) {
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!busy) onOpenChange(next);
-      }}
-    >
+    <Dialog open={open} onOpenChange={holdOpenWhile(busy, busyLabel, onOpenChange)}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-6xl">
         <PatternFrame roomy>
           <div className="flex flex-col gap-8">
@@ -87,7 +85,10 @@ export function OpenTablesDialog({
                 </ActionButton>
               </p>
             ) : (
-              <p role="status" className="h-40 animate-pulse rounded-2xl bg-muted">
+              <p
+                role="status"
+                className="h-40 animate-pulse rounded-2xl bg-muted motion-reduce:animate-none"
+              >
                 <span className="sr-only">{lobbyCopy.openTablesLoading}</span>
               </p>
             )}

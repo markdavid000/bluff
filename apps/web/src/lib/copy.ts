@@ -2,8 +2,10 @@ export const errorCopy = {
   cancelled: "Cancelled",
   tryAgain: "Try again",
   stillWorking: (message: string) => `${message} The network is busy, hang on.`,
+  stillGoing: (message: string) => `${message} Please wait until it's done.`,
   generic: "Something went wrong. Please try again.",
   networkBusy: "The network is busy. Please try again in a moment.",
+  mayStillLand: "This is taking a while. It may still go through, so watch the table.",
   noWallet: "Your seat is still getting ready. Please try again in a moment.",
   inviteNotWorking: "That invite link doesn't work. Ask the host for a new one.",
   reasons: {

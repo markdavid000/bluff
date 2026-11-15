@@ -58,8 +58,8 @@ export function useSitDown() {
   const playNow = useAction({
     id: "play-now",
     working: lobbyCopy.playNowWorking,
-    run: (report, tables: LobbyTable[], buyIn: bigint) => {
-      const table = pickTableToJoin(tables, buyIn);
+    run: async (report, latestTables: () => Promise<LobbyTable[]>, buyIn: bigint) => {
+      const table = pickTableToJoin(await latestTables(), buyIn);
       return takeSeat(
         table
           ? { kind: "join", tableId: table.id, buyIn }

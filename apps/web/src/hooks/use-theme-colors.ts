@@ -25,9 +25,12 @@ function snapshot(): ThemeColors | null {
   if (typeof document === "undefined") return null;
   const key = document.documentElement.className;
   if (cached?.key === key) return cached.colors;
-  const colors = Object.fromEntries(
+  const fresh = Object.fromEntries(
     THEME_TOKENS.map((token) => [token, resolveTokenColor(token)])
   ) as ThemeColors;
+  const unchanged =
+    cached !== null && THEME_TOKENS.every((token) => cached?.colors[token] === fresh[token]);
+  const colors = unchanged && cached ? cached.colors : fresh;
   cached = { key, colors };
   return colors;
 }

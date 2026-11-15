@@ -23,7 +23,10 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
         {avatarSrc ? (
           <Avatar src={avatarSrc} size={64} className={cn(isMe && "ring-4 ring-seat-yellow")} />
         ) : (
-          <span aria-hidden className="block size-16 animate-pulse rounded-full bg-muted" />
+          <span
+            aria-hidden
+            className="block size-16 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+          />
         )}
         {isHost ? (
           <span aria-hidden className="absolute -top-3 left-1/2 -translate-x-1/2">

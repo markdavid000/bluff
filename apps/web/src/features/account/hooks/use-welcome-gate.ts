@@ -24,7 +24,7 @@ export function useWelcomeGate() {
       : player.nickname === null
         ? onWelcome
           ? null
-          : `${WELCOME}?next=${encodeURIComponent(pathname)}`
+          : "welcome"
         : onWelcome
           ? "onward"
           : null;
@@ -34,7 +34,11 @@ export function useWelcomeGate() {
     let current = true;
     closeSession().then(
       () => {
-        if (current) router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`);
+        if (current) {
+          router.replace(
+            `/sign-in?next=${encodeURIComponent(`${pathname}${window.location.hash}`)}`
+          );
+        }
       },
       (error: unknown) => {
         console.error("Bluff could not close the old session.", error);
@@ -49,10 +53,10 @@ export function useWelcomeGate() {
   useEffect(() => {
     if (goTo === "onward") {
       router.replace(safeNextPath(new URLSearchParams(window.location.search).get("next")));
-    } else if (goTo) {
-      router.replace(goTo);
+    } else if (goTo === "welcome") {
+      router.replace(`${WELCOME}?next=${encodeURIComponent(`${pathname}${window.location.hash}`)}`);
     }
-  }, [goTo, router]);
+  }, [goTo, pathname, router]);
 
   const view: GateView =
     player.status === "failed" || (signedOut && closeFailed)

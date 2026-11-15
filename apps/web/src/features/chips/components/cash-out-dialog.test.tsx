@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { errorCopy } from "@/lib/copy";
 import { onNotice } from "@/lib/notify";
 import { ONE_CHIP } from "@/lib/chips";
 import { chipsCopy } from "../copy";
@@ -86,10 +87,11 @@ describe("CashOutDialog", () => {
     expect(input).not.toHaveAttribute("aria-invalid", "true");
   });
 
-  it("stays open while the cash out is running", () => {
+  it("stays open while the cash out is running, and says so when the player tries to close it", () => {
     open({ working: true });
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     expect(onOpenChange).not.toHaveBeenCalled();
+    expect(toasts()).toContain(errorCopy.stillGoing(chipsCopy.cashOutWorking));
     expect(screen.getByRole("button", { name: chipsCopy.cashOutAll })).toBeDisabled();
   });
 });

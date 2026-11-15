@@ -13,6 +13,7 @@ export function useChipsPanel() {
   const claim = useClaimChips();
   const pending = usePendingCashOut();
   const cashOut = useCashOut({ onFinished: () => setCashOutOpen(false) });
+  const checked = pending.data !== undefined;
   const unfinished = pending.data ?? null;
 
   return {
@@ -21,7 +22,8 @@ export function useChipsPanel() {
     cashOut,
     cashOutOpen,
     setCashOutOpen,
-    canCashOut: balance.status === "ready" && balance.amount > 0n && unfinished === null,
+    canCashOut: balance.status === "ready" && balance.amount > 0n && checked && unfinished === null,
+    pendingRetry: !checked && pending.isError ? () => void pending.refetch() : null,
     resume: unfinished ? () => cashOut.resume(unfinished) : null,
   };
 }

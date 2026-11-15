@@ -40,12 +40,33 @@ describe("explainProblem", () => {
 
   it("names the rule a move broke, in plain words", () => {
     expect(explainProblem(reverted(bluffAbi, "NotYourTurn", [1n, 0]))).toEqual({
-      kind: "failed",
+      kind: "refused",
       reason: errorCopy.reasons.NotYourTurn,
     });
     expect(explainProblem(reverted(chipFaucetAbi, "ClaimTooSoon", [123n]))).toEqual({
-      kind: "failed",
+      kind: "refused",
       reason: errorCopy.reasons.ClaimTooSoon,
+    });
+  });
+
+  it("names the rule a sponsored move broke, when the wallet service only gives the raw data", () => {
+    const data = encodeErrorResult({ abi: bluffAbi, errorName: "WrongStatus", args: [12n, 5] });
+    const fromPrivy = new Error(`${data} (User operation hash: 0x${"b2".repeat(32)})`);
+    expect(explainProblem(fromPrivy)).toEqual({
+      kind: "refused",
+      reason: errorCopy.reasons.WrongStatus,
+    });
+  });
+
+  it("never calls a move failed when the wallet service only gave up waiting for it", () => {
+    const timedOut = new DOMException("signal is aborted without reason", "AbortError");
+    expect(explainProblem(timedOut)).toEqual({ kind: "unsure", reason: errorCopy.mayStillLand });
+  });
+
+  it("ignores raw data that isn't one of the game's rules", () => {
+    expect(explainProblem(new Error("0xdeadbeef00 went wrong"))).toEqual({
+      kind: "failed",
+      reason: errorCopy.generic,
     });
   });
 
@@ -67,11 +88,11 @@ describe("explainProblem", () => {
 
   it("tells a player without the invite to ask the host", () => {
     expect(explainProblem(reverted(bluffAbi, "NotInvited", [4n]))).toEqual({
-      kind: "failed",
+      kind: "refused",
       reason: errorCopy.reasons.NotInvited,
     });
     expect(explainProblem(reverted(bluffInvitesAbi, "TooManyTries", [4n]))).toEqual({
-      kind: "failed",
+      kind: "refused",
       reason: errorCopy.reasons.TooManyTries,
     });
   });
@@ -85,7 +106,7 @@ describe("explainProblem", () => {
 
   it("says a table filled up in plain words", () => {
     expect(explainProblem(reverted(bluffAbi, "TableFull", [4n]))).toEqual({
-      kind: "failed",
+      kind: "refused",
       reason: errorCopy.reasons.TableFull,
     });
   });

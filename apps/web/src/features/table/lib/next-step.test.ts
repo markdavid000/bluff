@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { tableCopy } from "../copy";
 import { nextStep } from "./next-step";
-import type { Table, TableStatus } from "./table-view";
+import type { Table, TableSize, TableStatus } from "./table-view";
+import { NO_DICE, NO_GAME } from "./table-fixture.testing";
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";
@@ -15,7 +16,7 @@ const NAMES: Record<string, string> = {
 };
 const nameOf = (address: string) => NAMES[address] ?? "?";
 
-function table(status: TableStatus, seats: [string, boolean][], seatCount = 4): Table {
+function table(status: TableStatus, seats: [string, boolean][], seatCount: TableSize = 4): Table {
   return {
     id: 12n,
     host: HOST,
@@ -24,11 +25,13 @@ function table(status: TableStatus, seats: [string, boolean][], seatCount = 4): 
     seatCount,
     buyIn: 0n,
     deadline: 0,
+    ...NO_GAME,
     seats: seats.map(([player, ready]) => ({
       player: player as `0x${string}`,
       ready,
       isHost: player === HOST,
       isActive: true,
+      ...NO_DICE,
     })),
   };
 }
@@ -96,8 +99,8 @@ describe("nextStep", () => {
 
   it.each<[TableStatus, string]>([
     ["verifying", tableCopy.checkingPaid],
-    ["playing", tableCopy.gameOn],
-    ["revealing", tableCopy.gameOn],
+    ["playing", tableCopy.started],
+    ["revealing", tableCopy.started],
     ["finished", tableCopy.closed],
     ["cancelled", tableCopy.closed],
   ])("describes a %s table", (status, words) => {

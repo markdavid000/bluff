@@ -2,7 +2,11 @@ import { tableCopy } from "../copy";
 
 export interface TableEvent {
   eventName: string;
-  args: { player?: string; host?: string; ready?: boolean };
+  args: {
+    player?: string;
+    host?: string;
+    ready?: boolean;
+  };
 }
 
 function same(a: string | undefined, b: string | undefined): boolean {
@@ -32,12 +36,16 @@ export function noticeFor(
       return mine ? tableCopy.youWereRemoved : tableCopy.removedForNotPaying(nameOf(player));
     case "TableCancelled":
       return tableCopy.tableClosed;
-    case "SeatVerificationStarted":
-      return tableCopy.checkingPaid;
     case "TableReopened":
       return tableCopy.openAgain;
     case "GameStarted":
       return tableCopy.gameStarting;
+    case "TurnTimedOut":
+      if (!player) return null;
+      return mine ? tableCopy.youRanOutOfTime : tableCopy.ranOutOfTime(nameOf(player));
+    case "PlayerEliminated":
+      if (!player) return null;
+      return mine ? tableCopy.youAreOut : tableCopy.isOut(nameOf(player));
     default:
       return null;
   }

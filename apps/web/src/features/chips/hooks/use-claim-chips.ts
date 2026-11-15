@@ -44,7 +44,11 @@ export function useClaimChips() {
     },
   });
 
-  if (nextClaimMs === null) return { status: "loading" as const };
+  if (nextClaimMs === null) {
+    return nextClaim.isError
+      ? { status: "failed" as const, retry: () => void nextClaim.refetch() }
+      : { status: "loading" as const };
+  }
   if (nextClaimMs > now) {
     return { status: "waiting" as const, remainingMs: nextClaimMs - now };
   }

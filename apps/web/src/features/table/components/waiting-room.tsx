@@ -25,7 +25,7 @@ const POT_STACKS = 6;
 export function WaitingRoom({ room }: { room: Room }) {
   const colors = useThemeColors();
   const { table, seats } = room;
-  const seatCount = table.seatCount as 2 | 3 | 4;
+  const seatCount = table.seatCount;
   const mySeat = Math.max(
     seats.findIndex((seat) => seat.isMe),
     0
@@ -36,8 +36,8 @@ export function WaitingRoom({ room }: { room: Room }) {
   const label = (working: string) => (room.confirm ? tableCopy.confirmInWallet : working);
 
   return (
-    <div className="flex max-h-full min-h-0 w-full max-w-4xl flex-col items-center gap-4">
-      <div className="grid w-full grid-cols-[minmax(5rem,auto)_minmax(0,1fr)_minmax(5rem,auto)] grid-rows-[auto_auto_auto] items-center gap-3">
+    <div className="flex max-h-full min-h-0 w-full max-w-4xl flex-1 flex-col items-center gap-4 overflow-hidden px-2 pt-1 pb-4">
+      <div className="grid min-h-0 w-full flex-1 grid-cols-[minmax(5rem,auto)_minmax(0,1fr)_minmax(5rem,auto)] grid-rows-[auto_minmax(0,1fr)_auto] items-center gap-3">
         {layout.map((placement, index) => {
           const seat = seats[index];
           return (
@@ -57,19 +57,24 @@ export function WaitingRoom({ room }: { room: Room }) {
             </div>
           );
         })}
-        <div className="col-start-2 row-start-2 mx-auto w-full max-w-[min(48vh,460px)]">
-          {colors ? (
-            <LazyBoardScene
-              colors={colors}
-              seats={taken}
-              throwState={{ kind: "idle" }}
-              chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
-              revealed={false}
-              label={tableCopy.boardLabel}
-            />
-          ) : (
-            <BoardPlaceholder />
-          )}
+        <div
+          data-board-space
+          className="[container-type:size] col-start-2 row-start-2 flex h-full min-h-0 items-center justify-center"
+        >
+          <div className="relative aspect-square w-[min(100cqw,100cqh)]">
+            {colors ? (
+              <LazyBoardScene
+                colors={colors}
+                seats={taken}
+                throwState={{ kind: "idle" }}
+                chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
+                revealed={false}
+                label={tableCopy.boardLabel}
+              />
+            ) : (
+              <BoardPlaceholder />
+            )}
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-4">

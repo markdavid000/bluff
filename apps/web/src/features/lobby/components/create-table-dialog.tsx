@@ -15,6 +15,7 @@ import { lobbyCopy } from "../copy";
 import { useCreateTableForm } from "../hooks/use-create-table-form";
 import { SEAT_COUNTS, type SeatCount } from "../lib/tables";
 import { BuyInPicker } from "./buy-in-picker";
+import { holdOpenWhile } from "@/lib/hold-open";
 
 const DICE_BUDGET = 6;
 
@@ -43,12 +44,7 @@ export function CreateTableDialog({
   const privateHelpId = useId();
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!working) onOpenChange(next);
-      }}
-    >
+    <Dialog open={open} onOpenChange={holdOpenWhile(working, workingLabel, onOpenChange)}>
       <DialogContent>
         <PatternFrame roomy>
           <form

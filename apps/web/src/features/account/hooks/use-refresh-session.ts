@@ -1,32 +1,36 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent } from "react";
+import { loadPage } from "@/lib/load-page";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { openSession } from "../lib/session-client";
 
 export function useRefreshSession(next: string | undefined) {
-  const router = useRouter();
   const { ready, authenticated, getAccessToken } = usePrivy();
   const destination = safeNextPath(next);
-  const signIn = `/sign-in?next=${encodeURIComponent(destination)}`;
+
+  const onward = () =>
+    destination.includes("#") ? destination : `${destination}${window.location.hash}`;
+  const signIn = () => `/sign-in?next=${encodeURIComponent(onward())}`;
 
   const refresh = useEffectEvent(async () => {
     if (!authenticated) {
-      router.replace(signIn);
+      loadPage(signIn());
       return;
     }
     const token = await getAccessToken();
     const opened = token ? await openSession(token) : false;
-    router.replace(opened ? destination : signIn);
+    loadPage(opened ? onward() : signIn());
+  });
+
+  const giveUp = useEffectEvent((error: unknown) => {
+    console.error("Bluff could not refresh the session.", error);
+    loadPage(signIn());
   });
 
   useEffect(() => {
     if (!ready) return;
-    refresh().catch((error: unknown) => {
-      console.error("Bluff could not refresh the session.", error);
-      router.replace(signIn);
-    });
-  }, [ready, router, signIn]);
+    refresh().catch(giveUp);
+  }, [ready]);
 }

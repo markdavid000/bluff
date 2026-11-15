@@ -10,6 +10,9 @@ export function PlayerGreeting() {
       {accountCopy.readyToPlay(player.nickname ?? player.name)}
     </h1>
   ) : (
-    <span aria-hidden className="mx-auto h-9 w-56 animate-pulse rounded-md bg-muted" />
+    <span
+      aria-hidden
+      className="mx-auto h-9 w-56 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+    />
   );
 }

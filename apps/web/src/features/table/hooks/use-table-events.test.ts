@@ -69,4 +69,62 @@ describe("useTableEvents", () => {
     expect(shown).toEqual([]);
     expect(newestBlock()).toBe(120n);
   });
+
+  it("hands each bid to the screen, without a toast", () => {
+    const bid = vi.fn();
+    renderHook(() =>
+      useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D", onBidPlaced: bid })
+    );
+    deliver([log("BidPlaced", { id: 12n, round: 2, player: KOLA, quantity: 4, face: 5 }, 130n)]);
+    expect(bid).toHaveBeenCalledWith({ round: 2, player: KOLA, quantity: 4, face: 5 });
+    expect(shown).toEqual([]);
+  });
+
+  it("hands each round's result to the screen", () => {
+    const settled = vi.fn();
+    renderHook(() =>
+      useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D", onRoundSettled: settled })
+    );
+    deliver([
+      log(
+        "RoundSettled",
+        {
+          id: 12n,
+          round: 3,
+          face: 5,
+          quantity: 4,
+          count: 3,
+          loser: KOLA,
+          revealedFaces: [1, 5, 5, 2, 6],
+        },
+        150n
+      ),
+    ]);
+    expect(settled).toHaveBeenCalledWith({
+      round: 3,
+      face: 5,
+      quantity: 4,
+      count: 3,
+      loser: KOLA,
+      faces: [1, 5, 5, 2, 6],
+    });
+    expect(shown).toEqual([]);
+  });
+
+  it("ignores a round result it can't read", () => {
+    const settled = vi.fn();
+    renderHook(() =>
+      useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D", onRoundSettled: settled })
+    );
+    deliver([log("RoundSettled", { id: 12n, round: 3, face: 5 }, 150n)]);
+    expect(settled).not.toHaveBeenCalled();
+  });
+  it("hands the end of the game and its winners to the screen", () => {
+    const ended = vi.fn();
+    renderHook(() =>
+      useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D", onGameEnded: ended })
+    );
+    deliver([log("GameEnded", { id: 12n, reason: 0, winners: [KOLA] }, 150n)]);
+    expect(ended).toHaveBeenCalledWith({ reason: "last-standing", winners: [KOLA] });
+  });
 });

@@ -33,7 +33,10 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
             </ActionButton>
           </p>
         ) : lobby.myTableId.status === "loading" ? (
-          <p role="status" className="h-40 w-full animate-pulse rounded-2xl bg-muted">
+          <p
+            role="status"
+            className="h-40 w-full animate-pulse rounded-2xl bg-muted motion-reduce:animate-none"
+          >
             <span className="sr-only">{lobbyCopy.findingYourTable}</span>
           </p>
         ) : (
@@ -47,9 +50,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
                     size="large"
                     icon="play"
                     sound="drum"
-                    disabled={
-                      busy || lobby.buyInProblem !== null || lobby.openTables.status === "loading"
-                    }
+                    disabled={busy || lobby.buyInProblem !== null}
                     working={sitDown.findingSeat}
                     workingLabel={label(lobbyCopy.playNowWorking)}
                     onClick={lobby.playNow}
@@ -98,6 +99,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         openTables={lobby.openTables}
         problemFor={lobby.problemFor}
         busy={busy}
+        busyLabel={label(lobbyCopy.joinWorking)}
         onJoin={(table) => sitDown.join({ kind: "join", tableId: table.id, buyIn: table.buyIn })}
         onPlayNow={lobby.playNow}
         onCreate={lobby.createFromTables}
