@@ -10,6 +10,14 @@ step() {
   echo -e "\n${BLUE}[$1] $2${NC}"
 }
 
+WANTED_NODE="$(tr -d 'v[:space:]' < .nvmrc)"
+RUNNING_NODE="$(node -p 'process.versions.node.split(".")[0]')"
+if [ "$RUNNING_NODE" != "$WANTED_NODE" ]; then
+  echo "This project runs on Node $WANTED_NODE (see .nvmrc), but this is Node $RUNNING_NODE." >&2
+  echo "Run it through pnpm, which uses the Node set in package.json, or switch to Node $WANTED_NODE." >&2
+  exit 1
+fi
+
 step "1/10" "Format"
 pnpm format:check
 

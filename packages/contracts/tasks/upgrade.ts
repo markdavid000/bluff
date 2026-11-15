@@ -6,7 +6,7 @@ import {
   recordedProxy,
   writeDeployment,
 } from "./deployments";
-import { landedImplementation, versionAt } from "./chain";
+import { landedImplementation, liveOwner, versionAt } from "./chain";
 import { verifyImplementation } from "./verify";
 
 function isProxyName(name: string): name is ProxyName {
@@ -14,11 +14,12 @@ function isProxyName(name: string): name is ProxyName {
 }
 
 task("upgrade", "Validates and upgrades one proxy to the current source")
-  .addParam("contract", "Bluff, BluffCashier or ChipFaucet", undefined, types.string)
+  .addParam("contract", "Bluff, BluffCashier, BluffInvites or ChipFaucet", undefined, types.string)
   .setAction(async ({ contract }: { contract: string }, hre) => {
     if (!isProxyName(contract)) {
       throw new Error(`Unknown contract ${contract}. Use one of: ${PROXY_NAMES.join(", ")}.`);
     }
+    await liveOwner(hre);
     const record = readDeployment(hre.network.name);
     const current = recordedProxy(record, contract);
     const factory = await hre.ethers.getContractFactory(contract);

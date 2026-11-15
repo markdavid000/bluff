@@ -5,6 +5,33 @@ import type { ProxyName, ProxyRecord } from "./deployments";
 const LIVE_CONFIRMATIONS = 2;
 const IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
 
+export const PUBLIC_TEST_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const LOCAL_NETWORKS = new Set(["hardhat", "localhost"]);
+
+export function safeOwner(address: string | undefined, network: string): string {
+  if (LOCAL_NETWORKS.has(network)) {
+    if (!address) throw new Error("The local network has no account to deploy with.");
+    return address;
+  }
+  if (!address) {
+    throw new Error(
+      `No key to send from on ${network}. Set your own MNEMONIC first: npx hardhat vars set MNEMONIC`
+    );
+  }
+  if (address.toLowerCase() === PUBLIC_TEST_ADDRESS.toLowerCase()) {
+    throw new Error(
+      `Refusing to use the public test key on ${network}: anyone could take over the contracts. Set your own MNEMONIC.`
+    );
+  }
+  return address;
+}
+
+export async function liveOwner(hre: HardhatRuntimeEnvironment) {
+  const [signer] = await hre.ethers.getSigners();
+  safeOwner(signer?.address, hre.network.name);
+  return signer;
+}
+
 function isLocal(hre: HardhatRuntimeEnvironment): boolean {
   return hre.network.config.chainId === 31337;
 }

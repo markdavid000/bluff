@@ -2,7 +2,7 @@ import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { CHIP_ADDRESSES, type ChipAddresses } from "../config/networks";
 import { type DeploymentRecord, writeDeployment } from "./deployments";
-import { deployProxy } from "./chain";
+import { deployProxy, liveOwner } from "./chain";
 import { deployInvites, linkInvites } from "./invites";
 import { verifyImplementation } from "./verify";
 
@@ -22,7 +22,7 @@ task(
   "deploy",
   "Deploys Bluff, BluffCashier, BluffInvites and ChipFaucet behind UUPS proxies"
 ).setAction(async (_args, hre) => {
-  const [deployer] = await hre.ethers.getSigners();
+  const deployer = await liveOwner(hre);
   const { chips, dollars } = await resolveChipAddresses(hre);
   const bluff = await deployProxy(hre, "Bluff", [deployer.address]);
   const cashier = await deployProxy(hre, "BluffCashier", [deployer.address, chips, bluff.proxy]);

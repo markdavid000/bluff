@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-import { deployProxy } from "./chain";
+import { deployProxy, liveOwner } from "./chain";
 import { type ProxyRecord, readDeployment, recordedProxy, writeDeployment } from "./deployments";
 import { verifyImplementation } from "./verify";
 
@@ -28,7 +28,7 @@ task("deploy-invites", "Deploys BluffInvites beside a recorded Bluff and records
     if (existing) {
       throw new Error(`BluffInvites is already recorded at ${existing.proxy}.`);
     }
-    const [deployer] = await hre.ethers.getSigners();
+    const deployer = await liveOwner(hre);
     const invites = await deployInvites(hre, deployer.address, record.contracts.Bluff.proxy);
     record.contracts.BluffInvites = invites;
     writeDeployment(record);
@@ -41,6 +41,7 @@ task("deploy-invites", "Deploys BluffInvites beside a recorded Bluff and records
 
 task("link-invites", "Links the recorded Bluff to the recorded BluffInvites").setAction(
   async (_args, hre) => {
+    await liveOwner(hre);
     const record = readDeployment(hre.network.name);
     const invites = recordedProxy(record, "BluffInvites");
     await linkInvites(hre, record.contracts.Bluff.proxy, invites.proxy);
