@@ -7,6 +7,7 @@ import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import type { Table } from "../lib/table-view";
 import { useWaitingRoom } from "./use-waiting-room";
+import { NO_DICE, NO_GAME } from "../lib/table-fixture.testing";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -26,6 +27,7 @@ const unlock = vi.fn();
 let inviteCode: Record<string, unknown> = { status: "ready", code: null };
 const inviteAsked: Record<string, unknown>[] = [];
 let linkCode: bigint | null = null;
+let myTableId: Record<string, unknown> = { status: "ready", id: null };
 const replace = vi.fn();
 const router = { replace };
 
@@ -46,6 +48,7 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
+vi.mock("@/hooks/use-my-table-id", () => ({ useMyTableId: () => myTableId }));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
 vi.mock("@/hooks/use-prove-invite", () => ({ useProveInvite: () => proveInvite }));
 vi.mock("./use-invite-code", () => ({
@@ -68,11 +71,13 @@ function table(seats: [string, boolean][], overrides: Partial<Table> = {}): Tabl
     seatCount: 3,
     buyIn: 0n,
     deadline: Date.now() + 600_000,
+    ...NO_GAME,
     seats: seats.map(([player, ready]) => ({
       player: player as `0x${string}`,
       ready,
       isHost: player === HOST,
       isActive: true,
+      ...NO_DICE,
     })),
     ...overrides,
   };
@@ -228,6 +233,12 @@ describe("useWaitingRoom", () => {
         readAt: 1n,
       };
       expect(viewOf(render().result).joinProblem).toBe(tableCopy.started);
+    });
+
+    it("tells a player seated at another table to go back to it, and offers no join", () => {
+      myTableId = { status: "ready", id: 99n };
+      expect(viewOf(render().result).joinProblem).toBe(tableCopy.seatedElsewhere);
+      myTableId = { status: "ready", id: null };
     });
 
     it("says how many chips a paid table needs", () => {

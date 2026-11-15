@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { errorCopy } from "@/lib/copy";
+import { type Notice, onNotice } from "@/lib/notify";
 import { accountCopy } from "../copy";
 import { PlayerBadge } from "./player-badge";
 
@@ -16,9 +18,10 @@ const setOpen = vi.fn((next: boolean) => {
   open = next;
 });
 let player: Record<string, unknown> = { status: "loading" };
+let signingOut = false;
 
 vi.mock("../hooks/use-player-badge", () => ({
-  usePlayerBadge: () => ({ player, signOut, signingOut: false, open, setOpen }),
+  usePlayerBadge: () => ({ player, signOut, signingOut, open, setOpen }),
 }));
 
 const ready = {
@@ -33,6 +36,7 @@ const ready = {
 beforeEach(() => {
   player = { status: "loading" };
   open = false;
+  signingOut = false;
   vi.clearAllMocks();
 });
 
@@ -58,6 +62,23 @@ describe("PlayerBadge", () => {
       screen.getByRole("button", { name: accountCopy.openPlayer("Dave #4E31") })
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: accountCopy.signOut })).not.toBeInTheDocument();
+  });
+
+  it("stays open while signing out, and says so when the player tries to close it", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    player = ready;
+    open = true;
+    signingOut = true;
+    render(<PlayerBadge />);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(setOpen).not.toHaveBeenCalled();
+    expect(shown.map((notice) => notice.title)).toEqual([
+      errorCopy.stillGoing(accountCopy.signingOut),
+    ]);
+    stop();
   });
 
   it("opens the player's card, where they can sign out", () => {

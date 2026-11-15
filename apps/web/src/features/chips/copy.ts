@@ -5,6 +5,8 @@ export const chipsCopy = {
   balance: (chips: string) => `${chips} chips`,
   balanceLoading: "Counting your chips…",
   balanceProblem: "We could not count your chips.",
+  claimProblem: "We could not check your free chips.",
+  pendingProblem: "We could not check for an unfinished cash out.",
   showChips: "Show my chips",
   showingChips: "Opening your chips…",
   showChipsHelp: "Your wallet will ask you to sign once. It is free and sends nothing.",

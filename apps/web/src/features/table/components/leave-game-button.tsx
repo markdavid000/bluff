@@ -12,38 +12,42 @@ import {
 import { tableCopy } from "../copy";
 import { useLeaveConfirm } from "../hooks/use-leave-confirm";
 
-export function GameOnView({
+export function LeaveGameButton({
+  paid,
   leaving,
   leavingLabel,
+  disabled,
   onLeave,
 }: {
+  paid: boolean;
   leaving: boolean;
   leavingLabel: string;
+  disabled: boolean;
   onLeave: () => void;
 }) {
   const leave = useLeaveConfirm(onLeave);
   return (
-    <PatternFrame className="w-full max-w-xl">
-      <div className="flex flex-col items-center gap-5 py-2 text-center">
-        <h1 className="text-3xl">{tableCopy.gameOn}</h1>
-        <p className="text-base text-muted-foreground">{tableCopy.gameScreenSoon}</p>
-        <ActionButton
-          tone="quiet"
-          icon="back"
-          working={leaving}
-          workingLabel={leavingLabel}
-          onClick={leave.ask}
-        >
-          {tableCopy.leave}
-        </ActionButton>
-      </div>
+    <>
+      <ActionButton
+        tone="quiet"
+        size="small"
+        icon="back"
+        disabled={disabled}
+        working={leaving}
+        workingLabel={leavingLabel}
+        onClick={leave.ask}
+      >
+        {tableCopy.leave}
+      </ActionButton>
       <Dialog open={leave.asking} onOpenChange={leave.setAsking}>
         <DialogContent>
           <PatternFrame roomy>
             <div className="flex flex-col gap-8">
               <div className="flex flex-col gap-2">
                 <DialogTitle>{tableCopy.leaveConfirmTitle}</DialogTitle>
-                <DialogDescription>{tableCopy.leaveWarning}</DialogDescription>
+                <DialogDescription>
+                  {paid ? tableCopy.leaveWarning : tableCopy.leaveWarningFree}
+                </DialogDescription>
               </div>
               <div className="flex flex-wrap gap-3">
                 <ActionButton tone="danger" icon="back" onClick={leave.confirm}>
@@ -59,6 +63,6 @@ export function GameOnView({
           </PatternFrame>
         </DialogContent>
       </Dialog>
-    </PatternFrame>
+    </>
   );
 }

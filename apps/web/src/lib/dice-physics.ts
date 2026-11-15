@@ -142,6 +142,10 @@ function turnBetween(from: Face, to: Face): Rotation {
   return [turn.x, turn.y, turn.z, turn.w];
 }
 
+export function faceUpRotation(face: Face): Rotation {
+  return turnBetween(face, 1);
+}
+
 export function throwDice({ faces, from, random }: ThrowOptions): Throw {
   const { world, dieMaterial } = buildWorld();
   const half = DIE_SIZE / 2;

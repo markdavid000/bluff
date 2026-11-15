@@ -99,7 +99,7 @@ describe("useSitDown", () => {
 
   it("plays now by joining the fullest matching table", async () => {
     const { result } = render();
-    act(() => result.current.playNow([table(4n, 1, 4, 0n), table(5n, 2, 3, 0n)], 0n));
+    act(() => result.current.playNow(async () => [table(4n, 1, 4, 0n), table(5n, 2, 3, 0n)], 0n));
     await waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(takeSeat).toHaveBeenCalledWith(
       { kind: "join", tableId: 5n, buyIn: 0n },
@@ -109,12 +109,35 @@ describe("useSitDown", () => {
 
   it("plays now by opening a public table for two when nothing matches", async () => {
     const { result } = render();
-    act(() => result.current.playNow([table(4n, 1, 2, 10n * ONE_CHIP)], 0n));
+    act(() => result.current.playNow(async () => [table(4n, 1, 2, 10n * ONE_CHIP)], 0n));
     await waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(takeSeat).toHaveBeenCalledWith(
       { kind: "create", seatCount: PLAY_NOW_SEATS, buyIn: 0n, isPrivate: false },
       expect.any(Function)
     );
+  });
+
+  it("reads the open tables at the moment of the press, so it never misses one just opened", async () => {
+    const latest = vi.fn(async () => [table(9n, 1, 2, 0n)]);
+    const { result } = render();
+    act(() => result.current.playNow(latest, 0n));
+    await waitFor(() => expect(push).toHaveBeenCalledOnce());
+    expect(latest).toHaveBeenCalledOnce();
+    expect(takeSeat).toHaveBeenCalledWith(
+      { kind: "join", tableId: 9n, buyIn: 0n },
+      expect.any(Function)
+    );
+  });
+
+  it("never sets up a new table when the open tables can't be read", async () => {
+    const { result } = render();
+    act(() =>
+      result.current.playNow(async () => {
+        throw new Error("busy");
+      }, 0n)
+    );
+    await waitFor(() => expect(result.current.working).toBe(false));
+    expect(takeSeat).not.toHaveBeenCalled();
   });
 
   it("stays in the lobby when the move fails", async () => {

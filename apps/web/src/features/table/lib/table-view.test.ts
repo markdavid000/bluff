@@ -62,6 +62,65 @@ describe("toTable", () => {
   });
 });
 
+describe("the game", () => {
+  const playing: TableView = {
+    ...view,
+    status: 3,
+    diceInPlay: 7,
+    startedAt: 1_700_000_100n,
+    deadline: 1_700_000_145n,
+    round: 3,
+    turn: 2,
+    roundStarter: 1,
+    bidQuantity: 4,
+    bidFace: 5,
+    bidder: 1,
+    caller: 0,
+  };
+
+  function inGame(player: `0x${string}`, dice: number, missedTurns = 0, isActive = true): SeatView {
+    return { player, dice, missedTurns, isActive, ready: false };
+  }
+
+  it("keeps the round, the turn, the bid and who made it", () => {
+    const table = toTable(playing, [inGame(HOST, 2), inGame(KOLA, 3, 1), inGame(ADA, 2)]);
+    expect(table).toMatchObject({
+      status: "playing",
+      dicePerPlayer: 2,
+      diceInPlay: 7,
+      startedAt: 1_700_000_100_000,
+      round: 3,
+      turn: 2,
+      roundStarter: 1,
+      bid: { quantity: 4, face: 5, bidder: 1 },
+      caller: null,
+    });
+    expect(table.seats.map((entry) => [entry.dice, entry.missedTurns])).toEqual([
+      [2, 0],
+      [3, 1],
+      [2, 0],
+    ]);
+  });
+
+  it("has no bid at the start of a round", () => {
+    expect(toTable({ ...playing, bidQuantity: 0, bidFace: 0 }, []).bid).toBeNull();
+  });
+
+  it("knows who called while the dice are revealed", () => {
+    expect(toTable({ ...playing, status: 4, caller: 2 }, []).caller).toBe(2);
+  });
+
+  it("keeps a player who is out of the game, with no dice", () => {
+    const table = toTable(playing, [inGame(HOST, 0, 2, false), inGame(KOLA, 3)]);
+    expect(table.seats[0]).toMatchObject({ isActive: false, dice: 0, missedTurns: 2 });
+  });
+
+  it("refuses a bid on a face the game doesn't allow", () => {
+    expect(() => toTable({ ...playing, bidFace: 1 }, [])).toThrow(/bid/);
+    expect(() => toTable({ ...playing, seatCount: 5 }, [])).toThrow(/seats/);
+  });
+});
+
 describe("waiting room helpers", () => {
   it("counts the free seats", () => {
     expect(freeSeats(toTable(view, [seat(HOST, false), seat(KOLA, true), seat(ADA, false)]))).toBe(

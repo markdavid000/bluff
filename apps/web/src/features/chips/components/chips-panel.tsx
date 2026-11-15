@@ -8,11 +8,10 @@ import { PatternFrame } from "@/components/shared/pattern-band";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatChips } from "@/lib/chips";
 import { chipsCopy } from "../copy";
-import { useChipsPanel } from "../hooks/use-chips-panel";
+import type { useChipsPanel } from "../hooks/use-chips-panel";
 import { CashOutDialog } from "./cash-out-dialog";
 
-export function ChipsPanel() {
-  const panel = useChipsPanel();
+export function ChipsPanel({ panel }: { panel: ReturnType<typeof useChipsPanel> }) {
   const { balance, claim, cashOut } = panel;
 
   return (
@@ -52,7 +51,10 @@ export function ChipsPanel() {
                 </ActionButton>
               </p>
             ) : (
-              <span role="status" className="h-12 w-32 animate-pulse rounded-md bg-muted">
+              <span
+                role="status"
+                className="h-12 w-32 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+              >
                 <span className="sr-only">{chipsCopy.balanceLoading}</span>
               </span>
             )}
@@ -80,6 +82,14 @@ export function ChipsPanel() {
                 {chipsCopy.seeCashOuts}
               </a>
             ) : null}
+          </div>
+        ) : null}
+        {panel.pendingRetry ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">{chipsCopy.pendingProblem}</p>
+            <ActionButton tone="quiet" size="small" icon="target" onClick={panel.pendingRetry}>
+              {chipsCopy.tryAgain}
+            </ActionButton>
           </div>
         ) : null}
         {panel.resume ? (
@@ -113,8 +123,18 @@ export function ChipsPanel() {
               remainingMs={claim.remainingMs}
               icon={<Cowrie size={30} />}
             />
+          ) : claim.status === "failed" ? (
+            <span className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-muted-foreground">{chipsCopy.claimProblem}</span>
+              <ActionButton tone="quiet" size="small" icon="target" onClick={claim.retry}>
+                {chipsCopy.tryAgain}
+              </ActionButton>
+            </span>
           ) : (
-            <span aria-hidden className="h-12 w-48 animate-pulse rounded-xl bg-muted" />
+            <span
+              aria-hidden
+              className="h-12 w-48 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
+            />
           )}
           <ActionButton
             tone="quiet"

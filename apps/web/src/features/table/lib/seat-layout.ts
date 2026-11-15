@@ -1,3 +1,4 @@
+import type { TableSize } from "./table-view";
 import type { Vector } from "@/lib/dice-physics";
 
 export type SeatColor = "red" | "green" | "yellow" | "blue";
@@ -27,7 +28,7 @@ const SIDES_BY_COUNT: Record<2 | 3 | 4, Side[]> = {
 
 const COLORS: SeatColor[] = ["red", "green", "yellow", "blue"];
 
-export function seatLayout(players: 2 | 3 | 4, yourSeat: number): SeatPlacement[] {
+export function seatLayout(players: TableSize, yourSeat: number): SeatPlacement[] {
   const sides = SIDES_BY_COUNT[players];
   return Array.from({ length: players }, (_, seat) => {
     const offset = (seat - yourSeat + players) % players;

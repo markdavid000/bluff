@@ -64,6 +64,35 @@ describe("WelcomeGate", () => {
     window.history.replaceState(null, "", "/");
   });
 
+  it("keeps a private table's invite when a nameless player is sent to pick a name", () => {
+    pathname = "/table/5";
+    window.history.replaceState(null, "", "/table/5#abc123");
+    player = unnamed;
+    show();
+    expect(replace).toHaveBeenCalledWith(`/welcome?next=${encodeURIComponent("/table/5#abc123")}`);
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("takes the invite on to the table once the name is saved", () => {
+    pathname = "/welcome";
+    window.history.replaceState(null, "", `/welcome?next=${encodeURIComponent("/table/5#abc123")}`);
+    player = named;
+    show();
+    expect(replace).toHaveBeenCalledWith("/table/5#abc123");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("keeps a private table's invite when a signed-out player is sent to sign in", async () => {
+    pathname = "/table/5";
+    window.history.replaceState(null, "", "/table/5#abc123");
+    player = { status: "signed-out" };
+    show();
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith(`/sign-in?next=${encodeURIComponent("/table/5#abc123")}`)
+    );
+    window.history.replaceState(null, "", "/");
+  });
+
   it("ignores a next address that leads off the site", () => {
     pathname = "/welcome";
     window.history.replaceState(

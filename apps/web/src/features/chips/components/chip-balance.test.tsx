@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChipBalance as Balance } from "@/hooks/use-chip-balance";
 import { ONE_CHIP } from "@/lib/chips";
+import { errorCopy } from "@/lib/copy";
+import { type Notice, onNotice } from "@/lib/notify";
 import { chipsCopy } from "../copy";
 import { ChipBalance } from "./chip-balance";
 
@@ -10,18 +12,28 @@ vi.mock("./chips-panel", () => ({ ChipsPanel: () => <p>chips card</p> }));
 
 let balance: Balance = { status: "loading" };
 let needsYou = false;
+let busy = false;
 let open = false;
 const setOpen = vi.fn((next: boolean) => {
   open = next;
 });
 
 vi.mock("../hooks/use-chip-balance-button", () => ({
-  useChipBalanceButton: () => ({ balance, open, setOpen, needsYou }),
+  useChipBalanceButton: () => ({
+    balance,
+    panel: {},
+    open,
+    setOpen,
+    busy,
+    workingLabel: chipsCopy.claimWorking,
+    needsYou,
+  }),
 }));
 
 beforeEach(() => {
   balance = { status: "loading" };
   needsYou = false;
+  busy = false;
   open = false;
   vi.clearAllMocks();
 });
@@ -41,6 +53,23 @@ describe("ChipBalance", () => {
     expect(setOpen).toHaveBeenCalledWith(true);
     rerender(<ChipBalance />);
     expect(screen.getByRole("dialog")).toHaveTextContent("chips card");
+  });
+
+  it("stays open while chips are being claimed, and says so when the player tries to close it", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    balance = { status: "ready", amount: 0n };
+    open = true;
+    busy = true;
+    render(<ChipBalance />);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(setOpen).not.toHaveBeenCalled();
+    expect(shown.map((notice) => notice.title)).toEqual([
+      errorCopy.stillGoing(chipsCopy.claimWorking),
+    ]);
+    stop();
   });
 
   it("marks the chips when free chips or an unfinished cash out are waiting", () => {

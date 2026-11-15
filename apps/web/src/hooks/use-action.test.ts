@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ContractFunctionExecutionError, UserRejectedRequestError } from "viem";
+import { ContractFunctionExecutionError, UserRejectedRequestError, encodeErrorResult } from "viem";
 import { bluffAbi } from "@bluff/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { errorCopy } from "@/lib/copy";
@@ -43,6 +43,24 @@ describe("useAction", () => {
     act(() => result.current.start());
     expect(result.current.working).toBe(true);
     expect(notices).toEqual([]);
+  });
+
+  it("ignores a second press while the move is still going, so nothing is sent twice", async () => {
+    const move = deferred();
+    const run = vi.fn(() => move.promise);
+    const { result } = renderHook(() => useAction({ id: "cash", working: "Cashing out…", run }));
+    act(() => {
+      result.current.start();
+      result.current.start();
+    });
+    act(() => result.current.start());
+    expect(run).toHaveBeenCalledOnce();
+    await act(async () => {
+      move.resolve();
+      await vi.advanceTimersByTimeAsync(MIN_SHOWN_MS);
+    });
+    act(() => result.current.start());
+    expect(run).toHaveBeenCalledTimes(2);
   });
 
   it("hands what the move produced to the caller once it is done", async () => {
@@ -123,6 +141,37 @@ describe("useAction", () => {
     );
     await act(async () => result.current.start());
     expect(result.current.status.kind).toBe("done");
+  });
+
+  it("never offers to try again when a move may still be going through", async () => {
+    const run = vi
+      .fn()
+      .mockRejectedValue(new DOMException("signal is aborted without reason", "AbortError"));
+    const onDone = vi.fn();
+    const { result } = renderHook(() =>
+      useAction({ id: "leave", working: "Leaving the table…", run, onDone })
+    );
+    await act(async () => result.current.start());
+    await act(async () => vi.advanceTimersByTime(MIN_SHOWN_MS));
+    const note = notices.at(-1) as Notice;
+    expect(note).toMatchObject({ kind: "info", title: errorCopy.mayStillLand });
+    expect(note.action).toBeUndefined();
+    expect(onDone).not.toHaveBeenCalled();
+    expect(result.current.working).toBe(false);
+  });
+
+  it("names a game rule the move broke, with no Try again that could never work", async () => {
+    const run = vi
+      .fn()
+      .mockRejectedValue(
+        new Error(`${encodeErrorResult({ abi: bluffAbi, errorName: "TableFull", args: [12n] })}`)
+      );
+    const { result } = renderHook(() => useAction({ id: "join", working: "Joining…", run }));
+    await act(async () => result.current.start());
+    await act(async () => vi.advanceTimersByTime(MIN_SHOWN_MS));
+    const note = notices.at(-1) as Notice;
+    expect(note).toMatchObject({ kind: "error", title: errorCopy.reasons.TableFull });
+    expect(note.action).toBeUndefined();
   });
 
   it("explains a failure in plain words and offers to try again", async () => {

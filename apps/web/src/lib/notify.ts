@@ -7,6 +7,7 @@ export interface Notice {
   kind: NoticeKind;
   title: string;
   icon?: GameIconName;
+  staysMs?: number;
   action?: { label: string; onPress: () => void };
 }
 

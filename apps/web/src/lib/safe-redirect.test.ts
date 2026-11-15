@@ -7,6 +7,10 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/table/12?seat=2")).toBe("/table/12?seat=2");
   });
 
+  it("keeps the invite part of a link after the #", () => {
+    expect(safeNextPath("/table/12#abc123")).toBe("/table/12#abc123");
+  });
+
   it.each([
     ["nothing", undefined],
     ["an empty value", ""],

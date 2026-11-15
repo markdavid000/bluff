@@ -33,6 +33,13 @@ describe("usePlayerProfiles", () => {
     );
   });
 
+  it("keeps the names and faces when a later refresh fails", () => {
+    read = { isPending: false, isError: true, data: ["Kola", [4, ""]] };
+    expect(renderHook(() => usePlayerProfiles([KOLA], "Player")).result.current.status).toBe(
+      "ready"
+    );
+  });
+
   it("names every player and gives each a face, with a tag to tell them apart", () => {
     read = { isPending: false, isError: false, data: ["Kola", [4, ""], "", [0, ""]] };
     const { result } = renderHook(() => usePlayerProfiles([KOLA, ADA], "Player"));

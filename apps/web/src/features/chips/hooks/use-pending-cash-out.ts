@@ -3,21 +3,12 @@
 import { chipTokenAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQuery } from "@tanstack/react-query";
-import {
-  type Address,
-  type Hex,
-  type PublicClient,
-  createPublicClient,
-  getAbiItem,
-  isAddressEqual,
-} from "viem";
-import { contracts, gameChain, historyTransport } from "@/config/chain";
+import { type Address, type Hex, type PublicClient, getAbiItem, isAddressEqual } from "viem";
+import { contracts, historyClient } from "@/config/chain";
 import { MoveNotReadyError } from "@/lib/errors";
 import { forgetCashOut, rememberedCashOuts } from "../lib/pending-cash-outs";
 
 const RECENT_BLOCKS = 9_000n;
-
-const historyClient = createPublicClient({ chain: gameChain, transport: historyTransport });
 
 const unwrapRequested = getAbiItem({ abi: chipTokenAbi, name: "UnwrapRequested" });
 

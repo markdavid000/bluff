@@ -7,6 +7,7 @@ import { ScreenControls } from "@/components/shared/screen-controls";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { accountCopy } from "../copy";
 import { usePlayerBadge } from "../hooks/use-player-badge";
+import { holdOpenWhile } from "@/lib/hold-open";
 
 export function PlayerBadge() {
   const { player, signOut, signingOut, open, setOpen } = usePlayerBadge();
@@ -26,16 +27,16 @@ export function PlayerBadge() {
   }
 
   if (player.status !== "ready") {
-    return <span aria-hidden className="h-10 w-40 animate-pulse rounded-xl bg-muted" />;
+    return (
+      <span
+        aria-hidden
+        className="h-10 w-40 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
+      />
+    );
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!signingOut) setOpen(next);
-      }}
-    >
+    <Dialog open={open} onOpenChange={holdOpenWhile(signingOut, accountCopy.signingOut, setOpen)}>
       <DialogTrigger asChild>
         <ActionButton tone="quiet" size="small" aria-label={accountCopy.openPlayer(player.name)}>
           <Avatar src={player.avatarSrc} size={30} />

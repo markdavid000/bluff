@@ -2,11 +2,12 @@
 
 import { chipFaucetAbi } from "@bluff/contracts";
 import { useCreateWallet, useLogin, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
 import type { Address } from "viem";
 import { usePublicClient } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
+import { keepFragmentFor, withKeptFragment } from "@/lib/carried-fragment";
+import { loadPage } from "@/lib/load-page";
 import { notify } from "@/lib/notify";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { accountCopy } from "../copy";
@@ -20,7 +21,6 @@ type SignInState = { kind: "choosing" } | { kind: "working"; method: SignInMetho
 const USER_CANCELLED = new Set(["exited_auth_flow", "user_exited_auth_flow"]);
 
 export function useSignIn(next: string | undefined) {
-  const router = useRouter();
   const { ready, authenticated, user, getAccessToken } = usePrivy();
   const { createWallet } = useCreateWallet();
   const publicClient = usePublicClient({ chainId: gameChain.id });
@@ -58,10 +58,13 @@ export function useSignIn(next: string | undefined) {
       functionName: "nicknameOf",
       args: [address],
     });
-    router.replace(
-      nickname === "" ? `/welcome?next=${encodeURIComponent(destination)}` : destination
-    );
+    const onward = withKeptFragment(destination);
+    loadPage(nickname === "" ? `/welcome?next=${encodeURIComponent(onward)}` : onward);
   });
+
+  useEffect(() => {
+    keepFragmentFor(destination, window.location.hash);
+  }, [destination]);
 
   useEffect(() => {
     if (!ready || !authenticated) return;

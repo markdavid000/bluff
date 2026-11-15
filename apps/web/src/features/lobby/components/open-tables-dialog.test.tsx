@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
+import { errorCopy } from "@/lib/copy";
+import { type Notice, onNotice } from "@/lib/notify";
 import { lobbyCopy } from "../copy";
 import type { OpenTables } from "../hooks/use-open-tables";
 import type { LobbyTable } from "../lib/tables";
@@ -26,14 +28,21 @@ function table(id: bigint, players: number, seats: number, buyIn = 0n): LobbyTab
   };
 }
 
-function show(openTables: OpenTables, problemFor: (buyIn: bigint) => string | null = () => null) {
+const onOpenChange = vi.fn();
+
+function show(
+  openTables: OpenTables,
+  problemFor: (buyIn: bigint) => string | null = () => null,
+  busy = false
+) {
   render(
     <OpenTablesDialog
       open
-      onOpenChange={vi.fn()}
+      onOpenChange={onOpenChange}
       openTables={openTables}
       problemFor={problemFor}
-      busy={false}
+      busy={busy}
+      busyLabel={lobbyCopy.joinWorking}
       onJoin={onJoin}
       onPlayNow={onPlayNow}
       onCreate={onCreate}
@@ -87,5 +96,18 @@ describe("OpenTablesDialog", () => {
       within(dialog).getByRole("button", { name: `${lobbyCopy.join} ${lobbyCopy.tableName("12")}` })
     ).toBeDisabled();
     expect(within(dialog).getByText(lobbyCopy.notEnough("50"))).toBeInTheDocument();
+  });
+  it("stays open while the player is being seated, and says so when they try to close it", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    show({ status: "ready", tables: [] }, () => null, true);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(shown.map((notice) => notice.title)).toEqual([
+      errorCopy.stillGoing(lobbyCopy.joinWorking),
+    ]);
+    stop();
   });
 });

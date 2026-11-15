@@ -17,7 +17,7 @@ export function nextStep(
   nameOf: (address: string) => string
 ): string {
   if (table.status === "verifying") return tableCopy.checkingPaid;
-  if (table.status === "playing" || table.status === "revealing") return tableCopy.gameOn;
+  if (table.status === "playing" || table.status === "revealing") return tableCopy.started;
   if (table.status !== "waiting") return tableCopy.closed;
   if (table.seats.length < MIN_PLAYERS) {
     return tableCopy.waitingForPlayers(MIN_PLAYERS - table.seats.length);

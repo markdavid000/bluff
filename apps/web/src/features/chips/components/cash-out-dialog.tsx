@@ -14,6 +14,7 @@ import { formatChips } from "@/lib/chips";
 import { chipsCopy } from "../copy";
 import type { CashOutAmount } from "../hooks/use-cash-out";
 import { useCashOutForm } from "../hooks/use-cash-out-form";
+import { holdOpenWhile } from "@/lib/hold-open";
 
 export function CashOutDialog({
   open,
@@ -38,11 +39,10 @@ export function CashOutDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => {
-        if (working) return;
+      onOpenChange={holdOpenWhile(working, workingLabel, (next) => {
         if (!next) form.reset();
         onOpenChange(next);
-      }}
+      })}
     >
       <DialogContent>
         <PatternFrame roomy>

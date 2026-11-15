@@ -35,8 +35,11 @@ export function usePlayerProfiles(addresses: Address[], unnamed: string): Player
   });
 
   if (addresses.length === 0) return { status: "ready", profileOf: () => undefined };
-  if (read.isError) return { status: "failed", retry: () => void read.refetch() };
-  if (read.isPending || read.isPlaceholderData || !read.data) return { status: "loading" };
+  if (!read.data || read.isPlaceholderData) {
+    return read.isError
+      ? { status: "failed", retry: () => void read.refetch() }
+      : { status: "loading" };
+  }
 
   const results: readonly unknown[] = read.data;
   const retry = () => void read.refetch();

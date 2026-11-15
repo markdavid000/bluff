@@ -33,6 +33,7 @@ export function useAction<Args extends unknown[], Result = unknown>({
   const [status, setStatus] = useState<ActionStatus>({ kind: "idle" });
   const timers = useRef<number[]>([]);
   const shownAt = useRef<number | null>(null);
+  const running = useRef(false);
 
   function clearTimers() {
     timers.current.forEach((timer) => window.clearTimeout(timer));
@@ -48,6 +49,8 @@ export function useAction<Args extends unknown[], Result = unknown>({
   }
 
   async function start(...args: Args) {
+    if (running.current) return;
+    running.current = true;
     clearTimers();
     shownAt.current = null;
     setStatus({ kind: "preparing" });
@@ -67,6 +70,7 @@ export function useAction<Args extends unknown[], Result = unknown>({
       const result = await run((step) => setStatus({ kind: step }), ...args);
       clearTimers();
       afterMinimum(() => {
+        running.current = false;
         setStatus({ kind: "done" });
         if (!quiet && done) notify.success(done, { id });
         else if (shownAt.current !== null) notify.dismiss(id);
@@ -77,9 +81,13 @@ export function useAction<Args extends unknown[], Result = unknown>({
       const problem = explainProblem(error);
       if (problem.kind === "failed") console.error(`Action ${id} failed.`, error);
       afterMinimum(() => {
+        running.current = false;
         setStatus({ kind: "failed", reason: problem.reason });
-        if (problem.kind === "cancelled") notify.info(problem.reason, { id });
-        else {
+        if (problem.kind === "cancelled" || problem.kind === "unsure") {
+          notify.info(problem.reason, { id });
+        } else if (problem.kind === "refused") {
+          notify.error(problem.reason, { id });
+        } else {
           notify.error(problem.reason, {
             id,
             action: { label: errorCopy.tryAgain, onPress: () => void start(...args) },

@@ -6,6 +6,7 @@ import { tableCopy } from "../copy";
 import { KEEPER_STAGGER_MS } from "../lib/keeper-duty";
 import type { Table, TableStatus } from "../lib/table-view";
 import { useTableKeeper } from "./use-table-keeper";
+import { NO_DICE, NO_GAME } from "../lib/table-fixture.testing";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -66,9 +67,10 @@ function table(status: TableStatus): Table {
     seatCount: 2,
     buyIn: 10n,
     deadline: DEADLINE,
+    ...NO_GAME,
     seats: [
-      { player: HOST, ready: false, isHost: true, isActive: true },
-      { player: KOLA, ready: true, isHost: false, isActive: true },
+      { player: HOST, ready: false, isHost: true, isActive: true, ...NO_DICE },
+      { player: KOLA, ready: true, isHost: false, isActive: true, ...NO_DICE },
     ],
   };
 }
@@ -178,5 +180,28 @@ describe("useTableKeeper", () => {
     expect(sendMove).toHaveBeenCalledOnce();
     expect(console.error).not.toHaveBeenCalled();
     expect(shown).toEqual([]);
+  });
+
+  it("settles a called round with the public reveal", async () => {
+    chainStatus = 4;
+    renderHook(() => useTableKeeper({ table: table("revealing"), me: HOST, now: Date.now() }));
+    await wait(100);
+    expect(decryptPublic).toHaveBeenCalledWith(["0xaa", "0xbb"]);
+    expect(sendMove).toHaveBeenCalledWith(
+      expect.objectContaining({ functionName: "settleReveal", args: [12n, "0x01", "0x02"] }),
+      expect.any(Function)
+    );
+  });
+
+  it("claims a turn that ran out of time", async () => {
+    chainStatus = 3;
+    vi.setSystemTime(DEADLINE + 16_000);
+    renderHook(() => useTableKeeper({ table: table("playing"), me: HOST, now: Date.now() }));
+    await wait(100);
+    expect(decryptPublic).not.toHaveBeenCalled();
+    expect(sendMove).toHaveBeenCalledWith(
+      expect.objectContaining({ functionName: "claimTimeout", args: [12n] }),
+      expect.any(Function)
+    );
   });
 });

@@ -12,9 +12,17 @@ import {
   Vector2,
 } from "three";
 import type { ThemeColors } from "@/hooks/use-theme-colors";
-import { BOX_FACE_ORDER, DIE_SIZE, STEP_SECONDS, type Throw } from "@/lib/dice-physics";
+import {
+  BOX_FACE_ORDER,
+  DIE_SIZE,
+  STEP_SECONDS,
+  type Throw,
+  faceUpRotation,
+} from "@/lib/dice-physics";
 import type { ThrowState } from "../../hooks/use-dice-throw";
 import { calabashTexture } from "../../lib/calabash-texture";
+import { cupMotion } from "../../lib/cup-motion";
+import type { RevealedSeat } from "../../lib/reveal";
 import { dieFaceTexture } from "../../lib/dice-textures";
 import { type SeatColor, type SeatPlacement } from "../../lib/seat-layout";
 
@@ -255,7 +263,11 @@ function ThrownDice({
   );
 }
 
-function diceMaterials(colors: ThemeColors) {
+const ROW_TOWARD_CENTRE = 1.25;
+const ROW_SPACING = DIE_SIZE * 1.25;
+const GLOW_INTENSITY = 0.55;
+
+function diceMaterials(colors: ThemeColors, glow = false) {
   return BOX_FACE_ORDER.map(
     (face) =>
       new MeshStandardMaterial({
@@ -265,7 +277,38 @@ function diceMaterials(colors: ThemeColors) {
           edge: colors["--board-edge"],
         }),
         roughness: 0.35,
+        emissive: glow ? colors["--pattern-accent"] : "#000000",
+        emissiveIntensity: glow ? GLOW_INTENSITY : 0,
       })
+  );
+}
+
+function RevealedRow({
+  seat,
+  revealed,
+  plain,
+  glowing,
+}: {
+  seat: SeatPlacement;
+  revealed: RevealedSeat;
+  plain: MeshStandardMaterial[];
+  glowing: MeshStandardMaterial[];
+}) {
+  const first = -((revealed.faces.length - 1) * ROW_SPACING) / 2;
+  return (
+    <group position={[seat.cup[0], 0, seat.cup[2]]} rotation-y={seat.facing}>
+      {revealed.faces.map((face, index) => (
+        <mesh
+          key={index}
+          castShadow
+          material={revealed.counting[index] ? glowing : plain}
+          position={[first + index * ROW_SPACING, DIE_SIZE / 2, -ROW_TOWARD_CENTRE]}
+          quaternion={faceUpRotation(face)}
+        >
+          <boxGeometry args={[DIE_SIZE, DIE_SIZE, DIE_SIZE]} />
+        </mesh>
+      ))}
+    </group>
   );
 }
 
@@ -275,6 +318,9 @@ export function BoardScene({
   throwState,
   chipsEach,
   revealed,
+  revealedDice = null,
+  ownSeat = 0,
+  othersShaking = false,
   label,
 }: {
   colors: ThemeColors;
@@ -282,16 +328,20 @@ export function BoardScene({
   throwState: ThrowState;
   chipsEach: number;
   revealed: boolean;
+  revealedDice?: readonly (RevealedSeat | null)[] | null;
+  ownSeat?: number | null;
+  othersShaking?: boolean;
   label: string;
 }) {
   const materials = diceMaterials(colors);
+  const glowing = diceMaterials(colors, true);
   useEffect(
     () => () =>
-      materials.forEach((material) => {
+      [...materials, ...glowing].forEach((material) => {
         material.map?.dispose();
         material.dispose();
       }),
-    [materials]
+    [materials, glowing]
   );
   return (
     <div
@@ -314,16 +364,37 @@ export function BoardScene({
         />
         <Board colors={colors} />
         <Pot colors={colors} seats={seats} chipsEach={chipsEach} />
-        {seats.map((seat, index) => (
-          <Seat
-            key={seat.side}
-            seat={seat}
-            colors={colors}
-            shaking={index === 0 && throwState.kind === "shaking"}
-            lifted={revealed || (index === 0 && throwState.kind === "rolling")}
-          />
-        ))}
-        {throwState.kind === "rolling" && (
+        {seats.map((seat, index) => {
+          const motion = cupMotion({
+            index,
+            ownSeat,
+            throwKind: throwState.kind,
+            revealed,
+            othersShaking,
+          });
+          return (
+            <Seat
+              key={seat.side}
+              seat={seat}
+              colors={colors}
+              shaking={motion.shaking}
+              lifted={motion.lifted}
+            />
+          );
+        })}
+        {revealedDice?.map((row, index) => {
+          const seat = seats[index];
+          return row && seat ? (
+            <RevealedRow
+              key={seat.side}
+              seat={seat}
+              revealed={row}
+              plain={materials}
+              glowing={glowing}
+            />
+          ) : null;
+        })}
+        {throwState.kind === "rolling" && !revealedDice && (
           <ThrownDice
             result={throwState.result}
             startedAt={throwState.startedAt}
