@@ -62,7 +62,6 @@ export default defineConfig([
       "boundaries/include": ["src/**/*"],
       "boundaries/elements": [
         { type: "app", pattern: "src/app" },
-        { type: "proxy", pattern: "src/proxy*", mode: "file" },
         { type: "layout", pattern: "src/components/layout" },
         { type: "shared", pattern: "src/components/shared" },
         { type: "ui", pattern: "src/components/ui" },
@@ -71,6 +70,7 @@ export default defineConfig([
         { type: "lib", pattern: "src/lib" },
         { type: "config", pattern: "src/config" },
       ],
+      "boundaries/files": [{ pattern: "src/proxy*", category: "proxy" }],
     },
     rules: {
       "boundaries/no-unknown-files": "error",
@@ -95,8 +95,10 @@ export default defineConfig([
               },
             },
             {
-              from: { element: { type: "proxy" } },
-              allow: { to: { element: { type: ["proxy", "lib", "config"] } } },
+              from: { file: { categories: ["proxy"] } },
+              allow: {
+                to: [{ file: { categories: ["proxy"] } }, { element: { type: ["lib", "config"] } }],
+              },
             },
             {
               from: { element: { type: "layout" } },

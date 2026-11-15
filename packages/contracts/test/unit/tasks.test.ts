@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { existsSync, rmSync } from "node:fs";
 import path from "node:path";
 import hre from "hardhat";
+import { PUBLIC_TEST_ADDRESS, safeOwner } from "../../tasks/chain";
 import { type DeploymentRecord, readDeployment, writeDeployment } from "../../tasks/deployments";
 
 const RECORD = path.join(__dirname, "..", "..", "deployments", "hardhat.json");
@@ -112,5 +113,22 @@ describe("tasks", function () {
       hre.run("upgrade", { contract: "Bluff" }),
       "No deployment recorded for hardhat"
     );
+  });
+
+  describe("the owner of live contracts", function () {
+    const OWN = "0x00000000000000000000000000000000000a11ce";
+
+    it("refuses a live network with no key of your own", function () {
+      expect(() => safeOwner(undefined, "sepolia")).to.throw(/Set your own MNEMONIC/);
+    });
+
+    it("refuses the public test key on a live network", function () {
+      expect(() => safeOwner(PUBLIC_TEST_ADDRESS, "sepolia")).to.throw(/public test key/);
+    });
+
+    it("accepts your own key on a live network, and the test key locally", function () {
+      expect(safeOwner(OWN, "sepolia")).to.equal(OWN);
+      expect(safeOwner(PUBLIC_TEST_ADDRESS, "hardhat")).to.equal(PUBLIC_TEST_ADDRESS);
+    });
   });
 });

@@ -25,4 +25,4 @@ commit-msg:
 pre-push:
   jobs:
     - name: preflight
-      run: ./scripts/preflight.sh --fast
+      run: pnpm preflight --fast

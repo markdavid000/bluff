@@ -15,10 +15,7 @@ import "./tasks/invites";
 import "./tasks/upgrade";
 import "./tasks/validate-layout";
 
-const MNEMONIC = vars.get(
-  "MNEMONIC",
-  "test test test test test test test test test test test junk"
-);
+const MNEMONIC = vars.has("MNEMONIC") ? vars.get("MNEMONIC") : undefined;
 const SEPOLIA_RPC_URL = vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
 
 const BLUFF_OPTIMIZER_RUNS = 50;
@@ -45,7 +42,7 @@ const config: HardhatUserConfig = {
       chainId: 31337,
     },
     sepolia: {
-      accounts: { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 },
+      accounts: MNEMONIC ? { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 } : [],
       chainId: 11155111,
       url: SEPOLIA_RPC_URL,
     },
