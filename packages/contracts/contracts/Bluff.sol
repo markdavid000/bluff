@@ -339,7 +339,7 @@ contract Bluff is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.2.0";
+        return "1.3.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
