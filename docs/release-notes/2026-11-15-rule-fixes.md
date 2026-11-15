@@ -16,7 +16,9 @@ Turns now allow 75 seconds on the chain, so the screen can show a full minute. A
 - **Longer turns (`TableRules.TURN_LIMIT`):** 75 seconds, up from 45. The game screen's 60-second display follows in the web PR after #41, since that screen isn't on `dev` yet; until then its ring starts full and drains over the last 30 seconds.
 - **Docs:** the player guide says 60 seconds a turn, and the contract docs say how dice are dealt.
 
-No storage layout change, no new events, errors or functions, no packages. Live on Sepolia only after the `Bluff` proxy is upgraded, which needs the maintainer's go-ahead.
+No storage layout change, no new events, errors or functions, no packages.
+
+- **Live on Sepolia (2026-11-15):** the `Bluff` proxy `0x46B6…E23e` was upgraded from 1.2.0 to 1.3.0, implementation [`0x10f1…609f`](https://sepolia.etherscan.io/address/0x10f13f5eAc28799083555FD69A3De0834A77609f#code), verified on Etherscan, with the maintainer's go-ahead. After the upgrade the owner, the cashier and invites links, the paused flag and existing tables all read as before.
 
 ## Removed
 

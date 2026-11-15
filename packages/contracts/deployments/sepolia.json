@@ -8,8 +8,8 @@
   "contracts": {
     "Bluff": {
       "proxy": "0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e",
-      "implementation": "0xCbC9448B8eC8F5c00216c4686628CBf0bf232b32",
-      "version": "1.2.0"
+      "implementation": "0x10f13f5eAc28799083555FD69A3De0834A77609f",
+      "version": "1.3.0"
     },
     "BluffCashier": {
       "proxy": "0x4837497FEf56758e1bE765062a1504303bDC5EEe",

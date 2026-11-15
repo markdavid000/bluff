@@ -27,7 +27,7 @@ describe("tasks", function () {
     const record = readDeployment("hardhat");
     expect(record.chainId).to.equal(31337);
     const versions = {
-      Bluff: "1.2.0",
+      Bluff: "1.3.0",
       BluffCashier: "1.1.0",
       BluffInvites: "1.0.0",
       ChipFaucet: "1.1.0",
@@ -62,7 +62,7 @@ describe("tasks", function () {
     await hre.run("upgrade", { contract: "Bluff" });
     const after = readDeployment("hardhat");
     expect(after.contracts.Bluff.proxy).to.equal(before.contracts.Bluff.proxy);
-    expect(after.contracts.Bluff.version).to.equal("1.2.0");
+    expect(after.contracts.Bluff.version).to.equal("1.3.0");
   });
 
   it("adds BluffInvites beside a deployed Bluff, then links them, once each", async function () {
