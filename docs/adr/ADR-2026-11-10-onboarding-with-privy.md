@@ -68,7 +68,7 @@ The spike's four steps pass on Sepolia and their timings are recorded. After the
 
 ## Spike results (2026-11-11)
 
-Run on Sepolia against a throwaway contract, `SpikeVault` at `0xA8C54EB2673c3274a1def42f668F3244dfe4D9c5`, from a one-page Vite app using `@privy-io/react-auth` 3.51.3, `@zama-fhe/sdk` 3.7.2 and viem 2.57.17. The spike code lives on the unmerged `spike/privy-sepolia` branch.
+Run on Sepolia against a throwaway contract, `SpikeVault` at `0xA8C54EB2673c3274a1def42f668F3244dfe4D9c5`, from a one-page Vite app using `@privy-io/react-auth` 3.51.3, `@zama-fhe/sdk` 3.7.2 and viem 2.57.17. The spike code was throwaway and was not kept: the shipped sign-in, sponsored moves, private decryption and public reveals replace it, and this section records what it found.
 
 | Check                                            | Result                                            | Time (three runs)     |
 | ------------------------------------------------ | ------------------------------------------------- | --------------------- |
