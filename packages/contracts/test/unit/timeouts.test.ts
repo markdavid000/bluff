@@ -5,7 +5,7 @@ import { deployGameFixture } from "../fixtures";
 import { falseBid, settle } from "../helpers/round";
 import { startFreeGame } from "../helpers/tables";
 
-const TURN_LIMIT = 45;
+const TURN_LIMIT = 75;
 const STUCK_REVEAL_LIMIT = 10 * 60;
 const GAME_CLOCK = 15 * 60;
 const REVEALING = 4n;
@@ -16,7 +16,7 @@ const STUCK_REVEAL = 3n;
 
 describe("timeouts and the clock", function () {
   describe("turn timeouts", function () {
-    it("waits for the 45 second limit", async function () {
+    it("waits for the 75 second limit", async function () {
       const { alice, bob, carol, bluff } = await deployGameFixture();
       const id = await startFreeGame(bluff, [alice, bob]);
       const [table] = await bluff.getTable(id);

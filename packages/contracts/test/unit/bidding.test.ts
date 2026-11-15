@@ -5,7 +5,7 @@ import { deployGameFixture } from "../fixtures";
 
 const PLAYING = 3n;
 const WAITING = 1n;
-const TURN_LIMIT = 45n;
+const TURN_LIMIT = 75n;
 
 describe("bidding", function () {
   it("records a bid, passes the turn and resets the deadline", async function () {

@@ -8,6 +8,8 @@ import { CHIP, chipBalance, startPaidGame } from "../helpers/chips";
 import { settle } from "../helpers/round";
 import { startFreeGame } from "../helpers/tables";
 
+const TURN_LIMIT = 75;
+
 const PLAYING = 3n;
 const REVEALING = 4n;
 const FINISHED = 5n;
@@ -87,7 +89,7 @@ async function playRandomGame(seed: number, paid: boolean, playerCount: number) 
       const roll = random();
       const onTurn = signerOf(seats[Number(table.turn)].player);
       if (roll < 0.05) {
-        await time.increase(46);
+        await time.increase(TURN_LIMIT + 1);
         await (await bluff.connect(anyone()).claimTimeout(id)).wait();
       } else if (roll < 0.09) {
         const leavers = seats.filter((seat) => seat.isActive);
