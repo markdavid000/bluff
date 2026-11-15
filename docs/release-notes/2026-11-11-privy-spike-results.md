@@ -20,4 +20,4 @@ The Sepolia spike from the onboarding ADR passed: Google and email sign-in, a sp
 
 ## Verification
 
-- Three spike runs on Sepolia; results recorded in the ADR. The spike code stays on the unmerged `spike/privy-sepolia` branch.
+- Three spike runs on Sepolia; results recorded in the ADR. The spike code was throwaway and was not kept; the shipped app replaces it.
