@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ReactNode } from "react";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
@@ -40,7 +41,7 @@ function Shell({
   pop: boolean;
 }) {
   const present = useIsPresent();
-  const motionSet = useReducedMotion() ? CALM : pop ? POPPING : MOVING;
+  const motionSet = useCalmMotion() ? CALM : pop ? POPPING : MOVING;
   const Element = inline ? motion.span : motion.div;
   return (
     <Element

@@ -212,7 +212,7 @@ function Seated({
         fill={`var(${outfit})`}
         {...LINE}
       />
-      <g className={moving ? "animate-street-move motion-reduce:animate-none" : undefined}>
+      <g className={moving ? "animate-street-move calm:animate-none" : undefined}>
         <path
           d={`M${x + facing * 8} ${b - 62} L${x + facing * 30} ${b - 44}`}
           stroke={`var(${outfit})`}
@@ -585,7 +585,7 @@ export function StreetBackdrop({ className }: { className?: string }) {
             outfit="--seat-red"
             headwear="hair"
             scale={0.68}
-            className="animate-street-hop motion-reduce:animate-none"
+            className="animate-street-hop calm:animate-none"
           />
           <House {...HOUSES[2]} />
           <Palm x={1262} height={180} lean={-10} />

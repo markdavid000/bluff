@@ -3,18 +3,17 @@
 import { bluffAbi } from "@bluff/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateBalanceQueries } from "@zama-fhe/sdk/query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type Address, isAddressEqual } from "viem";
 import { useReadContracts } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useChipBalance } from "@/hooks/use-chip-balance";
+import { useGoToTable } from "@/hooks/use-go-to-table";
 import { useNow } from "@/hooks/use-now";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
 import { notify } from "@/lib/notify";
-import { tablePath } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { type NewTable, newTableOffer } from "../lib/play-again";
 import { toTable } from "../lib/table-view";
@@ -37,7 +36,7 @@ interface Player {
 }
 
 export function usePlayAgain({ last, players }: { last: LastTable; players: readonly Player[] }) {
-  const router = useRouter();
+  const goToTable = useGoToTable();
   const queryClient = useQueryClient();
   const takeSeat = useTakeSeat();
   const balance = useChipBalance({ working: tableCopy.gettingReady });
@@ -100,10 +99,11 @@ export function usePlayAgain({ last, players }: { last: LastTable; players: read
     ? others.find(({ player }) => isAddressEqual(player, match.host as Address))
     : undefined;
 
+  const [goingTo, setGoingTo] = useState<"new" | "offer" | null>(null);
+
   function seated(id: bigint) {
     invalidateBalanceQueries(queryClient, contracts.chips);
-    void queryClient.invalidateQueries({ queryKey: ["readContract"] });
-    router.push(tablePath(id));
+    void goToTable(id).then(() => queryClient.invalidateQueries({ queryKey: ["readContract"] }));
   }
 
   const create = useAction({
@@ -114,14 +114,20 @@ export function usePlayAgain({ last, players }: { last: LastTable; players: read
         { kind: "create", seatCount: last.seatCount, buyIn: last.buyIn, isPrivate: last.isPrivate },
         report
       ),
-    onDone: seated,
+    onDone: (id) => {
+      setGoingTo("new");
+      seated(id);
+    },
   });
   const join = useAction({
     id: "join-new-table",
     working: tableCopy.joining,
     run: (report, tableId: bigint, buyIn: bigint) =>
       takeSeat({ kind: "join", tableId, buyIn }, report),
-    onDone: seated,
+    onDone: (id) => {
+      setGoingTo("offer");
+      seated(id);
+    },
   });
 
   const known: KnownBalance =
@@ -149,9 +155,9 @@ export function usePlayAgain({ last, players }: { last: LastTable; players: read
     joinOffer: () => {
       if (match && !match.isPrivate && affordable(match.buyIn)) join.start(match.id, match.buyIn);
     },
-    playing: create.working,
-    joining: join.working,
-    busy: create.working || join.working,
+    playing: create.working || goingTo === "new",
+    joining: join.working || goingTo === "offer",
+    busy: create.working || join.working || goingTo !== null,
     confirm: create.confirmInWallet || join.confirmInWallet,
   };
 }

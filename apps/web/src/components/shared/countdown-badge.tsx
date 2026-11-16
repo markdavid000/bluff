@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ReactNode } from "react";
 import { formatCountdown } from "@/lib/time";
 
@@ -16,7 +17,7 @@ export function CountdownBadge({
   icon?: ReactNode;
   className?: string;
 }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   const time = formatCountdown(remainingMs);
   const tick = Math.ceil(remainingMs / 1000);
 

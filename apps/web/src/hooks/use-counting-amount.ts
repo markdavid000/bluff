@@ -1,6 +1,7 @@
 "use client";
 
-import { animate, useReducedMotion } from "motion/react";
+import { animate } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { useEffect, useRef, useState } from "react";
 import { ONE_CHIP } from "@/lib/chips";
 
@@ -8,7 +9,7 @@ const COUNT_SECONDS = 0.9;
 const UNITS = Number(ONE_CHIP);
 
 export function useCountingAmount(target: bigint) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   const [shown, setShown] = useState(target);
   const displayed = useRef(target);
 

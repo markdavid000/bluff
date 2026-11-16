@@ -4,6 +4,10 @@ export const MUSIC_TRACKS = ["drum", "bell", "both"] as const;
 
 export type MusicTrack = (typeof MUSIC_TRACKS)[number];
 
+export const BOARD_CHOICES = ["3d", "flat"] as const;
+
+export type BoardSetting = (typeof BOARD_CHOICES)[number];
+
 export interface Settings {
   music: boolean;
   musicTrack: MusicTrack;
@@ -11,6 +15,7 @@ export interface Settings {
   calmMotion: boolean;
   theme: ThemeSetting;
   seenTips: readonly string[];
+  board: BoardSetting;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -20,6 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   calmMotion: false,
   theme: "auto",
   seenTips: [],
+  board: "3d",
 };
 
 const STORAGE_KEY = "bluff.settings";
@@ -46,6 +52,7 @@ function fromSaved(saved: Record<string, unknown>): Settings {
     seenTips: Array.isArray(saved.seenTips)
       ? saved.seenTips.filter((tip): tip is string => typeof tip === "string")
       : DEFAULT_SETTINGS.seenTips,
+    board: pick(saved.board, BOARD_CHOICES, DEFAULT_SETTINGS.board),
   };
 }
 

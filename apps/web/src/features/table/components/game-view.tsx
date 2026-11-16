@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Appear } from "@/components/shared/appear";
 import { Cowrie } from "@/components/shared/cowrie";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -11,7 +12,7 @@ import { useGameBoard } from "../hooks/use-game-board";
 import { useGameHistory } from "../hooks/use-round-history";
 import { seatLayout } from "../lib/seat-layout";
 import { BidControl } from "./bid-control";
-import { BoardPlaceholder, LazyBoardScene } from "./board/lazy-board";
+import { GameBoard } from "./board/game-board";
 import { CurrentBid } from "./current-bid";
 import { GameSeat } from "./game-seat";
 import { GameClock } from "./game-clock";
@@ -37,10 +38,12 @@ export function GameView({ game }: { game: Game }) {
   const colors = useThemeColors();
   const { table, seats } = game;
   const wide = useMediaQuery(WIDE);
-  const history = useGameHistory(table, wide);
+  const [cardUp, setCardUp] = useState(false);
+  if (game.reveal !== null && !cardUp) setCardUp(true);
+  const history = useGameHistory(table, wide, { bid: game.bid, bidder: game.bidder });
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
-    return seat?.isMe ? tableCopy.you : (seat?.name ?? tableCopy.unnamed);
+    return seat?.isMe ? tableCopy.you : seat?.name || tableCopy.unnamed;
   };
   const layout = seatLayout(table.seatCount, Math.max(game.mySeat, 0));
   const taken = layout.slice(0, seats.length);
@@ -97,27 +100,24 @@ export function GameView({ game }: { game: Game }) {
                 lastBid={seat.lastBid}
                 ownDice={seat.isMe ? game.dice : null}
                 matching={seat.isMe ? game.matching : null}
+                holdDice={game.boardRevealed || cardUp}
               />
             </div>
           ) : null;
         })}
         <div className="[container-type:size] col-start-2 row-start-2 flex h-full min-h-0 items-center justify-center">
           <div className="relative aspect-square w-[min(100cqw,100cqh)]">
-            {colors ? (
-              <LazyBoardScene
-                colors={colors}
-                seats={taken}
-                throwState={throwState}
-                chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
-                revealed={game.boardRevealed}
-                revealedDice={game.revealedDice}
-                ownSeat={game.mySeat >= 0 ? game.mySeat : null}
-                othersShaking={othersShaking}
-                label={tableCopy.boardLabel}
-              />
-            ) : (
-              <BoardPlaceholder />
-            )}
+            <GameBoard
+              colors={colors}
+              seats={taken}
+              throwState={throwState}
+              chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
+              revealed={game.boardRevealed}
+              revealedDice={game.revealedDice}
+              ownSeat={game.mySeat >= 0 ? game.mySeat : null}
+              othersShaking={othersShaking}
+              label={tableCopy.boardLabel}
+            />
           </div>
         </div>
       </div>
@@ -139,7 +139,11 @@ export function GameView({ game }: { game: Game }) {
           onCall={game.callBluff}
         />
       </Appear>
-      <RevealCard reveal={game.reveal} onContinue={game.dismissReveal} />
+      <RevealCard
+        reveal={game.reveal}
+        onContinue={game.dismissReveal}
+        onGone={() => setCardUp(false)}
+      />
     </div>
   );
 }

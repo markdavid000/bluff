@@ -8,6 +8,13 @@ import { NO_GAME } from "../lib/table-fixture.testing";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
+const useTipsOnFirstVisit = vi.fn();
+vi.mock("../hooks/use-tips-dialog", () => ({
+  useTipsOnFirstVisit: () => useTipsOnFirstVisit(),
+}));
+vi.mock("../hooks/use-board-choice", () => ({
+  useBoardChoice: () => false,
+}));
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";
@@ -111,6 +118,11 @@ describe("WaitingScreen", () => {
   });
 
   describe("the waiting room", () => {
+    it("offers the tips before the game to a player who hasn't seen them", () => {
+      show(room());
+      expect(useTipsOnFirstVisit).toHaveBeenCalled();
+    });
+
     it("names every player with their ready state and the line", () => {
       show(room());
       expect(screen.getByLabelText(new RegExp(`^${tableCopy.you}|Dave #1A2B`))).toBeInTheDocument();

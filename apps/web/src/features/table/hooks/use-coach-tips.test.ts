@@ -32,10 +32,9 @@ function render(start: {
   choice: Bid | null;
   risk: BidRisk | null;
   safer: Bid | null;
-  paused?: boolean;
 }) {
   let props = start;
-  const hook = renderHook(() => useCoachTips({ paused: false, ...props, onPick }));
+  const hook = renderHook(() => useCoachTips({ ...props, onPick }));
   return {
     ...hook,
     change: (next: Partial<typeof start>) => {
@@ -51,19 +50,6 @@ const wait = (ms: number) =>
   });
 
 describe("useCoachTips", () => {
-  it("stays quiet while a first-game tip has the turn, without closing it", () => {
-    render({
-      myTurn: true,
-      choice: { quantity: 1, face: 6 },
-      risk: "safe",
-      safer: null,
-      paused: true,
-    });
-    wait(COACH_DELAY_MS);
-    expect(shown).toEqual([]);
-    expect(dismissed).toEqual([]);
-  });
-
   it("tells the player how safe their bid looks once their turn starts", () => {
     render({ myTurn: true, choice: { quantity: 1, face: 6 }, risk: "safe", safer: null });
     expect(shown).toEqual([]);

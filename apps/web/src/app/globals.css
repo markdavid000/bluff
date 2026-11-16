@@ -2,6 +2,14 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant calm {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where(.calm *) {
+    @slot;
+  }
+}
 
 @theme inline {
   --color-background: var(--background);

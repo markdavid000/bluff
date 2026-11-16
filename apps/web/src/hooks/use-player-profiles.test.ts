@@ -75,6 +75,20 @@ describe("usePlayerProfiles", () => {
     expect(result.current.status).toBe("loading");
   });
 
+  it("keeps the names it knows while a newcomer's name loads, instead of blanking everyone", () => {
+    let players: `0x${string}`[] = [KOLA];
+    read = { isPending: false, isError: false, isPlaceholderData: false, data: ["Kola", [4, ""]] };
+    const { result, rerender } = renderHook(() => usePlayerProfiles(players, "Player"));
+    expect(result.current).toMatchObject({ status: "ready", pending: false });
+    players = [KOLA, ADA];
+    read = { isPending: false, isError: false, isPlaceholderData: true, data: ["Kola", [4, ""]] };
+    rerender();
+    expect(result.current).toMatchObject({ status: "ready", pending: true });
+    if (result.current.status !== "ready") throw new Error("Expected names.");
+    expect(result.current.profileOf(KOLA)?.name).toBe("Kola");
+    expect(result.current.profileOf(ADA)).toBeUndefined();
+  });
+
   it("reports an answer in the wrong shape as a failure instead of guessing", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     read = { isPending: false, isError: false, data: ["Kola"] };

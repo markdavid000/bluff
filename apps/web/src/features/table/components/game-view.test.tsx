@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
@@ -81,6 +81,45 @@ describe("GameView", () => {
     expect(
       screen.getByRole("button", { name: tableCopy.callBluffOn("Sly Fox #3C4D") })
     ).toBeInTheDocument();
+  });
+
+  it("keeps every seat's dice count from the call until the reveal card closes", () => {
+    const before = gameView({ table: playing(), boardRevealed: true, reveal: null, myTurn: false });
+    const { rerender } = render(<GameView game={before} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(4) })).toBeInTheDocument();
+    const after = {
+      ...before,
+      seats: before.seats.map((seat) => (seat.isMe ? seat : { ...seat, dice: seat.dice - 1 })),
+    };
+    rerender(<GameView game={after} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(4) })).toBeInTheDocument();
+    rerender(<GameView game={{ ...after, boardRevealed: false }} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument();
+  });
+
+  it("keeps the dice count until the reveal card has fully left the screen", async () => {
+    const card = {
+      outcome: "holds" as const,
+      quantity: 2,
+      face: 4 as const,
+      count: 3,
+      loserName: "Sly Fox #3C4D",
+      loserIsMe: false,
+      rows: [],
+    };
+    const open = gameView({ table: playing(), boardRevealed: true, reveal: card, myTurn: false });
+    const { rerender } = render(<GameView game={open} />);
+    const closing = {
+      ...open,
+      boardRevealed: false,
+      reveal: null,
+      seats: open.seats.map((seat) => (seat.isMe ? seat : { ...seat, dice: seat.dice - 1 })),
+    };
+    rerender(<GameView game={closing} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(4) })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument()
+    );
   });
 
   it("holds the bid control back while the player's dice are still in the cup", () => {
@@ -178,5 +217,20 @@ describe("GameView", () => {
   it("warns screen readers when the player's time is nearly up", () => {
     render(<GameView game={gameView({ table: playing(), turnLow: true })} />);
     expect(screen.getByRole("alert")).toHaveTextContent(tableCopy.timeLow);
+  });
+
+  it("asks before leaving a game, and only leaves when the player confirms", async () => {
+    const leave = vi.fn();
+    render(<GameView game={gameView({ table: playing(), leave })} />);
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.leave }));
+    expect(
+      await screen.findByRole("dialog", { name: tableCopy.leaveConfirmTitle })
+    ).toBeInTheDocument();
+    expect(leave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.stay }));
+    expect(leave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.leave }));
+    fireEvent.click(await screen.findByRole("button", { name: tableCopy.leaveConfirm }));
+    expect(leave).toHaveBeenCalledOnce();
   });
 });

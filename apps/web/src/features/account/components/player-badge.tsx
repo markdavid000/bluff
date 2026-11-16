@@ -28,10 +28,7 @@ export function PlayerBadge() {
 
   if (player.status !== "ready") {
     return (
-      <span
-        aria-hidden
-        className="h-10 w-40 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
-      />
+      <span aria-hidden className="h-10 w-40 animate-pulse rounded-xl bg-muted calm:animate-none" />
     );
   }
 

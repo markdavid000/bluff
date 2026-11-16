@@ -87,7 +87,7 @@ export function OpenTablesDialog({
             ) : (
               <p
                 role="status"
-                className="h-40 animate-pulse rounded-2xl bg-muted motion-reduce:animate-none"
+                className="h-40 animate-pulse rounded-2xl bg-muted calm:animate-none"
               >
                 <span className="sr-only">{lobbyCopy.openTablesLoading}</span>
               </p>

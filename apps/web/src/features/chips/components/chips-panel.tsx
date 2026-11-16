@@ -54,7 +54,7 @@ export function ChipsPanel({ panel }: { panel: ReturnType<typeof useChipsPanel> 
             ) : (
               <span
                 role="status"
-                className="h-12 w-32 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+                className="h-12 w-32 animate-pulse rounded-md bg-muted calm:animate-none"
               >
                 <span className="sr-only">{chipsCopy.balanceLoading}</span>
               </span>
@@ -138,7 +138,7 @@ export function ChipsPanel({ panel }: { panel: ReturnType<typeof useChipsPanel> 
           ) : (
             <span
               aria-hidden
-              className="h-12 w-48 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
+              className="h-12 w-48 animate-pulse rounded-xl bg-muted calm:animate-none"
             />
           )}
           <ActionButton

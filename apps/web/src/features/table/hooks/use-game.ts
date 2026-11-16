@@ -4,14 +4,14 @@ import { bluffAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateBalanceQueries } from "@zama-fhe/sdk/query";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type { Address } from "viem";
 import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useBlockClock, useFollowChain } from "@/hooks/use-block-clock";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
+import { useForgetMyTable } from "@/hooks/use-my-table-id";
 import { useSendMove } from "@/hooks/use-send-move";
 import { bidChance, bidRisk } from "@/lib/bid-odds";
 import { type Bid, isValidFace, quickPicks } from "@/lib/bid-rules";
@@ -22,7 +22,6 @@ import { potOf, shareOf } from "../lib/payout";
 import { revealedBySeat } from "../lib/reveal";
 import { useBidChoice } from "./use-bid-choice";
 import { useCoachTips } from "./use-coach-tips";
-import { useFirstGameTips } from "./use-first-game-tips";
 import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
@@ -50,19 +49,27 @@ export function useGame(id: bigint) {
   useFollowChain();
   const block = useBlockClock();
   const [liveEnd, setLiveEnd] = useState<GameEnding | null>(null);
-  const router = useRouter();
+  const forgetMyTable = useForgetMyTable();
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
   const table = read.status === "ready" ? read.table : null;
+  const tableOver = table?.status === "finished";
+  const forgetSeat = useEffectEvent(() => forgetMyTable(id));
+  useEffect(() => {
+    if (tableOver) forgetSeat();
+  }, [tableOver]);
   const profiles = usePlayerProfiles(
     table?.seats.map((seat) => seat.player) ?? [],
     tableCopy.unnamed
   );
-  const nameOf = (address: string) =>
-    (profiles.status === "ready" ? profiles.profileOf(address)?.name : undefined) ??
-    tableCopy.unnamed;
+  const nameOf = (address: string) => {
+    if (profiles.status === "failed") return tableCopy.unnamed;
+    if (profiles.status === "loading") return "";
+    return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
+  };
+  const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
   const [shownResult, setShownResult] = useState<{ result: RoundResult; until: number } | null>(
     null
   );
@@ -73,7 +80,7 @@ export function useGame(id: bigint) {
   useTableEvents({
     id,
     me,
-    nameOf,
+    nameOf: noticeName,
     onBidPlaced: (placed: PlacedBid) => {
       const { face } = placed;
       if (!isValidFace(face)) return;
@@ -125,6 +132,7 @@ export function useGame(id: bigint) {
   const [lastRevealSeen, setLastRevealSeen] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [pendingBid, setPendingBid] = useState<{ bid: Bid; block: bigint | null } | null>(null);
+  const [calledIn, setCalledIn] = useState<number | null>(null);
   const [revealCounts, setRevealCounts] = useState<{
     round: number;
     counts: number[];
@@ -180,7 +188,7 @@ export function useGame(id: bigint) {
     revealNotice(
       revealCounts && { bidder: revealCounts.bidderPlayer, caller: revealCounts.callerPlayer },
       me,
-      nameOf
+      noticeName
     ),
     table?.status === "revealing" || awaitingResult
   );
@@ -228,22 +236,27 @@ export function useGame(id: bigint) {
   const callBluff = useAction({
     id: "call",
     working: tableCopy.callingBluff,
-    run: (report) =>
-      sendMove(
+    run: async (report, round: number) => {
+      const receipt = await sendMove(
         { address: contracts.bluff, abi: bluffAbi, functionName: "callBluff", args: [id] },
         report
-      ),
+      );
+      setCalledIn(round);
+      return receipt;
+    },
   });
 
   const coachFaces = dice.status === "ready" ? dice.faces : [];
   const coachHidden = Math.max((table?.diceInPlay ?? 0) - coachFaces.length, 0);
+  const callLanding = table !== null && table.status === "playing" && calledIn === table.round;
   const coachTurn =
     table !== null &&
     table.status === "playing" &&
     mine?.isActive === true &&
     table.turn === mySeat &&
     !pendingShown &&
-    !holdReveal;
+    !holdReveal &&
+    !callLanding;
   const riskOf = (bid: Bid) => bidRisk(bidChance(bid, coachFaces, coachHidden));
   const coachChoice = coachTurn && dice.status === "ready" ? choice.choice : null;
   const safer = coachChoice
@@ -253,20 +266,15 @@ export function useGame(id: bigint) {
           (pick.quantity !== coachChoice.quantity || pick.face !== coachChoice.face)
       ) ?? null)
     : null;
-  const { tipTurn } = useFirstGameTips({
-    myTurn: coachTurn,
-    turnKey: `${table?.round ?? 0}-${table?.turn ?? 0}-${shownBid?.quantity ?? 0}-${shownBid?.face ?? 0}`,
-    hasBid: shownBid !== null,
-  });
   useCoachTips({
     myTurn: coachTurn,
-    paused: tipTurn,
     choice: coachChoice,
     risk: coachChoice ? riskOf(coachChoice) : null,
     safer,
     onPick: choice.pick,
   });
 
+  const [left, setLeft] = useState(false);
   const leave = useAction({
     id: "leave",
     working: tableCopy.leaving,
@@ -277,9 +285,10 @@ export function useGame(id: bigint) {
         report
       ),
     onDone: () => {
+      setLeft(true);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       void queryClient.invalidateQueries({ queryKey: ["readContract"] });
-      router.replace("/play");
     },
   });
 
@@ -288,18 +297,23 @@ export function useGame(id: bigint) {
   const bid = shownBid;
   const stillIn = mine?.isActive === true;
   const myTurn =
-    table.status === "playing" && stillIn && table.turn === mySeat && !pendingShown && !holdReveal;
+    table.status === "playing" &&
+    stillIn &&
+    table.turn === mySeat &&
+    !pendingShown &&
+    !holdReveal &&
+    !callLanding;
   const ownFaces = dice.status === "ready" ? dice.faces : [];
   const nameOfSeat = (seat: number) => {
     const player = table.seats[seat]?.player;
-    return player ? nameOf(player) : tableCopy.unnamed;
+    return player ? noticeName(player) : tableCopy.unnamed;
   };
   const shownTurnEnds = table.deadline - TURN_GRACE_MS;
   const turnLeft = table.status === "playing" ? Math.max(shownTurnEnds - now, 0) : 0;
   const pot = potOf(table.buyIn, table.seats.length);
   const result =
     resultOpen && shownResult !== null
-      ? { ...shownResult.result, loserName: nameOf(shownResult.result.loser) }
+      ? { ...shownResult.result, loserName: noticeName(shownResult.result.loser) }
       : null;
   const snapshot = result !== null && revealCounts?.round === result.round ? revealCounts : null;
   const revealedDice =
@@ -340,8 +354,11 @@ export function useGame(id: bigint) {
   if (finished && reveal !== null && !lastRevealSeen) setLastRevealSeen(true);
   const waitedForReveal =
     !sawPlay || lastRevealSeen || (endSeenAt !== null && now >= endSeenAt + LAST_REVEAL_WAIT_MS);
-  const showResults = finished && (resultsOpen || (!holdReveal && waitedForReveal));
+  const showResults =
+    finished && end.status !== "loading" && (resultsOpen || (!holdReveal && waitedForReveal));
   if (showResults && !resultsOpen) setResultsOpen(true);
+  const leaveSettled =
+    left && (finished ? end.status !== "loading" : !(table.seats[mySeat]?.isActive ?? false));
   const iWon = end.status === "ready" && end.winners.some((winner) => same(winner, me));
   const chosen = myTurn ? choice.choice : null;
   const lastBidOf = (player: string, index: number): Bid | null =>
@@ -359,6 +376,7 @@ export function useGame(id: bigint) {
           table.status === "playing" &&
           index === table.turn &&
           !holdReveal &&
+          !(index === mySeat && callLanding) &&
           !(index === mySeat && pendingShown),
         lastBid:
           index === mySeat && pendingShown && pendingBid
@@ -377,7 +395,16 @@ export function useGame(id: bigint) {
           : tableCopy.placingBid
         : gameLine(table, mySeat, stillIn, nameOfSeat),
       bid,
-      bidderName: table.bid ? nameOfSeat(table.bid.bidder) : null,
+      bidderName: pendingShown
+        ? nameOfSeat(mySeat)
+        : table.bid
+          ? nameOfSeat(table.bid.bidder)
+          : null,
+      bidder: pendingShown
+        ? (me ?? null)
+        : table.bid
+          ? (table.seats[table.bid.bidder]?.player ?? null)
+          : null,
       choice,
       matching:
         chosen !== null ? ownFaces.map((face) => face === chosen.face || face === WILD_FACE) : null,
@@ -396,17 +423,18 @@ export function useGame(id: bigint) {
       myShare: end.status === "ready" && me ? shareOf(pot, end.winners, me) : null,
       winnerNames:
         end.status === "ready"
-          ? end.winners.map((winner) => (same(winner, me) ? tableCopy.you : nameOf(winner)))
+          ? end.winners.map((winner) => (same(winner, me) ? tableCopy.you : noticeName(winner)))
           : [],
       iWon,
-      showResults,
+      showResults: left ? leaveSettled : showResults,
+      left,
       placing: placeBid.working,
       calling: callBluff.working,
       leaving: leave.working,
       busy: placeBid.working || callBluff.working || leave.working,
       confirm: placeBid.confirmInWallet || callBluff.confirmInWallet || leave.confirmInWallet,
       placeBid: placeBid.start,
-      callBluff: () => callBluff.start(),
+      callBluff: () => callBluff.start(table.round),
       leave: () => leave.start(),
     },
   };

@@ -14,7 +14,7 @@ const SIDES: { face: Face; placement: string }[] = [
 export function TumblingDie({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("size-28 [perspective:600px]", className)}>
-      <div className="relative size-full animate-tumble preserve-3d motion-reduce:[transform:rotateX(-20deg)_rotateY(30deg)] motion-reduce:animate-none">
+      <div className="relative size-full animate-tumble preserve-3d calm:[transform:rotateX(-20deg)_rotateY(30deg)] calm:animate-none">
         {SIDES.map(({ face, placement }) => (
           <div key={face} className={cn("absolute inset-0 backface-hidden", placement)}>
             <DieFace

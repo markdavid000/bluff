@@ -5,13 +5,13 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateBalanceQueries } from "@zama-fhe/sdk/query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type { Address } from "viem";
 import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useFollowChain } from "@/hooks/use-block-clock";
 import { useChipBalance } from "@/hooks/use-chip-balance";
-import { useMyTableId } from "@/hooks/use-my-table-id";
+import { useForgetMyTable, useMyTableId } from "@/hooks/use-my-table-id";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useProveInvite } from "@/hooks/use-prove-invite";
@@ -25,7 +25,7 @@ import { type Role, nextStep } from "../lib/next-step";
 import { type Table, freeSeats, notReady } from "../lib/table-view";
 import { useInviteCode } from "./use-invite-code";
 import { useLinkInvite } from "./use-link-invite";
-import { useTable } from "./use-table";
+import { isNotTableRead, markLeftTable, useTable } from "./use-table";
 import { useTableEvents } from "./use-table-events";
 import { useWorkingNotice } from "./use-working-notice";
 import { useTableKeeper } from "./use-table-keeper";
@@ -46,19 +46,28 @@ function roleOf(table: Table, me: string | undefined): Role {
 export function useWaitingRoom(id: bigint) {
   useFollowChain();
   const router = useRouter();
+  const forgetMyTable = useForgetMyTable();
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
   const table = read.status === "ready" ? read.table : null;
+  const tableOver = table?.status === "cancelled" || table?.status === "finished";
+  const forgetSeat = useEffectEvent(() => forgetMyTable(id));
+  useEffect(() => {
+    if (tableOver) forgetSeat();
+  }, [tableOver]);
   const profiles = usePlayerProfiles(
     table?.seats.map((seat) => seat.player) ?? [],
     tableCopy.unnamed
   );
-  const nameOf = (address: string) =>
-    (profiles.status === "ready" ? profiles.profileOf(address)?.name : undefined) ??
-    tableCopy.unnamed;
-  useTableEvents({ id, me, nameOf });
+  const nameOf = (address: string) => {
+    if (profiles.status === "failed") return tableCopy.unnamed;
+    if (profiles.status === "loading") return "";
+    return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
+  };
+  const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
+  useTableEvents({ id, me, nameOf: noticeName });
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
@@ -95,6 +104,7 @@ export function useWaitingRoom(id: bigint) {
     },
   });
 
+  const [startSent, setStartSent] = useState(false);
   const start = useAction({
     id: "start",
     working: tableCopy.starting,
@@ -103,6 +113,7 @@ export function useWaitingRoom(id: bigint) {
         { address: contracts.bluff, abi: bluffAbi, functionName: "startTable", args: [id] },
         report
       ),
+    onDone: () => setStartSent(true),
   });
 
   const leave = useAction({
@@ -115,8 +126,10 @@ export function useWaitingRoom(id: bigint) {
         report
       ),
     onDone: () => {
+      markLeftTable(id);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
-      void queryClient.invalidateQueries({ queryKey: ["readContract"] });
+      void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
       router.replace("/play");
     },
   });
@@ -130,11 +143,14 @@ export function useWaitingRoom(id: bigint) {
         report
       ),
     onDone: () => {
+      markLeftTable(id);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       router.replace("/play");
     },
   });
 
+  const [seatTaken, setSeatTaken] = useState(false);
   const join = useAction({
     id: "join",
     working: tableCopy.joining,
@@ -147,6 +163,7 @@ export function useWaitingRoom(id: bigint) {
       return takeSeat({ kind: "join", tableId: id, buyIn }, report);
     },
     onDone: () => {
+      setSeatTaken(true);
       invalidateBalanceQueries(queryClient, contracts.chips);
       void queryClient.invalidateQueries({ queryKey: ["readContract"] });
     },
@@ -174,7 +191,8 @@ export function useWaitingRoom(id: bigint) {
   const unaffordable = whyUnaffordable(table.buyIn, known);
   const mine = seats.find((seat) => seat.isMe);
   const timeLeft = Math.max(table.deadline - now, 0);
-  const busy = ready.working || start.working || leave.working || close.working || join.working;
+  const starting = start.working || (startSent && table.status === "waiting");
+  const busy = ready.working || starting || leave.working || close.working || join.working;
   const confirm =
     ready.confirmInWallet ||
     start.confirmInWallet ||
@@ -198,8 +216,9 @@ export function useWaitingRoom(id: bigint) {
         table.status === "waiting" &&
         table.seats.length >= MIN_PLAYERS &&
         notReady(shown).length === 0,
-      joinProblem:
-        table.status !== "waiting"
+      joinProblem: seatTaken
+        ? null
+        : table.status !== "waiting"
           ? tableCopy.started
           : freeSeats(table) === 0
             ? tableCopy.full
@@ -215,10 +234,10 @@ export function useWaitingRoom(id: bigint) {
       busy,
       confirm,
       toggling: ready.working,
-      starting: start.working,
+      starting,
       leaving: leave.working,
       closing: close.working,
-      joining: join.working,
+      joining: join.working || (seatTaken && role === "visitor"),
       joinStep,
       invite: invite.status,
       unlockingInvite: invite.status === "locked" && invite.unlocking,

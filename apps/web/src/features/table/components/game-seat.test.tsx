@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
 import { GameSeat } from "./game-seat";
@@ -18,6 +18,7 @@ function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
       lastBid={null}
       ownDice={null}
       matching={null}
+      holdDice={false}
       {...props}
     />
   );
@@ -56,6 +57,7 @@ describe("GameSeat", () => {
         lastBid={null}
         ownDice={null}
         matching={null}
+        holdDice={false}
       />
     );
     expect(ring()).toBeNull();
@@ -100,11 +102,66 @@ describe("GameSeat", () => {
     expect(unlock).toHaveBeenCalledOnce();
   });
 
+  it("keeps a lost die on show while the reveal is open, then sends it tumbling away", async () => {
+    const seat = (dice: number, holdDice: boolean) => (
+      <GameSeat
+        name="Sly Fox #3C4D"
+        avatarSrc="/a.svg"
+        isMe={false}
+        dice={dice}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={null}
+        matching={null}
+        holdDice={holdDice}
+      />
+    );
+    const { container, rerender } = render(seat(3, true));
+    rerender(seat(2, true));
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument();
+    expect(container.querySelector("[data-lost-die]")).toBeNull();
+    rerender(seat(2, false));
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(2) })).toBeInTheDocument();
+    expect(container.querySelector("[data-lost-die]")).not.toBeNull();
+    await waitFor(() => expect(container.querySelector("[data-lost-die]")).toBeNull(), {
+      timeout: 3_000,
+    });
+  });
+
+  it("sends the player's own lost die tumbling away too", () => {
+    const mine = (dice: number, holdDice: boolean) => (
+      <GameSeat
+        name="Me #1A2B"
+        avatarSrc="/a.svg"
+        isMe
+        dice={dice}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={{ status: "loading" }}
+        matching={null}
+        holdDice={holdDice}
+      />
+    );
+    const { container, rerender } = render(mine(4, false));
+    rerender(mine(3, false));
+    expect(container.querySelector("[data-lost-die]")).not.toBeNull();
+  });
+
   it("marks a player who is out, with no dice", () => {
     show({ isActive: false, dice: 0 });
     expect(
       screen.getByRole("figure", { name: `Sly Fox #3C4D, ${tableCopy.out}` })
     ).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: tableCopy.hiddenDice(0) })).toBeNull();
+  });
+
+  it("holds the name's place quietly while it loads, instead of a stand-in name", () => {
+    const { container } = show({ name: "" });
+    expect(container.querySelector("figcaption [data-name-loading]")).not.toBeNull();
+    expect(screen.queryByText("Player")).toBeNull();
   });
 });

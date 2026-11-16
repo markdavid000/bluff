@@ -2,7 +2,8 @@
 
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ReactNode } from "react";
 import { GameIcon, type GameIconName } from "./game-icon";
 import { PatternBand } from "./pattern-band";
@@ -31,7 +32,7 @@ export function ToastTile({
   icon?: GameIconName;
   action?: ReactNode;
 }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   return (
     <motion.div
       role={kind === "error" ? "alert" : "status"}

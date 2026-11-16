@@ -50,7 +50,7 @@ describe("StreetBackdrop", () => {
     const moving = container.querySelectorAll("[class*='animate-street']");
     expect(moving.length).toBeGreaterThan(0);
     moving.forEach((element) => {
-      expect(element.getAttribute("class")).toContain("motion-reduce:animate-none");
+      expect(element.getAttribute("class")).toContain("calm:animate-none");
     });
   });
 });

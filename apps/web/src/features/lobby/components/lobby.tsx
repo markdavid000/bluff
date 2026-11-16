@@ -18,7 +18,10 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
   const { sitDown } = lobby;
   const label = (working: string) =>
     sitDown.confirmInWallet ? lobbyCopy.confirmInWallet : working;
-  const seatedAt = lobby.myTableId.status === "ready" ? lobby.myTableId.id : null;
+  const seatedAt =
+    lobby.myTableId.status === "ready" && lobby.myTableId.id !== sitDown.goingTo
+      ? lobby.myTableId.id
+      : null;
   const busy = sitDown.working;
 
   return (
@@ -36,7 +39,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         ) : lobby.myTableId.status === "loading" ? (
           <p
             role="status"
-            className="h-40 w-full animate-pulse rounded-2xl bg-muted motion-reduce:animate-none"
+            className="h-40 w-full animate-pulse rounded-2xl bg-muted calm:animate-none"
           >
             <span className="sr-only">{lobbyCopy.findingYourTable}</span>
           </p>

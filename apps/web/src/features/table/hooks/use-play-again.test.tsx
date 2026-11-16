@@ -23,6 +23,18 @@ const asked: { functionName: string; enabled: boolean }[] = [];
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
+let arrive: () => void = () => undefined;
+let holdArrival = false;
+vi.mock("@/hooks/use-go-to-table", () => ({
+  useGoToTable: () => (id: bigint) =>
+    new Promise<void>((resolve) => {
+      arrive = () => {
+        push(`/table/${id}`);
+        resolve();
+      };
+      if (!holdArrival) arrive();
+    }),
+}));
 vi.mock("@/hooks/use-chip-balance", () => ({ useChipBalance: () => balance }));
 vi.mock("@zama-fhe/sdk/query", () => ({ invalidateBalanceQueries: vi.fn() }));
 vi.mock("wagmi", () => ({
@@ -158,5 +170,19 @@ describe("usePlayAgain", () => {
     asked.length = 0;
     rerender();
     expect(asked.find((call) => call.functionName === "tableOf")?.enabled).toBe(false);
+  });
+
+  it("stays on setting up the table until the new table opens", async () => {
+    vi.useRealTimers();
+    holdArrival = true;
+    const { result } = render();
+    act(() => result.current.playAgain());
+    await waitFor(() => expect(takeSeat).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(result.current.playing).toBe(true);
+    expect(push).not.toHaveBeenCalled();
+    act(() => arrive());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/table/30"));
+    holdArrival = false;
   });
 });

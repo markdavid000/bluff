@@ -1,5 +1,5 @@
 import { bluffAbi } from "@bluff/contracts";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import {
   ContractFunctionExecutionError,
   ContractFunctionRevertedError,
@@ -7,7 +7,7 @@ import {
 } from "viem";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { forgetBlocks, seeBlock } from "@/lib/block-clock";
-import { useTable } from "./use-table";
+import { isNotTableRead, markLeftTable, useTable } from "./use-table";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -17,10 +17,14 @@ const HOST = "0x0000000000000000000000000000000000001a2b";
 const refetch = vi.fn();
 let read: Record<string, unknown> = {};
 let readAtBlock: ((blockNumber?: bigint) => Record<string, unknown>) | null = null;
-const requests: { blockNumber?: bigint; args: unknown[] }[] = [];
+const requests: { blockNumber?: bigint; args: unknown[]; query?: { enabled?: boolean } }[] = [];
 
 vi.mock("wagmi", () => ({
-  useReadContract: (request: { blockNumber?: bigint; args: unknown[] }) => {
+  useReadContract: (request: {
+    blockNumber?: bigint;
+    args: unknown[];
+    query?: { enabled?: boolean };
+  }) => {
     requests.push(request);
     return { refetch, ...(readAtBlock ? readAtBlock(request.blockNumber) : read) };
   },
@@ -71,7 +75,29 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe("isNotTableRead", () => {
+  it("picks every chain read except the table itself, for refreshing after leaving", () => {
+    expect(isNotTableRead({ queryKey: ["readContract", { functionName: "getTable" }] })).toBe(
+      false
+    );
+    expect(isNotTableRead({ queryKey: ["readContract", { functionName: "tableOf" }] })).toBe(true);
+    expect(isNotTableRead({ queryKey: ["readContract"] })).toBe(true);
+  });
+});
+
 describe("useTable", () => {
+  it("stops reading a table the player just left, so it doesn't redraw before the lobby", () => {
+    const { rerender, unmount } = renderHook(() => useTable(12n));
+    expect(requests.at(-1)?.query?.enabled).not.toBe(false);
+    act(() => markLeftTable(12n));
+    rerender();
+    expect(requests.at(-1)?.query?.enabled).toBe(false);
+    unmount();
+    requests.length = 0;
+    renderHook(() => useTable(12n));
+    expect(requests.at(-1)?.query?.enabled).not.toBe(false);
+  });
+
   it("is loading while the table is read", () => {
     read = { isError: false, data: undefined };
     expect(renderHook(() => useTable(12n)).result.current.status).toBe("loading");

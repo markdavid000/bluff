@@ -89,6 +89,8 @@ export function gameView(overrides: Partial<GameView> = {}): GameView {
     winnerNames: [],
     iWon: false,
     showResults: true,
+    left: false,
+    bidder: null,
     boardRevealed: table.status === "revealing",
     boardRound: table.round,
     placing: false,

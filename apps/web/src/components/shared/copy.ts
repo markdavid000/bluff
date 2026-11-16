@@ -3,6 +3,11 @@ export const sharedCopy = {
   switchToDay: "Switch to day",
   soundsOff: "Turn sounds off",
   soundsOn: "Turn sounds on",
+  settings: "Settings",
+  board: "Board",
+  boardChoices: { "3d": "3D board", flat: "Flat board" },
+  calmMotion: "Calm motion",
+  gameTips: "Game tips",
   musicOff: "Turn music off",
   musicOn: "Turn music on",
   chooseMusic: "Choose the music",
@@ -12,5 +17,5 @@ export const sharedCopy = {
     both: "Drum and bell",
   },
   musicPlaying: "Music on",
-  screenControls: "Day, night, sounds and music",
+  screenControls: "Day, night, sounds, music and settings",
 } as const;

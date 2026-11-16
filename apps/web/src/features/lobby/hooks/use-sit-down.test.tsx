@@ -19,6 +19,18 @@ const invalidateBalanceQueries = vi.fn();
 
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
+let arrive: () => void = () => undefined;
+vi.mock("@/hooks/use-go-to-table", () => ({
+  useGoToTable: () => (id: bigint) =>
+    new Promise<void>((resolve) => {
+      arrive = () => {
+        push(`/table/${id}`);
+        resolve();
+      };
+      if (!holdArrival) arrive();
+    }),
+}));
+let holdArrival = false;
 vi.mock("@zama-fhe/sdk/query", () => ({
   invalidateBalanceQueries: (...args: unknown[]) => invalidateBalanceQueries(...args),
 }));
@@ -138,6 +150,30 @@ describe("useSitDown", () => {
     );
     await waitFor(() => expect(result.current.working).toBe(false));
     expect(takeSeat).not.toHaveBeenCalled();
+  });
+
+  it("stays busy, naming the table it's heading to, until that table opens", async () => {
+    holdArrival = true;
+    const { result } = render();
+    act(() => result.current.join({ kind: "join", tableId: 12n, buyIn: 0n }));
+    await waitFor(() => expect(result.current.goingTo).toBe(12n));
+    expect(result.current.working).toBe(true);
+    expect(push).not.toHaveBeenCalled();
+    act(() => arrive());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/table/12"));
+    holdArrival = false;
+  });
+
+  it("keeps Play now showing it's finding a seat until the table opens", async () => {
+    holdArrival = true;
+    const { result } = render();
+    act(() => result.current.playNow(async () => [], 0n));
+    await waitFor(() => expect(result.current.goingTo).toBe(12n));
+    expect(result.current.findingSeat).toBe(true);
+    expect(result.current.creating).toBe(false);
+    act(() => arrive());
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    holdArrival = false;
   });
 
   it("stays in the lobby when the move fails", async () => {

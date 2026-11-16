@@ -3,7 +3,7 @@
 import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
 import { tableCopy } from "../../copy";
-import { BoardPlaceholder, LazyBoardScene } from "./lazy-board";
+import { GameBoard } from "./game-board";
 import { PREVIEW_CHIPS_EACH, PREVIEW_SEATS, usePreviewBoard } from "../../hooks/use-preview-board";
 
 export function BoardPreview() {
@@ -12,18 +12,14 @@ export function BoardPreview() {
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="mx-auto w-full max-w-[760px]">
-        {board.colors ? (
-          <LazyBoardScene
-            colors={board.colors}
-            seats={PREVIEW_SEATS}
-            throwState={board.throwState}
-            chipsEach={PREVIEW_CHIPS_EACH}
-            revealed={board.revealed}
-            label={tableCopy.boardLabel}
-          />
-        ) : (
-          <BoardPlaceholder />
-        )}
+        <GameBoard
+          colors={board.colors}
+          seats={PREVIEW_SEATS}
+          throwState={board.throwState}
+          chipsEach={PREVIEW_CHIPS_EACH}
+          revealed={board.revealed}
+          label={tableCopy.boardLabel}
+        />
       </div>
       <div
         aria-live="polite"

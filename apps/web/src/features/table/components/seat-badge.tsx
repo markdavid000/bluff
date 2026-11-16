@@ -25,7 +25,7 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
         ) : (
           <span
             aria-hidden
-            className="block size-16 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+            className="block size-16 animate-pulse rounded-full bg-muted calm:animate-none"
           />
         )}
         {isHost ? (
@@ -38,7 +38,7 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
             className={cn(
               "absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-background",
               ready ? "bg-seat-green" : "bg-muted",
-              updating && "animate-pulse motion-reduce:animate-none"
+              updating && "animate-pulse calm:animate-none"
             )}
           >
             {ready ? (
@@ -50,7 +50,16 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
         )}
       </span>
       <figcaption aria-hidden className="flex flex-col items-center leading-tight">
-        <span className="font-game text-base">{isMe ? tableCopy.you : name}</span>
+        <span className="font-game text-base">
+          {isMe
+            ? tableCopy.you
+            : name || (
+                <span
+                  data-name-loading
+                  className="inline-block h-[1em] w-16 animate-pulse rounded bg-muted align-middle calm:animate-none"
+                />
+              )}
+        </span>
         <span className="text-xs text-muted-foreground">
           {updating ? tableCopy.gettingReady : state}
         </span>

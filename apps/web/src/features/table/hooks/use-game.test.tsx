@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { type Notice, onNotice } from "@/lib/notify";
-import { settingsStore } from "@/lib/settings-store";
 import { tableCopy } from "../copy";
 import { NO_GAME } from "../lib/table-fixture.testing";
 import type { GameEnding } from "../lib/game-end";
@@ -49,7 +48,12 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
-vi.mock("./use-table", () => ({ useTable: () => tableRead }));
+const markLeftTable = vi.fn();
+vi.mock("./use-table", () => ({
+  useTable: () => tableRead,
+  markLeftTable: (id: bigint) => markLeftTable(id),
+  isNotTableRead: () => true,
+}));
 vi.mock("./use-table-events", () => ({
   useTableEvents: ({
     onRoundSettled,
@@ -66,6 +70,8 @@ vi.mock("./use-table-events", () => ({
   },
 }));
 vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
+const forgetMyTable = vi.fn();
+vi.mock("@/hooks/use-my-table-id", () => ({ useForgetMyTable: () => forgetMyTable }));
 vi.mock("./use-own-dice", () => ({ useOwnDice: () => dice }));
 vi.mock("./use-game-end", () => ({ useGameEnd: () => end }));
 let caughtUp: RoundResult | null = null;
@@ -164,6 +170,8 @@ describe("useGame", () => {
     const { result } = render();
     act(() => viewOf(result).placeBid({ quantity: 3, face: 4 }));
     expect(viewOf(result).bid).toEqual({ quantity: 3, face: 4 });
+    expect(viewOf(result).bidderName).toBe("Me #1A2B");
+    expect(viewOf(result).bidder).toBe(ME);
     expect(viewOf(result).myTurn).toBe(false);
     expect(viewOf(result).seats[0]?.isTurn).toBe(false);
     expect(viewOf(result).line).toBe(tableCopy.placingBid);
@@ -288,7 +296,6 @@ describe("useGame", () => {
 
   it("coaches the player with a tip only on their own turn", async () => {
     vi.useRealTimers();
-    settingsStore().update({ seenTips: ["wild-ones", "at-least", "how-to-raise", "call-bluff"] });
     const shown: Notice[] = [];
     const stop = onNotice((event) => {
       if (event.type === "show") shown.push(event.notice);
@@ -298,22 +305,6 @@ describe("useGame", () => {
       expect(shown.map((notice) => notice.title)).toContain(tableCopy.coachTip.safe("3 × three"))
     );
     stop();
-    settingsStore().update({ seenTips: [] });
-  });
-
-  it("teaches a new player that ones are wild before any bid advice", async () => {
-    vi.useRealTimers();
-    settingsStore().update({ seenTips: [] });
-    const shown: Notice[] = [];
-    const stop = onNotice((event) => {
-      if (event.type === "show") shown.push(event.notice);
-    });
-    render();
-    await waitFor(() =>
-      expect(shown.map((notice) => notice.title)).toEqual([tableCopy.firstTips["wild-ones"]])
-    );
-    stop();
-    settingsStore().update({ seenTips: [] });
   });
 
   it("gives no tip on someone else's turn", async () => {
@@ -356,6 +347,7 @@ describe("useGame", () => {
   });
 
   it("shows the last reveal before the results, with no flash between them", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     const { result, rerender } = render();
     show(game({ status: "finished" }));
     rerender();
@@ -369,6 +361,7 @@ describe("useGame", () => {
   });
 
   it("waits a moment for the last reveal, then shows the results anyway", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     const { result, rerender } = render();
     show(game({ status: "finished" }));
     rerender();
@@ -379,7 +372,25 @@ describe("useGame", () => {
     expect(viewOf(result).showResults).toBe(true);
   });
 
+  it("forgets the player's seat once the game is over, so the lobby opens without it", () => {
+    const { rerender } = render();
+    expect(forgetMyTable).not.toHaveBeenCalled();
+    show(game({ status: "finished" }));
+    rerender();
+    expect(forgetMyTable).toHaveBeenCalledWith(12n);
+  });
+
+  it("keeps the game on screen until the winner is known, so the results open complete", () => {
+    show(game({ status: "finished" }));
+    const { result, rerender } = render();
+    expect(viewOf(result).showResults).toBe(false);
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
+  });
+
   it("opens the results at once for a game that was already over", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     show(game({ status: "finished" }));
     expect(viewOf(render().result).showResults).toBe(true);
   });
@@ -502,10 +513,53 @@ describe("useGame", () => {
     expect(view.winnerNames).toEqual([tableCopy.you]);
   });
 
-  it("takes the player back to the lobby after leaving", async () => {
+  it("doesn't hand the turn back while a called bluff is still reaching the table", async () => {
     vi.useRealTimers();
-    const { result } = render();
+    show(game({ bid: { quantity: 3, face: 4, bidder: 1 } }));
+    const { result, rerender } = render();
+    expect(viewOf(result).myTurn).toBe(true);
+    act(() => viewOf(result).callBluff());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    rerender();
+    expect(viewOf(result).myTurn).toBe(false);
+    show(game({ round: 2, bid: null }));
+    rerender();
+    expect(viewOf(result).myTurn).toBe(true);
+  });
+
+  it("shows the results once the game ends after the player leaves, with the winner known", async () => {
+    vi.useRealTimers();
+    const { result, rerender } = render();
     act(() => viewOf(result).leave());
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+    await waitFor(() => expect(viewOf(result).left).toBe(true));
+    expect(viewOf(result).showResults).toBe(false);
+    const out = game().seats.map((seat) =>
+      seat.player === ME ? { ...seat, isActive: false, dice: 0 } : seat
+    );
+    show(game({ status: "finished", seats: out }));
+    rerender();
+    expect(viewOf(result).showResults).toBe(false);
+    end = { status: "ready", reason: "others-left", winners: [FOX] };
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("shows the results once the table knows the player left, when the others play on", async () => {
+    vi.useRealTimers();
+    const { result, rerender } = render();
+    act(() => viewOf(result).leave());
+    await waitFor(() => expect(viewOf(result).left).toBe(true));
+    expect(viewOf(result).showResults).toBe(false);
+    show(
+      game({
+        seats: game().seats.map((seat) =>
+          seat.player === ME ? { ...seat, isActive: false, dice: 0 } : seat
+        ),
+      })
+    );
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
   });
 });

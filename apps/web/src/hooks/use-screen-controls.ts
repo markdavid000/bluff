@@ -1,6 +1,6 @@
 "use client";
 
-import type { MusicTrack } from "@/lib/settings-store";
+import type { BoardSetting, MusicTrack } from "@/lib/settings-store";
 import { isNight } from "@/lib/theme";
 import { usePrefersDark } from "./use-prefers-dark";
 import { useSettings } from "./use-settings";
@@ -17,5 +17,9 @@ export function useScreenControls() {
     toggleTheme: () => update({ theme: night ? "day" : "night" }),
     toggleSounds: () => update({ sounds: !settings.sounds }),
     toggleMusic: () => update({ music: !settings.music }),
+    calm: settings.calmMotion,
+    board: settings.board,
+    chooseBoard: (board: BoardSetting) => update({ board }),
+    toggleCalm: () => update({ calmMotion: !settings.calmMotion }),
   };
 }
