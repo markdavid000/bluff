@@ -182,4 +182,33 @@ describe("ResultsCard", () => {
       expect(screen.getByRole("button", { name: tableCopy.playingAgain })).toBeInTheDocument();
     });
   });
+
+  describe("after the player leaves a game", () => {
+    it("names who won because they left", () => {
+      render(
+        <ResultsCard
+          game={gameView({
+            table: finished(),
+            left: true,
+            end: { status: "ready", reason: "others-left", winners: ["0x0"] },
+            winnerNames: ["Sly Fox"],
+          })}
+        />
+      );
+      expect(
+        screen.getByRole("heading", { name: tableCopy.winner("Sly Fox") })
+      ).toBeInTheDocument();
+      expect(screen.getByText(tableCopy.youLeftWinner("Sly Fox"))).toBeInTheDocument();
+    });
+
+    it("says the others play on when the game goes on without them", () => {
+      render(
+        <ResultsCard
+          game={gameView({ table: aTable({ status: "playing" }), left: true, winnerNames: [] })}
+        />
+      );
+      expect(screen.getByRole("heading", { name: tableCopy.youLeft })).toBeInTheDocument();
+      expect(screen.getByText(tableCopy.othersPlayOn)).toBeInTheDocument();
+    });
+  });
 });

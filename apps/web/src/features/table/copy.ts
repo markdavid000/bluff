@@ -84,6 +84,9 @@ export const tableCopy = {
   diceInPlayWord: "dice in play",
   bluffCaught: "Bluff caught!",
   bidHolds: "The bid holds",
+  youLeft: "You left the game",
+  youLeftWinner: (names: string) => `You left the game, so ${names} won.`,
+  othersPlayOn: "The others play on.",
   whyCaught: (claimed: number, found: number) =>
     `The bid said at least ${claimed}, but there were only ${found}.`,
   whyHolds: (claimed: number, found: number) =>

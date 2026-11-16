@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { AnimatePresence, motion, useIsPresent } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
 import { Appear } from "@/components/shared/appear";
@@ -45,7 +45,11 @@ export function GameSeat({
   holdDice: boolean;
 }) {
   const [diceShown, setDiceShown] = useState(dice);
-  if (!holdDice && diceShown !== dice) setDiceShown(dice);
+  const [lost, setLost] = useState(0);
+  if (!holdDice && diceShown !== dice) {
+    if (dice < diceShown) setLost((count) => count + 1);
+    setDiceShown(dice);
+  }
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
   return (
@@ -95,32 +99,33 @@ export function GameSeat({
         </Appear>
       </span>
       <figcaption className="max-w-28 truncate font-game text-sm leading-tight">{shown}</figcaption>
-      {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
+      <span className="relative">
+        {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
+        <AnimatePresence>
+          {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
+        </AnimatePresence>
+      </span>
     </figure>
   );
 }
 
-function FaceDownTile() {
-  const present = useIsPresent();
+function LostDie({ onDone }: { onDone: () => void }) {
   const calm = useCalmMotion();
   return (
     <motion.span
-      data-hidden-die
-      data-rolling-off={present ? undefined : ""}
-      exit={
+      aria-hidden
+      data-lost-die
+      initial={{ opacity: 1, scale: 1.4, x: 0, y: 0, rotate: 0 }}
+      animate={
         calm
-          ? { opacity: 0, transition: { duration: 0.2 } }
-          : {
-              x: 70,
-              y: [0, -14, 26],
-              rotate: 300,
-              opacity: [1, 1, 0],
-              transition: { duration: 0.8, delay: 0.35, ease: "easeIn" },
-            }
+          ? { opacity: [1, 1, 0], scale: [1.4, 1.2, 0.6] }
+          : { x: [0, 60, 150], y: [0, -40, 70], rotate: [0, 200, 520], opacity: [1, 1, 0] }
       }
-      className="inline-flex"
+      transition={calm ? { duration: 1.1 } : { duration: 1.2, ease: "easeIn" }}
+      onAnimationComplete={onDone}
+      className="pointer-events-none absolute top-1/2 left-1/2 z-20 -mt-4 -ml-4"
     >
-      <HiddenDie className="size-6 text-xs" />
+      <HiddenDie className="size-8 text-sm" />
     </motion.span>
   );
 }
@@ -137,11 +142,9 @@ function SeatDice({
   if (ownDice === null) {
     return (
       <span role="img" aria-label={tableCopy.hiddenDice(dice)} className="flex gap-1">
-        <AnimatePresence initial={false}>
-          {Array.from({ length: dice }, (_, index) => (
-            <FaceDownTile key={index} />
-          ))}
-        </AnimatePresence>
+        {Array.from({ length: dice }, (_, index) => (
+          <HiddenDie key={index} className="size-6 text-xs" />
+        ))}
       </span>
     );
   }

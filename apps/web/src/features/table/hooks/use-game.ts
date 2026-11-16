@@ -4,7 +4,6 @@ import { bluffAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateBalanceQueries } from "@zama-fhe/sdk/query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Address } from "viem";
 import { contracts } from "@/config/chain";
@@ -27,7 +26,7 @@ import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
 import { type PlacedBid, type RoundResult, useTableEvents } from "./use-table-events";
-import { isNotTableRead, markLeftTable, useTable } from "./use-table";
+import { useTable } from "./use-table";
 import { useTableKeeper } from "./use-table-keeper";
 import { useWorkingNotice } from "./use-working-notice";
 import { revealNotice } from "../lib/reveal-notice";
@@ -50,7 +49,6 @@ export function useGame(id: bigint) {
   useFollowChain();
   const block = useBlockClock();
   const [liveEnd, setLiveEnd] = useState<GameEnding | null>(null);
-  const router = useRouter();
   const forgetMyTable = useForgetMyTable();
   const queryClient = useQueryClient();
   const { user } = usePrivy();
@@ -262,6 +260,7 @@ export function useGame(id: bigint) {
     onPick: choice.pick,
   });
 
+  const [left, setLeft] = useState(false);
   const leave = useAction({
     id: "leave",
     working: tableCopy.leaving,
@@ -272,11 +271,10 @@ export function useGame(id: bigint) {
         report
       ),
     onDone: () => {
-      markLeftTable(id);
+      setLeft(true);
       forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
-      void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
-      router.replace("/play");
+      void queryClient.invalidateQueries({ queryKey: ["readContract"] });
     },
   });
 
@@ -339,6 +337,8 @@ export function useGame(id: bigint) {
     !sawPlay || lastRevealSeen || (endSeenAt !== null && now >= endSeenAt + LAST_REVEAL_WAIT_MS);
   const showResults = finished && (resultsOpen || (!holdReveal && waitedForReveal));
   if (showResults && !resultsOpen) setResultsOpen(true);
+  const leaveSettled =
+    left && (finished ? end.status !== "loading" : !(table.seats[mySeat]?.isActive ?? false));
   const iWon = end.status === "ready" && end.winners.some((winner) => same(winner, me));
   const chosen = myTurn ? choice.choice : null;
   const lastBidOf = (player: string, index: number): Bid | null =>
@@ -396,7 +396,8 @@ export function useGame(id: bigint) {
           ? end.winners.map((winner) => (same(winner, me) ? tableCopy.you : nameOf(winner)))
           : [],
       iWon,
-      showResults,
+      showResults: left ? leaveSettled : showResults,
+      left,
       placing: placeBid.working,
       calling: callBluff.working,
       leaving: leave.working,

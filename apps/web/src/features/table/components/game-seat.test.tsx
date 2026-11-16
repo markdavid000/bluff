@@ -102,44 +102,53 @@ describe("GameSeat", () => {
     expect(unlock).toHaveBeenCalledOnce();
   });
 
-  it("keeps a lost die on show while the reveal is open, then rolls it off the row", async () => {
-    const { container, rerender } = show({ dice: 3, holdDice: true });
-    const tiles = () => container.querySelectorAll("[data-hidden-die]").length;
-    rerender(
+  it("keeps a lost die on show while the reveal is open, then sends it tumbling away", async () => {
+    const seat = (dice: number, holdDice: boolean) => (
       <GameSeat
         name="Sly Fox #3C4D"
         avatarSrc="/a.svg"
         isMe={false}
-        dice={2}
+        dice={dice}
         isActive
         isTurn={false}
         turnFraction={1}
         lastBid={null}
         ownDice={null}
         matching={null}
-        holdDice
+        holdDice={holdDice}
       />
     );
+    const { container, rerender } = render(seat(3, true));
+    rerender(seat(2, true));
     expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument();
-    expect(tiles()).toBe(3);
-    rerender(
+    expect(container.querySelector("[data-lost-die]")).toBeNull();
+    rerender(seat(2, false));
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(2) })).toBeInTheDocument();
+    expect(container.querySelector("[data-lost-die]")).not.toBeNull();
+    await waitFor(() => expect(container.querySelector("[data-lost-die]")).toBeNull(), {
+      timeout: 3_000,
+    });
+  });
+
+  it("sends the player's own lost die tumbling away too", () => {
+    const mine = (dice: number, holdDice: boolean) => (
       <GameSeat
-        name="Sly Fox #3C4D"
+        name="Me #1A2B"
         avatarSrc="/a.svg"
-        isMe={false}
-        dice={2}
+        isMe
+        dice={dice}
         isActive
         isTurn={false}
         turnFraction={1}
         lastBid={null}
-        ownDice={null}
+        ownDice={{ status: "loading" }}
         matching={null}
-        holdDice={false}
+        holdDice={holdDice}
       />
     );
-    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(2) })).toBeInTheDocument();
-    expect(container.querySelector("[data-rolling-off]")).not.toBeNull();
-    await waitFor(() => expect(tiles()).toBe(2), { timeout: 2_000 });
+    const { container, rerender } = render(mine(4, false));
+    rerender(mine(3, false));
+    expect(container.querySelector("[data-lost-die]")).not.toBeNull();
   });
 
   it("marks a player who is out, with no dice", () => {

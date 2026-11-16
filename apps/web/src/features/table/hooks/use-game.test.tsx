@@ -489,11 +489,38 @@ describe("useGame", () => {
     expect(view.winnerNames).toEqual([tableCopy.you]);
   });
 
-  it("takes the player back to the lobby after leaving", async () => {
+  it("shows the results once the game ends after the player leaves, with the winner known", async () => {
     vi.useRealTimers();
-    const { result } = render();
+    const { result, rerender } = render();
     act(() => viewOf(result).leave());
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
-    expect(markLeftTable).toHaveBeenCalledWith(12n);
+    await waitFor(() => expect(viewOf(result).left).toBe(true));
+    expect(viewOf(result).showResults).toBe(false);
+    const out = game().seats.map((seat) =>
+      seat.player === ME ? { ...seat, isActive: false, dice: 0 } : seat
+    );
+    show(game({ status: "finished", seats: out }));
+    rerender();
+    expect(viewOf(result).showResults).toBe(false);
+    end = { status: "ready", reason: "others-left", winners: [FOX] };
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("shows the results once the table knows the player left, when the others play on", async () => {
+    vi.useRealTimers();
+    const { result, rerender } = render();
+    act(() => viewOf(result).leave());
+    await waitFor(() => expect(viewOf(result).left).toBe(true));
+    expect(viewOf(result).showResults).toBe(false);
+    show(
+      game({
+        seats: game().seats.map((seat) =>
+          seat.player === ME ? { ...seat, isActive: false, dice: 0 } : seat
+        ),
+      })
+    );
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
   });
 });

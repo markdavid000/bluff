@@ -15,7 +15,11 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 - **Settings menu:** the header's settings tile opens **Board**, with 3D board (the default) or Flat board saved as `board`, and **Calm motion** saved as `calmMotion`, which nothing used before.
 - **`GameBoard`** picks the board everywhere (the game, the waiting room and the design preview). It's the flat board only when the player chose it or the device has no WebGL. Calm motion and a slow device don't change the board, at the maintainer's request.
 - **Calm motion:** `useCalmMotion` (device or setting) replaces `useReducedMotion` in every component, and a `calm:` style variant (device or setting) replaces `motion-reduce:`.
-- **A lost die rolls off:** a seat keeps its old dice count from the moment a bluff is called until the reveal card has fully left the screen. The card reports when its closing animation ends, because a window in the background pauses that animation and the card can linger after the game moves on. The lost face-down die then rolls off the end of the row, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
+- **A lost die tumbles away:** when anyone loses a die, including the player, a full-size die tumbles away from that seat for about a second, or shrinks and fades in place with calm motion. The seat keeps its old count from the bluff call until the reveal card has fully left the screen. The card reports when its closing animation ends, because a window in the background pauses it.
+- **Results after leaving a game:** a player who leaves mid-game now sees a results card instead of the lobby, for free and paid games alike:
+  - In a 2-player game, the game ends and they see the winner, with "You left the game, so Maki won."
+  - When the others play on, they see "You left the game" with "The others play on."
+  - The game screen stays, saying "Leaving the table…", until the outcome is known, so the card appears once, already correct.
 - **First-game tips move to a dialog before the game:** the four tips no longer pop up as toasts during play. A player who hasn't seen them gets a "Before you play" dialog in the waiting room: one tip per card with a picture, "Tip 1 of 4", Next tip, and Got it. Closing it counts as seen. **Game tips** in the Settings menu brings them back from any screen. The safe and risky hints during play are unchanged.
 - **Cowries pour:** eight cowries tumble onto "You won 20 chips" on a paid win. With calm motion there's no pour.
 
@@ -31,6 +35,7 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 
 ## Removed
 
+- The small face-down tile sliding off an opponent's row, replaced by the tumbling die.
 - The per-turn tip toasts (`useFirstGameTips`) and the coach's pause for them.
 - `lazy-board.tsx`, `LazyBoardScene` and `BoardPlaceholder` as exports. `GameBoard` now owns the lazy 3D scene and its placeholder.
 - Direct uses of `useReducedMotion` and `motion-reduce:`, replaced as above.
@@ -46,7 +51,8 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - the settings menu's board choice and calm motion;
   - the lost die held during the reveal and then rolling off;
   - the cowrie pour;
-  - the dice held from the call until the card has fully left the screen;
+  - the dice held until the card has fully left the screen, and the tumbling die for every seat;
+  - the results after leaving, for a game that ends and one that goes on;
   - the tips dialog, its hooks and Game tips in Settings;
   - freezing the table read after leaving;
   - clearing the remembered seat;

@@ -24,8 +24,10 @@ export function ResultsCard({ game }: { game: Game }) {
   });
   const label = (working: string) => (again.confirm ? tableCopy.confirmInWallet : working);
   const offer = again.offer;
-  const heading =
-    end.status !== "ready"
+  const goesOn = game.left && table.status !== "finished";
+  const heading = goesOn
+    ? tableCopy.youLeft
+    : end.status !== "ready"
       ? tableCopy.gameOver
       : iWon && winnerNames.length === 1
         ? tableCopy.youWin
@@ -36,7 +38,12 @@ export function ResultsCard({ game }: { game: Game }) {
     <PatternFrame className="w-full max-w-xl">
       <div className="flex flex-col items-center gap-6 py-2 text-center">
         <h1 className="text-3xl">{heading}</h1>
-        <Appear show={end.status === "failed"}>
+        <Appear show={game.left && (goesOn || (end.status === "ready" && winnerNames.length > 0))}>
+          <p className="text-base text-muted-foreground">
+            {goesOn ? tableCopy.othersPlayOn : tableCopy.youLeftWinner(winnerNames.join(", "))}
+          </p>
+        </Appear>
+        <Appear show={!goesOn && end.status === "failed"}>
           {end.status === "failed" ? (
             <div className="flex flex-col items-center gap-3">
               <p className="text-base text-muted-foreground">{tableCopy.winnerProblem}</p>
@@ -46,10 +53,10 @@ export function ResultsCard({ game }: { game: Game }) {
             </div>
           ) : null}
         </Appear>
-        <Appear show={end.status === "unknown"}>
+        <Appear show={!goesOn && end.status === "unknown"}>
           <p className="text-base text-muted-foreground">{tableCopy.winnerUnknown}</p>
         </Appear>
-        <Appear show={end.status === "loading"}>
+        <Appear show={!goesOn && end.status === "loading"}>
           <span
             role="status"
             className="h-6 w-48 animate-pulse rounded-md bg-muted calm:animate-none"
