@@ -30,6 +30,7 @@ export const errorCopy = {
     WrongStatus: "The table has moved on. Here is where it is now.",
     ClaimTooSoon: "You can get more chips tomorrow.",
     InvalidNickname: "Use 3 to 20 letters or numbers. Spaces, _ and - are fine.",
+    NicknameTaken: "That nickname is taken. Try another.",
     InvalidAvatar: "Pick one of the faces shown.",
     InvalidAvatarImage: "That picture could not be used. Please try another.",
     EnforcedPause: "The game is taking a short break. Please try again soon.",

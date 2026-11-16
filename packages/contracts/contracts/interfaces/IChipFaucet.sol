@@ -9,10 +9,12 @@ interface IChipFaucet {
     event ChipsClaimed(address indexed player, euint64 amount, uint64 nextClaimAt);
     event NicknameSet(address indexed player, string nickname);
     event AvatarSet(address indexed player, uint8 preset, string image);
+    event NicknameReserved(address indexed player, string nickname);
 
     error ZeroAddress();
     error ClaimTooSoon(uint64 nextClaimAt);
     error InvalidNickname();
+    error NicknameTaken();
     error InvalidAvatar(uint8 avatar);
     error InvalidAvatarImage();
 
@@ -26,11 +28,15 @@ interface IChipFaucet {
 
     function setAvatarImage(string calldata image) external;
 
+    function reserveExistingNicknames(address[] calldata players) external;
+
     function pause() external;
 
     function unpause() external;
 
     function nicknameOf(address player) external view returns (string memory);
+
+    function isNicknameTaken(string calldata nickname, address asker) external view returns (bool);
 
     function nextClaimAt(address player) external view returns (uint64);
 

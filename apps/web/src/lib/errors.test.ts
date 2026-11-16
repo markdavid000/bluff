@@ -49,6 +49,13 @@ describe("explainProblem", () => {
     });
   });
 
+  it("says a nickname is taken when someone else already has it", () => {
+    expect(explainProblem(reverted(chipFaucetAbi, "NicknameTaken"))).toEqual({
+      kind: "refused",
+      reason: errorCopy.reasons.NicknameTaken,
+    });
+  });
+
   it("names the rule a sponsored move broke, when the wallet service only gives the raw data", () => {
     const data = encodeErrorResult({ abi: bluffAbi, errorName: "WrongStatus", args: [12n, 5] });
     const fromPrivy = new Error(`${data} (User operation hash: 0x${"b2".repeat(32)})`);
