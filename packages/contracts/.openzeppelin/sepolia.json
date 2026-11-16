@@ -1203,7 +1203,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IBluff)16259": {
+          "t_contract(IBluff)16278": {
             "label": "contract IBluff",
             "numberOfBytes": "20"
           },
@@ -1219,7 +1219,7 @@
             "label": "mapping(uint256 => mapping(address => struct BluffCashier.Payment))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)": {
+          "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)": {
             "label": "mapping(uint256 => euint64)",
             "numberOfBytes": "32"
           },
@@ -1234,13 +1234,13 @@
               },
               {
                 "label": "bluff",
-                "type": "t_contract(IBluff)16259",
+                "type": "t_contract(IBluff)16278",
                 "offset": 0,
                 "slot": "1"
               },
               {
                 "label": "pots",
-                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)",
                 "offset": 0,
                 "slot": "2"
               },
@@ -1312,13 +1312,13 @@
             "members": [
               {
                 "label": "paid",
-                "type": "t_userDefinedValueType(euint64)16971",
+                "type": "t_userDefinedValueType(euint64)17017",
                 "offset": 0,
                 "slot": "0"
               },
               {
                 "label": "paidInFull",
-                "type": "t_userDefinedValueType(ebool)16955",
+                "type": "t_userDefinedValueType(ebool)17001",
                 "offset": 0,
                 "slot": "1"
               }
@@ -1333,12 +1333,12 @@
             "label": "uint64",
             "numberOfBytes": "8"
           },
-          "t_userDefinedValueType(ebool)16955": {
+          "t_userDefinedValueType(ebool)17001": {
             "label": "ebool",
             "numberOfBytes": "32",
             "underlying": "t_bytes32"
           },
-          "t_userDefinedValueType(euint64)16971": {
+          "t_userDefinedValueType(euint64)17017": {
             "label": "euint64",
             "numberOfBytes": "32",
             "underlying": "t_bytes32"
@@ -1360,7 +1360,7 @@
             {
               "contract": "BluffCashier",
               "label": "bluff",
-              "type": "t_contract(IBluff)16259",
+              "type": "t_contract(IBluff)16278",
               "src": "contracts/BluffCashier.sol:33",
               "offset": 0,
               "slot": "1"
@@ -1368,7 +1368,7 @@
             {
               "contract": "BluffCashier",
               "label": "pots",
-              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)",
               "src": "contracts/BluffCashier.sol:34",
               "offset": 0,
               "slot": "2"
@@ -2695,7 +2695,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IBluff)16259": {
+          "t_contract(IBluff)16278": {
             "label": "contract IBluff",
             "numberOfBytes": "20"
           },
@@ -2707,7 +2707,7 @@
             "label": "mapping(address => uint8)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_userDefinedValueType(ebool)16955)": {
+          "t_mapping(t_address,t_userDefinedValueType(ebool)17001)": {
             "label": "mapping(address => ebool)",
             "numberOfBytes": "32"
           },
@@ -2719,11 +2719,11 @@
             "label": "mapping(uint256 => mapping(address => uint8))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)17001))": {
             "label": "mapping(uint256 => mapping(address => ebool))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)": {
+          "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)": {
             "label": "mapping(uint256 => euint64)",
             "numberOfBytes": "32"
           },
@@ -2732,19 +2732,19 @@
             "members": [
               {
                 "label": "bluff",
-                "type": "t_contract(IBluff)16259",
+                "type": "t_contract(IBluff)16278",
                 "offset": 0,
                 "slot": "0"
               },
               {
                 "label": "codes",
-                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+                "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)",
                 "offset": 0,
                 "slot": "1"
               },
               {
                 "label": "attempts",
-                "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))",
+                "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)17001))",
                 "offset": 0,
                 "slot": "2"
               },
@@ -2829,12 +2829,12 @@
             "label": "uint8",
             "numberOfBytes": "1"
           },
-          "t_userDefinedValueType(ebool)16955": {
+          "t_userDefinedValueType(ebool)17001": {
             "label": "ebool",
             "numberOfBytes": "32",
             "underlying": "t_bytes32"
           },
-          "t_userDefinedValueType(euint64)16971": {
+          "t_userDefinedValueType(euint64)17017": {
             "label": "euint64",
             "numberOfBytes": "32",
             "underlying": "t_bytes32"
@@ -2848,7 +2848,7 @@
             {
               "contract": "BluffInvites",
               "label": "bluff",
-              "type": "t_contract(IBluff)16259",
+              "type": "t_contract(IBluff)16278",
               "src": "contracts/BluffInvites.sol:16",
               "offset": 0,
               "slot": "0"
@@ -2856,7 +2856,7 @@
             {
               "contract": "BluffInvites",
               "label": "codes",
-              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)16971)",
+              "type": "t_mapping(t_uint256,t_userDefinedValueType(euint64)17017)",
               "src": "contracts/BluffInvites.sol:17",
               "offset": 0,
               "slot": "1"
@@ -2864,7 +2864,7 @@
             {
               "contract": "BluffInvites",
               "label": "attempts",
-              "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)16955))",
+              "type": "t_mapping(t_uint256,t_mapping(t_address,t_userDefinedValueType(ebool)17001))",
               "src": "contracts/BluffInvites.sol:18",
               "offset": 0,
               "slot": "2"
@@ -3388,6 +3388,274 @@
               "src": "contracts/Bluff.sol:66",
               "offset": 0,
               "slot": "8"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:29",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "d48ae9d728bf290c2be30a115dd18b19d1cafc35fa19c918fb9640eb19e8f3c5": {
+      "address": "0x1E16DD83Ac787FeB6F5998900EbB5E05907D9C85",
+      "txHash": "0x3e3c2d54d33ed4fa151bf5cab6f27b108ee2a3fafb3ddce990225a265bd2b812",
+      "layout": {
+        "solcVersion": "0.8.27",
+        "storage": [],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IERC7984ERC20Wrapper)10673": {
+            "label": "contract IERC7984ERC20Wrapper",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IMintableERC20)16609": {
+            "label": "contract IMintableERC20",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_string_storage)": {
+            "label": "mapping(address => string)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint64)": {
+            "label": "mapping(address => uint64)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint8)": {
+            "label": "mapping(address => uint8)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(ChipFaucetStorage)15768_storage": {
+            "label": "struct ChipFaucet.ChipFaucetStorage",
+            "members": [
+              {
+                "label": "chips",
+                "type": "t_contract(IERC7984ERC20Wrapper)10673",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "dollars",
+                "type": "t_contract(IMintableERC20)16609",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "nicknames",
+                "type": "t_mapping(t_address,t_string_storage)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "nextClaimAt",
+                "type": "t_mapping(t_address,t_uint64)",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "avatars",
+                "type": "t_mapping(t_address,t_uint8)",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "avatarImages",
+                "type": "t_mapping(t_address,t_string_storage)",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "nicknameOwners",
+                "type": "t_mapping(t_bytes32,t_address)",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_struct(InitializableStorage)11817_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)11339_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)11394_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)11496_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:bluff.storage.ChipFaucet": [
+            {
+              "contract": "ChipFaucet",
+              "label": "chips",
+              "type": "t_contract(IERC7984ERC20Wrapper)10673",
+              "src": "contracts/ChipFaucet.sol:27",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "dollars",
+              "type": "t_contract(IMintableERC20)16609",
+              "src": "contracts/ChipFaucet.sol:28",
+              "offset": 0,
+              "slot": "1"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "nicknames",
+              "type": "t_mapping(t_address,t_string_storage)",
+              "src": "contracts/ChipFaucet.sol:29",
+              "offset": 0,
+              "slot": "2"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "nextClaimAt",
+              "type": "t_mapping(t_address,t_uint64)",
+              "src": "contracts/ChipFaucet.sol:30",
+              "offset": 0,
+              "slot": "3"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "avatars",
+              "type": "t_mapping(t_address,t_uint8)",
+              "src": "contracts/ChipFaucet.sol:31",
+              "offset": 0,
+              "slot": "4"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "avatarImages",
+              "type": "t_mapping(t_address,t_string_storage)",
+              "src": "contracts/ChipFaucet.sol:32",
+              "offset": 0,
+              "slot": "5"
+            },
+            {
+              "contract": "ChipFaucet",
+              "label": "nicknameOwners",
+              "type": "t_mapping(t_bytes32,t_address)",
+              "src": "contracts/ChipFaucet.sol:33",
+              "offset": 0,
+              "slot": "6"
             }
           ],
           "erc7201:openzeppelin.storage.Pausable": [

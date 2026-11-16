@@ -98,7 +98,7 @@ Errors: `UnauthorizedCallback`, `InvalidCallbackData`, `NotBluff`, `ZeroAddress`
 Also, from 1.2.0:
 
 - `isNicknameTaken(nickname, asker)` is true when someone other than `asker` holds the name, ignoring letter case. The app checks it while a player types.
-- `reserveExistingNicknames(players)` (owner) reserves nicknames set before 1.2.0, first holder first, and skips duplicates. Run it once after the upgrade with `pnpm --filter @bluff/contracts exec hardhat reserve-nicknames --network sepolia`, which finds every player from `NicknameSet` events and lists the duplicates.
+- `reserveExistingNicknames(players)` (owner) reserves nicknames set before 1.2.0, first holder first, and skips duplicates. Run it once after the upgrade with `pnpm --filter @bluff/contracts exec hardhat reserve-nicknames --network sepolia`, which finds every player from `NicknameSet` events and lists the duplicates. It searches logs 5,000 blocks at a time, which free Alchemy and publicnode can't serve, so point that one run at an RPC that can, for example `HARDHAT_VAR_SEPOLIA_RPC_URL=https://sepolia.gateway.tenderly.co`. It ran on 2026-11-16 and reserved 3 nicknames, with no duplicates.
 
 Events: `ChipsClaimed`, `NicknameSet`, `NicknameReserved`, `AvatarSet`. Errors: `ClaimTooSoon`, `InvalidNickname`, `NicknameTaken`, `InvalidAvatar`, `InvalidAvatarImage`, `ZeroAddress`. Version 1.1.0 adds avatars and 1.2.0 adds unique nicknames ([ADR-2026-11-16-unique-nicknames](adr/ADR-2026-11-16-unique-nicknames.md)); both only append to `bluff.storage.ChipFaucet`.
 
@@ -163,7 +163,7 @@ Every proxy and implementation is verified on Etherscan, so its source is readab
 | `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x10f1…609f`](https://sepolia.etherscan.io/address/0x10f13f5eAc28799083555FD69A3De0834A77609f#code) (1.3.0) |
 | `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xA10e…c322`](https://sepolia.etherscan.io/address/0xA10e003BfE989b4651602BC310208461bF96c322#code)         |
 | `BluffInvites` | [`0x5bAC…F140`](https://sepolia.etherscan.io/address/0x5bACDa7BACa6f67754122F49b59B404471C3F140#code) | [`0x7a96…975B`](https://sepolia.etherscan.io/address/0x7a9637Be08c5E8002B38db785F3F4DE0F809975B#code) (1.0.0) |
-| `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0xc027…49ac`](https://sepolia.etherscan.io/address/0xc0276c42C793F86c7ad4e6a5aD91E5C9F8eF49ac#code) (1.1.0) |
+| `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0x1E16…9C85`](https://sepolia.etherscan.io/address/0x1E16DD83Ac787FeB6F5998900EbB5E05907D9C85#code) (1.2.0) |
 
 The deploy and upgrade tasks verify each new implementation when `ETHERSCAN_API_KEY` is set (`npx hardhat vars set ETHERSCAN_API_KEY`). They name the contract explicitly because the bytecode carries no metadata hash (`bytecodeHash: "none"`), which leaves the verifier unable to match it on its own.
 
