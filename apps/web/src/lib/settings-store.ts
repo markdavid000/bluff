@@ -4,7 +4,7 @@ export const MUSIC_TRACKS = ["drum", "bell", "both"] as const;
 
 export type MusicTrack = (typeof MUSIC_TRACKS)[number];
 
-export const BOARD_CHOICES = ["auto", "3d", "flat"] as const;
+export const BOARD_CHOICES = ["3d", "flat"] as const;
 
 export type BoardSetting = (typeof BOARD_CHOICES)[number];
 
@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   calmMotion: false,
   theme: "auto",
   seenTips: [],
-  board: "auto",
+  board: "3d",
 };
 
 const STORAGE_KEY = "bluff.settings";

@@ -1,44 +1,26 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { useSettings } from "@/hooks/use-settings";
 import { supportsWebGL } from "../lib/webgl";
 
-type Listener = () => void;
-
-let slow = false;
 let webgl: boolean | null = null;
-const listeners = new Set<Listener>();
 
-function subscribe(listener: Listener) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+function subscribe() {
+  return () => undefined;
 }
 
-function boardState(): "none" | "slow" | "fine" {
+function canDraw3d(): boolean {
   webgl ??= supportsWebGL();
-  if (!webgl) return "none";
-  return slow ? "slow" : "fine";
+  return webgl;
 }
 
-export function resetSlowBoard() {
-  slow = false;
+export function forgetBoardCheck() {
   webgl = null;
-  listeners.forEach((listener) => listener());
 }
 
-export function useBoardChoice() {
-  const calm = useCalmMotion();
+export function useBoardChoice(): boolean {
   const { settings } = useSettings();
-  const device = useSyncExternalStore(subscribe, boardState, () => "fine" as const);
-  const automatic = settings.board === "auto" && (calm || device === "slow");
-  return {
-    flat: device === "none" || settings.board === "flat" || automatic,
-    reportSlow: () => {
-      if (slow) return;
-      slow = true;
-      listeners.forEach((listener) => listener());
-    },
-  };
+  const can3d = useSyncExternalStore(subscribe, canDraw3d, () => true);
+  return settings.board === "flat" || !can3d;
 }

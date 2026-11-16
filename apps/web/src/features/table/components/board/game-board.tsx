@@ -26,9 +26,9 @@ type SceneProps = ComponentProps<typeof BoardScene>;
 export function GameBoard({
   colors,
   ...board
-}: Omit<SceneProps, "colors" | "onSlow"> & { colors: ThemeColors | null }) {
-  const choice = useBoardChoice();
-  if (choice.flat) return <FlatBoard {...board} />;
+}: Omit<SceneProps, "colors"> & { colors: ThemeColors | null }) {
+  const flat = useBoardChoice();
+  if (flat) return <FlatBoard {...board} />;
   if (!colors) return <BoardPlaceholder />;
-  return <LazyBoardScene {...board} colors={colors} onSlow={choice.reportSlow} />;
+  return <LazyBoardScene {...board} colors={colors} />;
 }

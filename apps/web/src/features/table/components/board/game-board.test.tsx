@@ -6,7 +6,7 @@ import { GameBoard } from "./game-board";
 
 let flat = true;
 vi.mock("../../hooks/use-board-choice", () => ({
-  useBoardChoice: () => ({ flat, reportSlow: vi.fn() }),
+  useBoardChoice: () => flat,
 }));
 vi.mock("@/hooks/use-calm-motion", () => ({ useCalmMotion: () => false }));
 

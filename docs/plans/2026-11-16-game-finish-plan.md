@@ -45,7 +45,7 @@ They use the existing coach toast slot (one toast at a time, 10 seconds, a **Got
 
 ### The simpler board
 
-- **When:** no WebGL, the device asks for reduced motion, the in-app **calm motion** setting is on, or the 3D board runs under 30 frames a second for 3 seconds in a row.
+- **When:** the player picks Flat board in Settings, or the device has no WebGL. The 3D board is the default everywhere; calm motion and slow devices don't switch it (the maintainer's decision on 2026-11-16, which supersedes the automatic triggers first planned).
 - **What:** a flat top-down board in CSS with the same seat colours, each player's cup with their dice count, your own dice faces, the pot and the reveal rows. It reads the same state as the 3D board.
 - **Proof:** a test renders both boards from one game state and checks they show the same seats, dice counts, bid and reveal.
 

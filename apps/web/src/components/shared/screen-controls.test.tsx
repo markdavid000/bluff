@@ -8,7 +8,7 @@ vi.mock("@/hooks/use-prefers-dark", () => ({ usePrefersDark: () => false }));
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 
 afterEach(() => {
-  act(() => settingsStore().update({ calmMotion: false, board: "auto" }));
+  act(() => settingsStore().update({ calmMotion: false, board: "3d" }));
 });
 
 function openSettings() {
@@ -17,12 +17,13 @@ function openSettings() {
 }
 
 describe("ScreenControls", () => {
-  it("lets the player choose the 3D or the flat board in the settings", async () => {
+  it("starts on the 3D board and lets the player switch to the flat one", async () => {
     openSettings();
-    fireEvent.click(
+    expect(
       await screen.findByRole("menuitemradio", { name: sharedCopy.boardChoices["3d"] })
-    );
-    expect(settingsStore().get().board).toBe("3d");
+    ).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: sharedCopy.boardChoices.flat }));
+    expect(settingsStore().get().board).toBe("flat");
   });
 
   it("shows which board is chosen", async () => {

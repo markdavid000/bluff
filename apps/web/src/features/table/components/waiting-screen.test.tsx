@@ -9,7 +9,7 @@ import { NO_GAME } from "../lib/table-fixture.testing";
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
 vi.mock("../hooks/use-board-choice", () => ({
-  useBoardChoice: () => ({ flat: false, reportSlow: vi.fn() }),
+  useBoardChoice: () => false,
 }));
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
