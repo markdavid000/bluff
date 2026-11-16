@@ -15,7 +15,7 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 - **Settings menu:** the header's settings tile opens **Board**, with 3D board (the default) or Flat board saved as `board`, and **Calm motion** saved as `calmMotion`, which nothing used before.
 - **`GameBoard`** picks the board everywhere (the game, the waiting room and the design preview). It's the flat board only when the player chose it or the device has no WebGL. Calm motion and a slow device don't change the board, at the maintainer's request.
 - **Calm motion:** `useCalmMotion` (device or setting) replaces `useReducedMotion` in every component, and a `calm:` style variant (device or setting) replaces `motion-reduce:`.
-- **A lost die rolls off:** a seat keeps its old dice count from the moment a bluff is called until the reveal card closes. The lost face-down die then rolls off the end of the row, starting just after the card has faded, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
+- **A lost die rolls off:** a seat keeps its old dice count from the moment a bluff is called until the reveal card has fully left the screen. The card reports when its closing animation ends, because a window in the background pauses that animation and the card can linger after the game moves on. The lost face-down die then rolls off the end of the row, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
 - **First-game tips move to a dialog before the game:** the four tips no longer pop up as toasts during play. A player who hasn't seen them gets a "Before you play" dialog in the waiting room: one tip per card with a picture, "Tip 1 of 4", Next tip, and Got it. Closing it counts as seen. **Game tips** in the Settings menu brings them back from any screen. The safe and risky hints during play are unchanged.
 - **Cowries pour:** eight cowries tumble onto "You won 20 chips" on a paid win. With calm motion there's no pour.
 
@@ -25,6 +25,7 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - The table page redrew with the fresh read (a visitor's Join card, or "This table has closed"). The table's read now stops the moment the player leaves, and the refresh skips it.
   - The lobby briefly showed "Your table — Back to your table" from the remembered seat. Leaving now clears that seat, if it still points at the table just left.
   - A recorder in the browser confirmed both paths go straight to the lobby.
+- **The lost die behind the card:** recorded live, a window in the background paused the card's closing, so the die rolled while the card was still up when the player came back. Seen in front, the die rolls after the card has gone.
 - **The leave confirmation:** a new test covers "Leave this game?" in a game, and it showed live. Leaving a waiting room still doesn't ask, as before.
 - **The settings tile is in full colour,** since it opens a menu rather than switching something off.
 
@@ -45,7 +46,7 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - the settings menu's board choice and calm motion;
   - the lost die held during the reveal and then rolling off;
   - the cowrie pour;
-  - the dice held from the call to the card closing;
+  - the dice held from the call until the card has fully left the screen;
   - the tips dialog, its hooks and Game tips in Settings;
   - freezing the table read after leaving;
   - clearing the remembered seat;

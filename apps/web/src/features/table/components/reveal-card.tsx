@@ -31,9 +31,11 @@ export interface Reveal {
 export function RevealCard({
   reveal,
   onContinue,
+  onGone,
 }: {
   reveal: Reveal | null;
   onContinue: () => void;
+  onGone?: () => void;
 }) {
   const faceWord = (face: number) => tableCopy.faceWords[face - 1] ?? String(face);
   const [last, setLast] = useState(reveal);
@@ -41,7 +43,7 @@ export function RevealCard({
   const shown = reveal ?? last;
   return (
     <Dialog open={reveal !== null} onOpenChange={(open) => (open ? undefined : onContinue())}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onCloseAutoFocus={() => onGone?.()}>
         {shown ? (
           <PatternFrame roomy>
             <div className="flex flex-col items-center gap-5 text-center">

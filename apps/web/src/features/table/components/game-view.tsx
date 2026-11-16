@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Appear } from "@/components/shared/appear";
 import { Cowrie } from "@/components/shared/cowrie";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -37,6 +38,8 @@ export function GameView({ game }: { game: Game }) {
   const colors = useThemeColors();
   const { table, seats } = game;
   const wide = useMediaQuery(WIDE);
+  const [cardUp, setCardUp] = useState(false);
+  if (game.reveal !== null && !cardUp) setCardUp(true);
   const history = useGameHistory(table, wide);
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
@@ -97,7 +100,7 @@ export function GameView({ game }: { game: Game }) {
                 lastBid={seat.lastBid}
                 ownDice={seat.isMe ? game.dice : null}
                 matching={seat.isMe ? game.matching : null}
-                holdDice={game.boardRevealed}
+                holdDice={game.boardRevealed || cardUp}
               />
             </div>
           ) : null;
@@ -136,7 +139,11 @@ export function GameView({ game }: { game: Game }) {
           onCall={game.callBluff}
         />
       </Appear>
-      <RevealCard reveal={game.reveal} onContinue={game.dismissReveal} />
+      <RevealCard
+        reveal={game.reveal}
+        onContinue={game.dismissReveal}
+        onGone={() => setCardUp(false)}
+      />
     </div>
   );
 }
