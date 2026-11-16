@@ -28,7 +28,7 @@ export function VisitorView({ room }: { room: Room }) {
               <span
                 key={seat.player}
                 aria-hidden
-                className="size-13 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+                className="size-13 animate-pulse rounded-full bg-muted calm:animate-none"
               />
             )
           )}

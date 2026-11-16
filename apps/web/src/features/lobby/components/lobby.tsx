@@ -36,7 +36,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         ) : lobby.myTableId.status === "loading" ? (
           <p
             role="status"
-            className="h-40 w-full animate-pulse rounded-2xl bg-muted motion-reduce:animate-none"
+            className="h-40 w-full animate-pulse rounded-2xl bg-muted calm:animate-none"
           >
             <span className="sr-only">{lobbyCopy.findingYourTable}</span>
           </p>

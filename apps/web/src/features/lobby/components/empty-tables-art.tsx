@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 
 const SLEEP = [
   { x: 206, y: 66, scale: 0.7, delay: 0 },
@@ -31,7 +32,7 @@ function Die({ x, y, pips }: { x: number; y: number; pips: [number, number][] })
 }
 
 export function EmptyTablesArt({ className }: { className?: string }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   return (
     <svg viewBox="0 0 320 210" aria-hidden className={className}>
       <ellipse cx={160} cy={196} rx={140} ry={10} fill="var(--board-edge)" opacity={0.25} />

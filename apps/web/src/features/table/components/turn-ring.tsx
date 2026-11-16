@@ -38,7 +38,7 @@ export function TurnRing({
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={CIRCUMFERENCE * (1 - left)}
             stroke={`hsl(${hue} 80% 45%)`}
-            className="transition-[stroke-dashoffset,stroke] duration-1000 ease-linear motion-reduce:transition-none"
+            className="transition-[stroke-dashoffset,stroke] duration-1000 ease-linear calm:transition-none"
           />
         </svg>
       ) : null}

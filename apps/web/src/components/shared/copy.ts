@@ -3,6 +3,8 @@ export const sharedCopy = {
   switchToDay: "Switch to day",
   soundsOff: "Turn sounds off",
   soundsOn: "Turn sounds on",
+  calmOn: "Calm the motion",
+  calmOff: "Bring back full motion",
   musicOff: "Turn music off",
   musicOn: "Turn music on",
   chooseMusic: "Choose the music",

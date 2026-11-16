@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { useId } from "react";
 import { ActionButton } from "@/components/shared/action-button";
 import { Avatar } from "@/components/shared/avatar";
@@ -14,7 +15,7 @@ const OPPONENT_FACE = 11;
 
 export function WelcomeForm() {
   const welcome = useWelcome();
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   const nameId = useId();
   const helpId = useId();
 

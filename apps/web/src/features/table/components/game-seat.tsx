@@ -1,10 +1,13 @@
 "use client";
 
 import { cn } from "cn";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
+import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
 import { Appear } from "@/components/shared/appear";
 import { Avatar } from "@/components/shared/avatar";
 import { DieFace } from "@/components/shared/die";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { Bid } from "@/lib/bid-rules";
 import type { Face } from "@/lib/dice-physics";
 import { tableCopy } from "../copy";
@@ -27,6 +30,7 @@ export function GameSeat({
   lastBid,
   ownDice,
   matching,
+  holdDice,
 }: {
   name: string;
   avatarSrc: string | undefined;
@@ -38,9 +42,12 @@ export function GameSeat({
   lastBid: Bid | null;
   ownDice: OwnDice | null;
   matching: readonly boolean[] | null;
+  holdDice: boolean;
 }) {
+  const [diceShown, setDiceShown] = useState(dice);
+  if (!holdDice && diceShown !== dice) setDiceShown(dice);
   const shown = isMe ? tableCopy.you : name;
-  const state = !isActive ? tableCopy.out : tableCopy.diceLeft(dice);
+  const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
   return (
     <figure
       aria-label={[shown, state, isTurn ? tableCopy.thinking : null].filter(Boolean).join(", ")}
@@ -63,7 +70,7 @@ export function GameSeat({
           ) : (
             <span
               aria-hidden
-              className="block size-13 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+              className="block size-13 animate-pulse rounded-full bg-muted calm:animate-none"
             />
           )}
         </TurnRing>
@@ -88,8 +95,33 @@ export function GameSeat({
         </Appear>
       </span>
       <figcaption className="max-w-28 truncate font-game text-sm leading-tight">{shown}</figcaption>
-      {isActive ? <SeatDice dice={dice} ownDice={ownDice} matching={matching} /> : null}
+      {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
     </figure>
+  );
+}
+
+function FaceDownTile() {
+  const present = useIsPresent();
+  const calm = useCalmMotion();
+  return (
+    <motion.span
+      data-hidden-die
+      data-rolling-off={present ? undefined : ""}
+      exit={
+        calm
+          ? { opacity: 0, transition: { duration: 0.2 } }
+          : {
+              x: 70,
+              y: [0, -14, 26],
+              rotate: 300,
+              opacity: [1, 1, 0],
+              transition: { duration: 0.8, ease: "easeIn" },
+            }
+      }
+      className="inline-flex"
+    >
+      <HiddenDie className="size-6 text-xs" />
+    </motion.span>
   );
 }
 
@@ -105,9 +137,11 @@ function SeatDice({
   if (ownDice === null) {
     return (
       <span role="img" aria-label={tableCopy.hiddenDice(dice)} className="flex gap-1">
-        {Array.from({ length: dice }, (_, index) => (
-          <HiddenDie key={index} className="size-6 text-xs" />
-        ))}
+        <AnimatePresence initial={false}>
+          {Array.from({ length: dice }, (_, index) => (
+            <FaceDownTile key={index} />
+          ))}
+        </AnimatePresence>
       </span>
     );
   }
@@ -165,7 +199,7 @@ function SeatDice({
         <span
           key={index}
           aria-hidden
-          className="size-9 animate-pulse rounded-lg bg-muted motion-reduce:animate-none"
+          className="size-9 animate-pulse rounded-lg bg-muted calm:animate-none"
         />
       ))}
     </span>

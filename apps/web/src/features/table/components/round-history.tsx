@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
 import { PatternBand } from "@/components/shared/pattern-band";
@@ -23,7 +24,7 @@ const SLIP =
   "rounded-xl bg-cowrie/10 px-3 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_2px_0_0_rgb(0_0_0/0.25)]";
 
 function BidLine({ bid, nameOf, latest }: { bid: HistoryBid; nameOf: NameOf; latest: boolean }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   return (
     <motion.li
       initial={calm ? false : { opacity: 0, x: -14, scale: 0.9 }}
@@ -52,7 +53,7 @@ function Body({ history, nameOf }: { history: RoundHistoryState; nameOf: NameOf 
     return (
       <span
         role="status"
-        className="block h-8 w-full animate-pulse rounded-xl bg-cowrie/15 motion-reduce:animate-none"
+        className="block h-8 w-full animate-pulse rounded-xl bg-cowrie/15 calm:animate-none"
       >
         <span className="sr-only">{tableCopy.loading}</span>
       </span>
@@ -124,7 +125,7 @@ export function RoundHistory({ history, nameOf }: { history: RoundHistoryState; 
             {tableCopy.history}
             <span
               aria-hidden
-              className="mb-1 size-2 rotate-45 border-r-2 border-b-2 border-current transition-transform group-open:mt-1 group-open:mb-0 group-open:-rotate-135 motion-reduce:transition-none"
+              className="mb-1 size-2 rotate-45 border-r-2 border-b-2 border-current transition-transform group-open:mt-1 group-open:mb-0 group-open:-rotate-135 calm:transition-none"
             />
           </span>
         </summary>

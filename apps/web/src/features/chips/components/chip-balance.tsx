@@ -51,14 +51,14 @@ export function ChipBalance() {
           ) : (
             <span
               role="status"
-              className="h-5 w-16 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+              className="h-5 w-16 animate-pulse rounded-md bg-muted calm:animate-none"
             >
               <span className="sr-only">{chipsCopy.balanceLoading}</span>
             </span>
           )}
           <Appear show={needsYou} inline pop className="absolute -top-1 -right-1 flex size-3.5">
             <span className="relative flex size-3.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-seat-green opacity-75 motion-reduce:animate-none" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-seat-green opacity-75 calm:animate-none" />
               <span className="relative inline-flex size-3.5 rounded-full border-2 border-background bg-seat-green" />
               <span className="sr-only">{chipsCopy.needsYou}</span>
             </span>

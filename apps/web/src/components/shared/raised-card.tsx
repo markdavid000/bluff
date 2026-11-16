@@ -1,13 +1,14 @@
 "use client";
 
 import { cn } from "cn";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ReactNode } from "react";
 
 const MAX_TILT_DEGREES = 6;
 
 export function RaisedCard({ children, className }: { children: ReactNode; className?: string }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   const pointerX = useMotionValue(0.5);
   const pointerY = useMotionValue(0.5);
   const springX = useSpring(pointerX, { stiffness: 220, damping: 18 });

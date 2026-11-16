@@ -17,5 +17,7 @@ export function useScreenControls() {
     toggleTheme: () => update({ theme: night ? "day" : "night" }),
     toggleSounds: () => update({ sounds: !settings.sounds }),
     toggleMusic: () => update({ music: !settings.music }),
+    calm: settings.calmMotion,
+    toggleCalm: () => update({ calmMotion: !settings.calmMotion }),
   };
 }

@@ -2,7 +2,7 @@
 
 import { ContactShadows, OrbitControls, RoundedBox } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DoubleSide,
   type Group,
@@ -22,6 +22,7 @@ import {
 import type { ThrowState } from "../../hooks/use-dice-throw";
 import { calabashTexture } from "../../lib/calabash-texture";
 import { cupMotion } from "../../lib/cup-motion";
+import { createFrameWatch } from "../../lib/frame-watch";
 import type { RevealedSeat } from "../../lib/reveal";
 import { dieFaceTexture } from "../../lib/dice-textures";
 import { type SeatColor, type SeatPlacement } from "../../lib/seat-layout";
@@ -312,6 +313,14 @@ function RevealedRow({
   );
 }
 
+function FrameWatcher({ onSlow }: { onSlow: () => void }) {
+  const [watch] = useState(createFrameWatch);
+  useFrame((_, delta) => {
+    if (watch.tick(delta)) onSlow();
+  });
+  return null;
+}
+
 export function BoardScene({
   colors,
   seats,
@@ -322,6 +331,7 @@ export function BoardScene({
   ownSeat = 0,
   othersShaking = false,
   label,
+  onSlow,
 }: {
   colors: ThemeColors;
   seats: SeatPlacement[];
@@ -332,6 +342,7 @@ export function BoardScene({
   ownSeat?: number | null;
   othersShaking?: boolean;
   label: string;
+  onSlow?: () => void;
 }) {
   const materials = diceMaterials(colors);
   const glowing = diceMaterials(colors, true);
@@ -362,6 +373,7 @@ export function BoardScene({
           distance={9}
           color={colors["--pattern-accent"]}
         />
+        {onSlow ? <FrameWatcher onSlow={onSlow} /> : null}
         <Board colors={colors} />
         <Pot colors={colors} seats={seats} chipsEach={chipsEach} />
         {seats.map((seat, index) => {

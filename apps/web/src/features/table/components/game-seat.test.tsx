@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
 import { GameSeat } from "./game-seat";
@@ -18,6 +18,7 @@ function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
       lastBid={null}
       ownDice={null}
       matching={null}
+      holdDice={false}
       {...props}
     />
   );
@@ -56,6 +57,7 @@ describe("GameSeat", () => {
         lastBid={null}
         ownDice={null}
         matching={null}
+        holdDice={false}
       />
     );
     expect(ring()).toBeNull();
@@ -98,6 +100,46 @@ describe("GameSeat", () => {
     show({ isMe: true, ownDice: { status: "locked", unlock, unlocking: false } });
     fireEvent.click(screen.getByRole("button", { name: tableCopy.showMyDice }));
     expect(unlock).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a lost die on show while the reveal is open, then rolls it off the row", async () => {
+    const { container, rerender } = show({ dice: 3, holdDice: true });
+    const tiles = () => container.querySelectorAll("[data-hidden-die]").length;
+    rerender(
+      <GameSeat
+        name="Sly Fox #3C4D"
+        avatarSrc="/a.svg"
+        isMe={false}
+        dice={2}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={null}
+        matching={null}
+        holdDice
+      />
+    );
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument();
+    expect(tiles()).toBe(3);
+    rerender(
+      <GameSeat
+        name="Sly Fox #3C4D"
+        avatarSrc="/a.svg"
+        isMe={false}
+        dice={2}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={null}
+        matching={null}
+        holdDice={false}
+      />
+    );
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(2) })).toBeInTheDocument();
+    expect(container.querySelector("[data-rolling-off]")).not.toBeNull();
+    await waitFor(() => expect(tiles()).toBe(2));
   });
 
   it("marks a player who is out, with no dice", () => {

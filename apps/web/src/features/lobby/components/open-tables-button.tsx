@@ -37,7 +37,7 @@ export function OpenTablesButton({
         className="pointer-events-none absolute -top-2 -right-2 flex size-7"
       >
         <span aria-hidden className="relative flex size-7">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-seat-green opacity-60 motion-reduce:animate-none" />
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-seat-green opacity-60 calm:animate-none" />
           <span className="relative inline-flex size-7 items-center justify-center rounded-full border-2 border-background bg-seat-green font-game text-sm text-seat-foreground tabular-nums">
             {count}
           </span>

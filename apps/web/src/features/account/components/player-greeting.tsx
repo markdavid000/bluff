@@ -12,7 +12,7 @@ export function PlayerGreeting() {
   ) : (
     <span
       aria-hidden
-      className="mx-auto h-9 w-56 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+      className="mx-auto h-9 w-56 animate-pulse rounded-md bg-muted calm:animate-none"
     />
   );
 }

@@ -67,6 +67,12 @@ export function ScreenControls({ className }: { className?: string }) {
         label={controls.sounds ? sharedCopy.soundsOff : sharedCopy.soundsOn}
         onPress={controls.toggleSounds}
       />
+      <ControlTile
+        icon="setting"
+        on={controls.calm}
+        label={controls.calm ? sharedCopy.calmOff : sharedCopy.calmOn}
+        onPress={controls.toggleCalm}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ControlTile icon="music" on={controls.music} label={sharedCopy.chooseMusic} />

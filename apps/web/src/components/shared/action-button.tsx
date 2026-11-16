@@ -2,7 +2,8 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ComponentProps, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { SoundName } from "@/config/sounds";
@@ -63,7 +64,7 @@ export function ActionButton({
   ...props
 }: ActionButtonProps) {
   const { play } = useSound();
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   const showWorking = working && workingLabel !== undefined;
   const iconSize = size === "large" ? 34 : size === "small" ? 22 : 28;
   return (

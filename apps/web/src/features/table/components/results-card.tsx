@@ -6,6 +6,7 @@ import { tableCopy } from "../copy";
 import type { useGame } from "../hooks/use-game";
 import { usePlayAgain } from "../hooks/use-play-again";
 import { BackToLobby } from "./back-to-lobby";
+import { CowriePour } from "./cowrie-pour";
 
 type Game = NonNullable<ReturnType<typeof useGame>["view"]>;
 
@@ -51,14 +52,16 @@ export function ResultsCard({ game }: { game: Game }) {
         <Appear show={end.status === "loading"}>
           <span
             role="status"
-            className="h-6 w-48 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+            className="h-6 w-48 animate-pulse rounded-md bg-muted calm:animate-none"
           >
             <span className="sr-only">{tableCopy.loading}</span>
           </span>
         </Appear>
         <Appear show={myShare !== null && table.buyIn > 0n}>
           {myShare !== null ? (
-            <p className="font-game text-2xl">{tableCopy.youWon(formatChips(myShare))}</p>
+            <CowriePour>
+              <p className="font-game text-2xl">{tableCopy.youWon(formatChips(myShare))}</p>
+            </CowriePour>
           ) : null}
         </Appear>
         <section className="flex w-full flex-col gap-3">

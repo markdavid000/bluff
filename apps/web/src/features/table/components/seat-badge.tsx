@@ -25,7 +25,7 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
         ) : (
           <span
             aria-hidden
-            className="block size-16 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+            className="block size-16 animate-pulse rounded-full bg-muted calm:animate-none"
           />
         )}
         {isHost ? (
@@ -38,7 +38,7 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
             className={cn(
               "absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-background",
               ready ? "bg-seat-green" : "bg-muted",
-              updating && "animate-pulse motion-reduce:animate-none"
+              updating && "animate-pulse calm:animate-none"
             )}
           >
             {ready ? (

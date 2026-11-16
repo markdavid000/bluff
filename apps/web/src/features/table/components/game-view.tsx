@@ -11,7 +11,7 @@ import { useGameBoard } from "../hooks/use-game-board";
 import { useGameHistory } from "../hooks/use-round-history";
 import { seatLayout } from "../lib/seat-layout";
 import { BidControl } from "./bid-control";
-import { BoardPlaceholder, LazyBoardScene } from "./board/lazy-board";
+import { GameBoard } from "./board/game-board";
 import { CurrentBid } from "./current-bid";
 import { GameSeat } from "./game-seat";
 import { GameClock } from "./game-clock";
@@ -97,27 +97,24 @@ export function GameView({ game }: { game: Game }) {
                 lastBid={seat.lastBid}
                 ownDice={seat.isMe ? game.dice : null}
                 matching={seat.isMe ? game.matching : null}
+                holdDice={game.reveal !== null}
               />
             </div>
           ) : null;
         })}
         <div className="[container-type:size] col-start-2 row-start-2 flex h-full min-h-0 items-center justify-center">
           <div className="relative aspect-square w-[min(100cqw,100cqh)]">
-            {colors ? (
-              <LazyBoardScene
-                colors={colors}
-                seats={taken}
-                throwState={throwState}
-                chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
-                revealed={game.boardRevealed}
-                revealedDice={game.revealedDice}
-                ownSeat={game.mySeat >= 0 ? game.mySeat : null}
-                othersShaking={othersShaking}
-                label={tableCopy.boardLabel}
-              />
-            ) : (
-              <BoardPlaceholder />
-            )}
+            <GameBoard
+              colors={colors}
+              seats={taken}
+              throwState={throwState}
+              chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
+              revealed={game.boardRevealed}
+              revealedDice={game.revealedDice}
+              ownSeat={game.mySeat >= 0 ? game.mySeat : null}
+              othersShaking={othersShaking}
+              label={tableCopy.boardLabel}
+            />
           </div>
         </div>
       </div>

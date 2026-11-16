@@ -16,7 +16,7 @@ export function GameClock({ leftMs }: { leftMs: number }) {
       className={cn(
         urgent ? URGENT_BADGE : WOODEN_BADGE,
         "flex-col justify-center px-3.5 leading-none",
-        urgent && "animate-pulse motion-reduce:animate-none"
+        urgent && "animate-pulse calm:animate-none"
       )}
     >
       <span aria-hidden className={BADGE_LABEL}>

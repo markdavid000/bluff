@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { Appear } from "@/components/shared/appear";
 import { DieFace } from "@/components/shared/die";
 import type { Bid } from "@/lib/bid-rules";
@@ -30,7 +31,7 @@ function NoBid() {
 }
 
 function PlacedBid({ bid, bidderName }: { bid: Bid; bidderName: string | null }) {
-  const calm = useReducedMotion();
+  const calm = useCalmMotion();
   return (
     <span aria-live="polite" className="relative inline-flex">
       <motion.span

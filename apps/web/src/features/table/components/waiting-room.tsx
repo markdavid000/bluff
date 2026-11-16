@@ -7,7 +7,7 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { tableCopy } from "../copy";
 import type { useWaitingRoom } from "../hooks/use-waiting-room";
 import { seatLayout } from "../lib/seat-layout";
-import { BoardPlaceholder, LazyBoardScene } from "./board/lazy-board";
+import { GameBoard } from "./board/game-board";
 import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
@@ -65,18 +65,14 @@ export function WaitingRoom({ room }: { room: Room }) {
           className="[container-type:size] col-start-2 row-start-2 flex h-full min-h-0 items-center justify-center"
         >
           <div className="relative aspect-square w-[min(100cqw,100cqh)]">
-            {colors ? (
-              <LazyBoardScene
-                colors={colors}
-                seats={taken}
-                throwState={{ kind: "idle" }}
-                chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
-                revealed={false}
-                label={tableCopy.boardLabel}
-              />
-            ) : (
-              <BoardPlaceholder />
-            )}
+            <GameBoard
+              colors={colors}
+              seats={taken}
+              throwState={{ kind: "idle" }}
+              chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
+              revealed={false}
+              label={tableCopy.boardLabel}
+            />
           </div>
         </div>
       </div>
