@@ -48,7 +48,11 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
-vi.mock("@/hooks/use-my-table-id", () => ({ useMyTableId: () => myTableId }));
+const forgetMyTable = vi.fn();
+vi.mock("@/hooks/use-my-table-id", () => ({
+  useMyTableId: () => myTableId,
+  useForgetMyTable: () => forgetMyTable,
+}));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
 vi.mock("@/hooks/use-prove-invite", () => ({ useProveInvite: () => proveInvite }));
 vi.mock("./use-invite-code", () => ({
@@ -194,6 +198,7 @@ describe("useWaitingRoom", () => {
     act(() => viewOf(result).leave());
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
     expect(markLeftTable).toHaveBeenCalledWith(12n);
+    expect(forgetMyTable).toHaveBeenCalledWith(12n);
   });
 
   describe("for a visitor", () => {

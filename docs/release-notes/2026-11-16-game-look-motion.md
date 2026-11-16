@@ -21,7 +21,11 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 
 ## Changes after review
 
-- **No flash when leaving:** leaving a waiting room or a game, or closing a table, froze nothing before, so the fresh table read redrew the page (a visitor's Join card, or "This table has closed") before the lobby appeared. The table's read now stops the moment the player leaves, and the refresh skips it, so the page stays as it was until the lobby replaces it.
+- **No flash when leaving:** leaving a waiting room or a game, or closing a table, flashed two things before the lobby settled. Both are fixed:
+  - The table page redrew with the fresh read (a visitor's Join card, or "This table has closed"). The table's read now stops the moment the player leaves, and the refresh skips it.
+  - The lobby briefly showed "Your table — Back to your table" from the remembered seat. Leaving now clears that seat, if it still points at the table just left.
+  - A recorder in the browser confirmed both paths go straight to the lobby.
+- **The leave confirmation:** a new test covers "Leave this game?" in a game, and it showed live. Leaving a waiting room still doesn't ask, as before.
 - **The settings tile is in full colour,** since it opens a menu rather than switching something off.
 
 ## Removed
@@ -44,6 +48,8 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - the dice held from the call to the card closing;
   - the tips dialog, its hooks and Game tips in Settings;
   - freezing the table read after leaving;
+  - clearing the remembered seat;
+  - the leave confirmation in a game;
   - the settings tile's colour.
 - **`pnpm preflight`:** passes.
 - **In the browser:**

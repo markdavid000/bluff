@@ -11,7 +11,7 @@ import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useFollowChain } from "@/hooks/use-block-clock";
 import { useChipBalance } from "@/hooks/use-chip-balance";
-import { useMyTableId } from "@/hooks/use-my-table-id";
+import { useForgetMyTable, useMyTableId } from "@/hooks/use-my-table-id";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useProveInvite } from "@/hooks/use-prove-invite";
@@ -46,6 +46,7 @@ function roleOf(table: Table, me: string | undefined): Role {
 export function useWaitingRoom(id: bigint) {
   useFollowChain();
   const router = useRouter();
+  const forgetMyTable = useForgetMyTable();
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
@@ -116,6 +117,7 @@ export function useWaitingRoom(id: bigint) {
       ),
     onDone: () => {
       markLeftTable(id);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
       router.replace("/play");
@@ -132,6 +134,7 @@ export function useWaitingRoom(id: bigint) {
       ),
     onDone: () => {
       markLeftTable(id);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       router.replace("/play");
     },

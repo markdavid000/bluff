@@ -12,6 +12,7 @@ import { useAction } from "@/hooks/use-action";
 import { useBlockClock, useFollowChain } from "@/hooks/use-block-clock";
 import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
+import { useForgetMyTable } from "@/hooks/use-my-table-id";
 import { useSendMove } from "@/hooks/use-send-move";
 import { bidChance, bidRisk } from "@/lib/bid-odds";
 import { type Bid, isValidFace, quickPicks } from "@/lib/bid-rules";
@@ -50,6 +51,7 @@ export function useGame(id: bigint) {
   const block = useBlockClock();
   const [liveEnd, setLiveEnd] = useState<GameEnding | null>(null);
   const router = useRouter();
+  const forgetMyTable = useForgetMyTable();
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
@@ -271,6 +273,7 @@ export function useGame(id: bigint) {
       ),
     onDone: () => {
       markLeftTable(id);
+      forgetMyTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
       router.replace("/play");

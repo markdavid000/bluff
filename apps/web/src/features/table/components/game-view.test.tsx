@@ -193,4 +193,19 @@ describe("GameView", () => {
     render(<GameView game={gameView({ table: playing(), turnLow: true })} />);
     expect(screen.getByRole("alert")).toHaveTextContent(tableCopy.timeLow);
   });
+
+  it("asks before leaving a game, and only leaves when the player confirms", async () => {
+    const leave = vi.fn();
+    render(<GameView game={gameView({ table: playing(), leave })} />);
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.leave }));
+    expect(
+      await screen.findByRole("dialog", { name: tableCopy.leaveConfirmTitle })
+    ).toBeInTheDocument();
+    expect(leave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.stay }));
+    expect(leave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.leave }));
+    fireEvent.click(await screen.findByRole("button", { name: tableCopy.leaveConfirm }));
+    expect(leave).toHaveBeenCalledOnce();
+  });
 });
