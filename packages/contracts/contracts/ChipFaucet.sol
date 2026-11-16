@@ -30,6 +30,7 @@ contract ChipFaucet is
         mapping(address player => uint64) nextClaimAt;
         mapping(address player => uint8) avatars;
         mapping(address player => string) avatarImages;
+        mapping(bytes32 nameKey => address owner) nicknameOwners;
     }
 
     uint64 public constant CLAIM_CHIPS = 100 * 1e6;
@@ -88,6 +89,19 @@ contract ChipFaucet is
         emit AvatarSet(msg.sender, 0, image);
     }
 
+    function reserveExistingNicknames(address[] calldata players) external onlyOwner {
+        ChipFaucetStorage storage $ = _getChipFaucetStorage();
+        for (uint256 i = 0; i < players.length; ++i) {
+            address player = players[i];
+            string memory nickname = $.nicknames[player];
+            if (bytes(nickname).length == 0) continue;
+            bytes32 key = NicknameRules.keyOf(nickname);
+            if ($.nicknameOwners[key] != address(0)) continue;
+            $.nicknameOwners[key] = player;
+            emit NicknameReserved(player, nickname);
+        }
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -98,6 +112,11 @@ contract ChipFaucet is
 
     function nicknameOf(address player) external view returns (string memory) {
         return _getChipFaucetStorage().nicknames[player];
+    }
+
+    function isNicknameTaken(string calldata nickname, address asker) external view returns (bool) {
+        address holder = _getChipFaucetStorage().nicknameOwners[NicknameRules.keyOf(nickname)];
+        return holder != address(0) && holder != asker;
     }
 
     function nextClaimAt(address player) external view returns (uint64) {
@@ -118,7 +137,7 @@ contract ChipFaucet is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.1.0";
+        return "1.2.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
@@ -144,6 +163,17 @@ contract ChipFaucet is
 
     function _setNickname(ChipFaucetStorage storage $, string calldata nickname) private {
         if (!NicknameRules.isValid(nickname)) revert InvalidNickname();
+        bytes32 key = NicknameRules.keyOf(nickname);
+        address holder = $.nicknameOwners[key];
+        if (holder != address(0) && holder != msg.sender) revert NicknameTaken();
+        string memory previous = $.nicknames[msg.sender];
+        if (bytes(previous).length != 0) {
+            bytes32 previousKey = NicknameRules.keyOf(previous);
+            if (previousKey != key && $.nicknameOwners[previousKey] == msg.sender) {
+                delete $.nicknameOwners[previousKey];
+            }
+        }
+        $.nicknameOwners[key] = msg.sender;
         $.nicknames[msg.sender] = nickname;
         emit NicknameSet(msg.sender, nickname);
     }

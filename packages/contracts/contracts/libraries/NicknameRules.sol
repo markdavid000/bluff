@@ -17,6 +17,16 @@ library NicknameRules {
         return true;
     }
 
+    function keyOf(string memory nickname) internal pure returns (bytes32) {
+        bytes memory lowered = bytes(nickname);
+        bytes memory copy = new bytes(lowered.length);
+        for (uint256 i = 0; i < lowered.length; ++i) {
+            bytes1 character = lowered[i];
+            copy[i] = character >= "A" && character <= "Z" ? bytes1(uint8(character) + 32) : character;
+        }
+        return keccak256(copy);
+    }
+
     function _isAllowed(bytes1 character) private pure returns (bool) {
         return
             (character >= "a" && character <= "z") ||

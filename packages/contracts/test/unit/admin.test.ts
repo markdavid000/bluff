@@ -21,7 +21,7 @@ describe("admin", function () {
       expect(await faucet.owner()).to.equal(owner.address);
       expect(await faucet.chips()).to.equal(await chips.getAddress());
       expect(await faucet.dollars()).to.equal(await dollars.getAddress());
-      expect(await faucet.version()).to.equal("1.1.0");
+      expect(await faucet.version()).to.equal("1.2.0");
     });
 
     it("refuses missing addresses", async function () {

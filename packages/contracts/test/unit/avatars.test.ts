@@ -107,8 +107,8 @@ describe("avatars", function () {
     expect(await faucet.avatarOf(bob.address)).to.deep.equal([9n, ""]);
   });
 
-  it("reports version 1.1.0", async function () {
+  it("reports version 1.2.0", async function () {
     const { faucet } = await deployGameFixture();
-    expect(await faucet.version()).to.equal("1.1.0");
+    expect(await faucet.version()).to.equal("1.2.0");
   });
 });

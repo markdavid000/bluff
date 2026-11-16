@@ -4,6 +4,7 @@ import path from "node:path";
 import hre from "hardhat";
 import { PUBLIC_TEST_ADDRESS, safeOwner } from "../../tasks/chain";
 import { type DeploymentRecord, readDeployment, writeDeployment } from "../../tasks/deployments";
+import { writeNicknameBeforeReservations } from "../helpers/nicknames";
 
 const RECORD = path.join(__dirname, "..", "..", "deployments", "hardhat.json");
 
@@ -30,7 +31,7 @@ describe("tasks", function () {
       Bluff: "1.3.0",
       BluffCashier: "1.1.0",
       BluffInvites: "1.0.0",
-      ChipFaucet: "1.1.0",
+      ChipFaucet: "1.2.0",
     } as const;
     for (const name of ["Bluff", "BluffCashier", "BluffInvites", "ChipFaucet"] as const) {
       const entry = record.contracts[name];
@@ -101,6 +102,29 @@ describe("tasks", function () {
     );
     expect(bluff.interface.parseError(relink?.data ?? "0x")?.name).to.equal("InvitesAlreadySet");
     expect(await bluff.invites()).to.equal(recorded.proxy);
+  });
+
+  it("reserves nicknames set before the rule, first holder first, and names the duplicates", async function () {
+    await hre.run("deploy");
+    const record = readDeployment("hardhat");
+    const faucetRecord = record.contracts.ChipFaucet;
+    if (!faucetRecord) throw new Error("ChipFaucet was not recorded.");
+    const faucet = await hre.ethers.getContractAt("ChipFaucet", faucetRecord.proxy);
+    const [, alice, bob, carol] = await hre.ethers.getSigners();
+    await faucet.connect(alice).setNickname("Maki");
+    await faucet.connect(bob).setNickname("Bob1");
+    await faucet.connect(carol).setNickname("Car1");
+    await writeNicknameBeforeReservations(faucet, bob.address, "maki");
+    await writeNicknameBeforeReservations(faucet, carol.address, "Ada");
+
+    const result = (await hre.run("reserve-nicknames", { fromBlock: "0" })) as {
+      reserved: string[];
+      duplicates: string[];
+    };
+
+    expect(result.duplicates).to.deep.equal([bob.address]);
+    expect(await faucet.isNicknameTaken("ada", alice.address)).to.equal(true);
+    expect(await faucet.isNicknameTaken("MAKI", bob.address)).to.equal(true);
   });
 
   it("refuses an unknown contract name", async function () {

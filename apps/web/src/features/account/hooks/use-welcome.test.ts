@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onNotice } from "@/lib/notify";
 import { accountCopy } from "../copy";
+import { NICKNAME_CHECK_MS } from "./use-nickname-taken";
 import { useWelcome } from "./use-welcome";
 
 vi.mock("@/config/env", () => ({
@@ -11,7 +12,27 @@ vi.mock("@/config/env", () => ({
 const sendMove = vi.fn();
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
 let nextClaimAt: bigint | undefined = 0n;
-vi.mock("wagmi", () => ({ useReadContract: () => ({ data: nextClaimAt }) }));
+let takenNames: string[] = [];
+const askedTaken: string[] = [];
+vi.mock("wagmi", () => ({
+  useReadContract: ({
+    functionName,
+    args,
+    query,
+  }: {
+    functionName: string;
+    args?: [string, string];
+    query?: { enabled?: boolean };
+  }) => {
+    if (functionName !== "isNicknameTaken") return { data: nextClaimAt };
+    if (!query?.enabled || !args) return { data: undefined, isPlaceholderData: false };
+    askedTaken.push(args[0]);
+    return {
+      data: takenNames.some((name) => name.toLowerCase() === args[0].toLowerCase()),
+      isPlaceholderData: false,
+    };
+  },
+}));
 vi.mock("./use-player", () => ({
   usePlayer: () => ({
     status: "ready",
@@ -34,6 +55,8 @@ beforeEach(() => {
   });
   sendMove.mockResolvedValue({ status: "success" });
   nextClaimAt = 0n;
+  takenNames = [];
+  askedTaken.length = 0;
 });
 
 function sent() {
@@ -46,6 +69,69 @@ afterEach(() => {
 });
 
 describe("useWelcome", () => {
+  describe("a nickname someone else has", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      takenNames = ["Brave Otter"];
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("checks the name once the player stops typing, then says it's taken", () => {
+      const { result, rerender } = renderHook(() => useWelcome());
+      act(() => result.current.changeNickname("brave otter"));
+      expect(askedTaken).not.toContain("brave otter");
+      act(() => {
+        vi.advanceTimersByTime(NICKNAME_CHECK_MS);
+      });
+      rerender();
+      expect(askedTaken).toContain("brave otter");
+      expect(shown).toEqual([accountCopy.nicknameTaken]);
+      expect(result.current.canSave).toBe(false);
+    });
+
+    it("won't send a taken name, and says why again", () => {
+      const { result, rerender } = renderHook(() => useWelcome());
+      act(() => result.current.changeNickname("Brave Otter"));
+      act(() => {
+        vi.advanceTimersByTime(NICKNAME_CHECK_MS);
+      });
+      rerender();
+      act(() => result.current.submit());
+      expect(sendMove).not.toHaveBeenCalled();
+      expect(shown).toEqual([accountCopy.nicknameTaken, accountCopy.nicknameTaken]);
+    });
+
+    it("lets the player save again once they pick a free name", () => {
+      const { result, rerender } = renderHook(() => useWelcome());
+      act(() => result.current.changeNickname("Brave Otter"));
+      act(() => {
+        vi.advanceTimersByTime(NICKNAME_CHECK_MS);
+      });
+      rerender();
+      act(() => result.current.changeNickname("Calm Otter"));
+      expect(result.current.canSave).toBe(true);
+      act(() => {
+        vi.advanceTimersByTime(NICKNAME_CHECK_MS);
+      });
+      rerender();
+      expect(result.current.canSave).toBe(true);
+      expect(shown).toEqual([accountCopy.nicknameTaken]);
+    });
+
+    it("doesn't ask about a name that breaks the nickname rules", () => {
+      const { result, rerender } = renderHook(() => useWelcome());
+      act(() => result.current.changeNickname("no"));
+      act(() => {
+        vi.advanceTimersByTime(NICKNAME_CHECK_MS);
+      });
+      rerender();
+      expect(askedTaken).not.toContain("no");
+    });
+  });
+
   it("says what kind of name to pick in a short toast, and sends nothing", () => {
     const { result } = renderHook(() => useWelcome());
     act(() => result.current.changeNickname("no"));

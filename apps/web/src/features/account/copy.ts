@@ -29,6 +29,7 @@ export const accountCopy = {
   welcomeIntro: "This is how other players will see you at the table. You can change them later.",
   nicknameLabel: "Your name",
   nicknameHelp: "3 to 20 letters or numbers. Spaces, _ and - are fine.",
+  nicknameTaken: "That nickname is taken. Try another.",
   nicknameInvalid: "Pick a name with 3 to 20 letters or numbers.",
   suggestAnother: "Suggest another",
   suggesting: "Thinking…",

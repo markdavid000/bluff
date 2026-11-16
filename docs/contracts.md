@@ -86,16 +86,21 @@ Errors: `UnauthorizedCallback`, `InvalidCallbackData`, `NotBluff`, `ZeroAddress`
 
 ## ChipFaucet
 
-| Function                                                                                                                                                                            | Does                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `claim(nickname)`                                                                                                                                                                   | 100 chips every 24 hours: mints `100 × rate()` mock USDT, approves the token and wraps to the caller. A non-empty nickname is saved too. Blocked while paused. |
-| `setNickname(nickname)`                                                                                                                                                             | 3 to 20 characters: letters, digits, single spaces, `_`, `-`. Works while paused.                                                                              |
-| `claimWithAvatar(nickname, avatar)`                                                                                                                                                 | The first-visit move, added in 1.1.0: the same daily claim as `claim`, which also saves a preset face from 1 to 12. Blocked while paused.                      |
-| `setAvatar(avatar)`                                                                                                                                                                 | A preset face, 1 to 12. Clears an uploaded picture. Works while paused.                                                                                        |
-| `setAvatarImage(image)`                                                                                                                                                             | An uploaded picture's IPFS content id: 1 to 100 letters and digits. Clears the preset. Works while paused.                                                     |
-| `nicknameOf(player)`, `nextClaimAt(player)`, `avatarOf(player)` (preset, image; `0, ""` when none was chosen), `CLAIM_CHIPS`, `CLAIM_INTERVAL`, `chips()`, `dollars()`, `version()` | Views.                                                                                                                                                         |
+| Function                                                                                                                                                                            | Does                                                                                                                                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `claim(nickname)`                                                                                                                                                                   | 100 chips every 24 hours: mints `100 × rate()` mock USDT, approves the token and wraps to the caller. A non-empty nickname is saved too. Blocked while paused.                                                      |
+| `setNickname(nickname)`                                                                                                                                                             | 3 to 20 characters: letters, digits, single spaces, `_`, `-`. Unique ignoring letter case: a name someone else holds reverts `NicknameTaken`, and changing your name frees the old one (1.2.0). Works while paused. |
+| `claimWithAvatar(nickname, avatar)`                                                                                                                                                 | The first-visit move, added in 1.1.0: the same daily claim as `claim`, which also saves a preset face from 1 to 12. Blocked while paused.                                                                           |
+| `setAvatar(avatar)`                                                                                                                                                                 | A preset face, 1 to 12. Clears an uploaded picture. Works while paused.                                                                                                                                             |
+| `setAvatarImage(image)`                                                                                                                                                             | An uploaded picture's IPFS content id: 1 to 100 letters and digits. Clears the preset. Works while paused.                                                                                                          |
+| `nicknameOf(player)`, `nextClaimAt(player)`, `avatarOf(player)` (preset, image; `0, ""` when none was chosen), `CLAIM_CHIPS`, `CLAIM_INTERVAL`, `chips()`, `dollars()`, `version()` | Views.                                                                                                                                                                                                              |
 
-Events: `ChipsClaimed`, `NicknameSet`, `AvatarSet`. Errors: `ClaimTooSoon`, `InvalidNickname`, `InvalidAvatar`, `InvalidAvatarImage`, `ZeroAddress`. Version 1.1.0 adds avatars; its storage only appends to `bluff.storage.ChipFaucet`.
+Also, from 1.2.0:
+
+- `isNicknameTaken(nickname, asker)` is true when someone other than `asker` holds the name, ignoring letter case. The app checks it while a player types.
+- `reserveExistingNicknames(players)` (owner) reserves nicknames set before 1.2.0, first holder first, and skips duplicates. Run it once after the upgrade with `pnpm --filter @bluff/contracts exec hardhat reserve-nicknames --network sepolia`, which finds every player from `NicknameSet` events and lists the duplicates.
+
+Events: `ChipsClaimed`, `NicknameSet`, `NicknameReserved`, `AvatarSet`. Errors: `ClaimTooSoon`, `InvalidNickname`, `NicknameTaken`, `InvalidAvatar`, `InvalidAvatarImage`, `ZeroAddress`. Version 1.1.0 adds avatars and 1.2.0 adds unique nicknames ([ADR-2026-11-16-unique-nicknames](adr/ADR-2026-11-16-unique-nicknames.md)); both only append to `bluff.storage.ChipFaucet`.
 
 ## BluffInvites
 
@@ -131,7 +136,7 @@ The owner cannot read any of these. `confidentiality.test.ts` proves the game's 
 | `Bluff` (50 optimizer runs) | 23,632   | 944                         |
 | `BluffCashier`              | 9,524    | 15,052                      |
 | `BluffInvites`              | 8,799    | 15,777                      |
-| `ChipFaucet`                | 8,433    | 16,143                      |
+| `ChipFaucet`                | 10,011   | 14,565                      |
 
 Zama's per-transaction encryption limits are 20,000,000 HCU in total and 5,000,000 HCU along any dependency chain. The FHEVM mock enforces both, which `limits.test.ts` proves: `HCUTransactionDepthLimitExceeded` at 16 chained 64-bit multiplications, and `HCUTransactionLimitExceeded` at 40 independent ones. Every test runs under that mock, including:
 
@@ -143,7 +148,7 @@ So every action stays within budget.
 
 ## Owner powers
 
-The owner can upgrade, pause, link the cashier and the invites contract once each, and hand ownership over in two steps. Nothing else:
+The owner can upgrade, pause, link the cashier and the invites contract once each, reserve the nicknames players already had when names became unique, and hand ownership over in two steps. Nothing else:
 
 - **No chips.** The owner cannot move chips, end or change a game, invite anyone, or read any encrypted value.
 - **Pausing is narrow.** A pause stops only new tables, joins and chip claims. Leaving, moves, timeouts, reveals, settlement, refunds and payouts always work.

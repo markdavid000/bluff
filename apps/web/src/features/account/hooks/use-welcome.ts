@@ -11,6 +11,7 @@ import { PRESET_AVATARS, type PresetAvatar, defaultAvatarFor, isPresetAvatar } f
 import { isValidNickname, suggestNickname } from "@/lib/nickname";
 import { notify } from "@/lib/notify";
 import { accountCopy } from "../copy";
+import { useNicknameTaken } from "./use-nickname-taken";
 import { usePlayer } from "./use-player";
 
 const SUGGEST_MS = 350;
@@ -101,6 +102,14 @@ export function useWelcome() {
   });
 
   const valid = isValidNickname(nickname.trim());
+  const taken = useNicknameTaken(
+    nickname.trim(),
+    player.status === "ready" ? player.address : undefined
+  );
+  const takenName = taken ? nickname.trim().toLowerCase() : null;
+  useEffect(() => {
+    if (takenName !== null) notify.error(accountCopy.nicknameTaken, { id: "nickname" });
+  }, [takenName]);
   const working = saveAndClaim.working || saveOnly.working;
 
   return {
@@ -111,7 +120,7 @@ export function useWelcome() {
     faces: PRESET_AVATARS,
     working,
     confirmInWallet: saveAndClaim.confirmInWallet || saveOnly.confirmInWallet,
-    canSave: player.status === "ready" && claimKnown && !working,
+    canSave: player.status === "ready" && claimKnown && !working && !taken,
     submitLabel: canClaim ? accountCopy.welcomeSubmit : accountCopy.welcomeSave,
     workingLabel: canClaim ? accountCopy.welcomeWorking : accountCopy.welcomeSaveWorking,
     changeNickname: (value: string) => {
@@ -133,6 +142,10 @@ export function useWelcome() {
     },
     chooseAvatar: setChosen,
     submit: () => {
+      if (taken) {
+        notify.error(accountCopy.nicknameTaken, { id: "nickname" });
+        return;
+      }
       if (valid) {
         if (canClaim) saveAndClaim.start();
         else saveOnly.start();
