@@ -3,7 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type * as Chain from "@/config/chain";
-import { useRoundHistory } from "./use-round-history";
+import { useGameHistory, useRoundHistory } from "./use-round-history";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -64,5 +64,31 @@ describe("useRoundHistory", () => {
   it("reads nothing when the history isn't wanted", () => {
     expect(render(false).current.status).toBe("loading");
     expect(getLogs).not.toHaveBeenCalled();
+  });
+
+  describe("useGameHistory", () => {
+    it("lists the player's own bid at once, while it's still on its way", async () => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      );
+      getLogs.mockResolvedValue([{ eventName: "RoundStarted", args: { id: 12n, round: 1 } }]);
+      const table = {
+        id: 12n,
+        round: 1,
+        status: "playing",
+        turn: 0,
+        bid: null,
+        seats: [],
+      } as unknown as Parameters<typeof useGameHistory>[0];
+      const { result } = renderHook(
+        () => useGameHistory(table, true, { bid: { quantity: 2, face: 5 }, bidder: ADA }),
+        { wrapper }
+      );
+      await waitFor(() => expect(result.current.status).toBe("ready"));
+      expect(result.current).toMatchObject({
+        rounds: [{ round: 1, bids: [{ player: ADA, quantity: 2, face: 5 }] }],
+      });
+    });
   });
 });

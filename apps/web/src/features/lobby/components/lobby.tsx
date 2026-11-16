@@ -18,7 +18,10 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
   const { sitDown } = lobby;
   const label = (working: string) =>
     sitDown.confirmInWallet ? lobbyCopy.confirmInWallet : working;
-  const seatedAt = lobby.myTableId.status === "ready" ? lobby.myTableId.id : null;
+  const seatedAt =
+    lobby.myTableId.status === "ready" && lobby.myTableId.id !== sitDown.goingTo
+      ? lobby.myTableId.id
+      : null;
   const busy = sitDown.working;
 
   return (

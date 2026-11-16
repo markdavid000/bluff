@@ -201,6 +201,28 @@ describe("useWaitingRoom", () => {
     expect(forgetMyTable).toHaveBeenCalledWith(12n);
   });
 
+  it("keeps saying it's starting until the table shows the game has begun", async () => {
+    me = HOST;
+    sendMove.mockResolvedValue({ blockNumber: 101n });
+    const { result, rerender } = render();
+    act(() => viewOf(result).start());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    rerender();
+    expect(viewOf(result).starting).toBe(true);
+    tableRead = { ...tableRead, table: { ...(tableRead.table as Table), status: "playing" } };
+    rerender();
+    expect(viewOf(result).starting).toBe(false);
+  });
+
+  it("forgets the player's seat once the table closes, so the lobby opens without it", () => {
+    const { rerender } = render();
+    expect(forgetMyTable).not.toHaveBeenCalled();
+    tableRead = { ...tableRead, table: { ...(tableRead.table as Table), status: "cancelled" } };
+    rerender();
+    expect(forgetMyTable).toHaveBeenCalledWith(12n);
+  });
+
   describe("for a visitor", () => {
     beforeEach(() => {
       me = STRANGER;
@@ -217,6 +239,41 @@ describe("useWaitingRoom", () => {
           expect.any(Function)
         )
       );
+    });
+
+    it("keeps saying it's joining until the table shows the new seat, so Join never comes back", async () => {
+      takeSeat.mockResolvedValue(12n);
+      const { result, rerender } = render();
+      act(() => viewOf(result).join());
+      await waitFor(() => expect(takeSeat).toHaveBeenCalled());
+      await waitFor(() => expect(viewOf(result).joining).toBe(true));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      rerender();
+      expect(viewOf(result)).toMatchObject({ role: "visitor", joining: true });
+      tableRead = {
+        status: "ready",
+        table: table(
+          [
+            [HOST, false],
+            [KOLA, false],
+          ],
+          { seatCount: 2 }
+        ),
+        readAt: 100n,
+      };
+      rerender();
+      expect(viewOf(result).joinProblem).toBeNull();
+      tableRead = {
+        status: "ready",
+        table: table([
+          [HOST, false],
+          [KOLA, false],
+          [STRANGER, false],
+        ]),
+        readAt: 101n,
+      };
+      rerender();
+      expect(viewOf(result)).toMatchObject({ role: "guest", joining: false });
     });
 
     it("says when the table is full or has started", () => {

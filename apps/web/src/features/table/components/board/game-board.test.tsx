@@ -30,6 +30,6 @@ describe("GameBoard", () => {
   it("waits for the theme before drawing the 3D board", () => {
     flat = false;
     render(<GameBoard {...props} />);
-    expect(screen.getByText(tableCopy.loadingBoard)).toBeInTheDocument();
+    expect(screen.getByText(tableCopy.loadingBoard)).toHaveClass("sr-only");
   });
 });

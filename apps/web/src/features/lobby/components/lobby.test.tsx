@@ -31,6 +31,7 @@ const sitDown = {
   findingSeat: false,
   working: false,
   confirmInWallet: false,
+  goingTo: null,
 };
 
 type Lobby = Record<string, unknown>;
@@ -128,5 +129,16 @@ describe("Lobby", () => {
       "href",
       "/table/12"
     );
+  });
+
+  it("doesn't flash the seat card for the table the player is on their way to", () => {
+    lobby = {
+      ...base,
+      myTableId: { status: "ready", id: 12n },
+      sitDown: { ...sitDown, working: true, goingTo: 12n },
+    };
+    show();
+    expect(screen.queryByText(lobbyCopy.seatedAt("12"))).toBeNull();
+    expect(screen.getByRole("button", { name: lobbyCopy.playNow })).toBeInTheDocument();
   });
 });

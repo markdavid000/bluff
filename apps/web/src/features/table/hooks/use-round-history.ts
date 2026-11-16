@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAbiItem } from "viem";
 import { contracts, gameClient } from "@/config/chain";
 import { type HistoryRound, roundHistory, withCurrentBid } from "../lib/round-history";
+import type { Bid } from "@/lib/bid-rules";
 import type { Table } from "../lib/table-view";
 
 const LOOK_BACK_BLOCKS = 400n;
@@ -61,9 +62,12 @@ export function useRoundHistory({
   return { status: "loading" };
 }
 
-export function useGameHistory(table: Table, enabled: boolean): RoundHistoryState {
+export function useGameHistory(
+  table: Table,
+  enabled: boolean,
+  shown: { bid: Bid | null; bidder: string | null }
+): RoundHistoryState {
   const bid = table.bid;
-  const bidder = bid ? table.seats[bid.bidder]?.player : undefined;
   const history = useRoundHistory({
     id: table.id,
     round: table.round,
@@ -76,7 +80,9 @@ export function useGameHistory(table: Table, enabled: boolean): RoundHistoryStat
     rounds: withCurrentBid(
       history.rounds,
       table.round,
-      bid && bidder ? { player: bidder, quantity: bid.quantity, face: bid.face } : null
+      shown.bid && shown.bidder
+        ? { player: shown.bidder, quantity: shown.bid.quantity, face: shown.bid.face }
+        : null
     ),
   };
 }

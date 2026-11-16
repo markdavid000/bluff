@@ -158,4 +158,10 @@ describe("GameSeat", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: tableCopy.hiddenDice(0) })).toBeNull();
   });
+
+  it("holds the name's place quietly while it loads, instead of a stand-in name", () => {
+    const { container } = show({ name: "" });
+    expect(container.querySelector("figcaption [data-name-loading]")).not.toBeNull();
+    expect(screen.queryByText("Player")).toBeNull();
+  });
 });

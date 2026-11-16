@@ -33,7 +33,18 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 - **The leave confirmation:** a new test covers "Leave this game?" in a game, and it showed live. Leaving a waiting room still doesn't ask, as before.
 - **The settings tile is in full colour,** since it opens a menu rather than switching something off.
 
-## Removed
+## Flash audit
+
+Every path between screens was recorded live, screen by screen, and each wrong in-between screen was fixed at its cause. Easing made one-frame blips last half a second, so each one had to go, not be hidden:
+
+- **Going to a new table** (Create, Play now, Join from the list, Play again): a shared `useGoToTable` reads the table into the cache before opening it, so the "Setting up the table…" screen no longer shows. The lobby hides its "Your table" card for the table it's heading to, and each button stays busy until the table opens.
+- **Joining from a link:** "Joining the table…" holds until the new seat shows, so Join doesn't come back, and no reason not to join shows while the join lands.
+- **Starting a game:** "Starting the game…" holds until the table has started, so Start doesn't come back.
+- **Calling a bluff:** the turn isn't handed back while the call is reaching the table, so the bid controls don't reappear.
+- **Your own bid:** the bid badge and the rounds panel show it with your name at once, not about 13 seconds later.
+- **Names:** while a newcomer's name loads, everyone else keeps their name, instead of all reading "Player". Seats show a quiet placeholder rather than "Player"; sentences fall back to "Player".
+- **The 3D board loading:** the board space stays empty, with "Setting up the table…" for screen readers only.
+- **The end of a game:** the results card waits until the winner is known, instead of "The game is over" then "You win!". When a game ends or a table closes, the remembered seat is cleared, so Back to the lobby doesn't show "Your table".
 
 - The small face-down tile sliding off an opponent's row, replaced by the tumbling die.
 - The per-turn tip toasts (`useFirstGameTips`) and the coach's pause for them.

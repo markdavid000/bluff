@@ -40,10 +40,10 @@ export function GameView({ game }: { game: Game }) {
   const wide = useMediaQuery(WIDE);
   const [cardUp, setCardUp] = useState(false);
   if (game.reveal !== null && !cardUp) setCardUp(true);
-  const history = useGameHistory(table, wide);
+  const history = useGameHistory(table, wide, { bid: game.bid, bidder: game.bidder });
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
-    return seat?.isMe ? tableCopy.you : (seat?.name ?? tableCopy.unnamed);
+    return seat?.isMe ? tableCopy.you : seat?.name || tableCopy.unnamed;
   };
   const layout = seatLayout(table.seatCount, Math.max(game.mySeat, 0));
   const taken = layout.slice(0, seats.length);

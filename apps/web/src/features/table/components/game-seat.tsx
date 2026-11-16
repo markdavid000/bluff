@@ -98,7 +98,14 @@ export function GameSeat({
           ) : null}
         </Appear>
       </span>
-      <figcaption className="max-w-28 truncate font-game text-sm leading-tight">{shown}</figcaption>
+      <figcaption className="max-w-28 truncate font-game text-sm leading-tight">
+        {shown || (
+          <span
+            data-name-loading
+            className="inline-block h-[1em] w-16 animate-pulse rounded bg-muted align-middle calm:animate-none"
+          />
+        )}
+      </figcaption>
       <span className="relative">
         {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
         <AnimatePresence>

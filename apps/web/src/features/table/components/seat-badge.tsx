@@ -50,7 +50,16 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
         )}
       </span>
       <figcaption aria-hidden className="flex flex-col items-center leading-tight">
-        <span className="font-game text-base">{isMe ? tableCopy.you : name}</span>
+        <span className="font-game text-base">
+          {isMe
+            ? tableCopy.you
+            : name || (
+                <span
+                  data-name-loading
+                  className="inline-block h-[1em] w-16 animate-pulse rounded bg-muted align-middle calm:animate-none"
+                />
+              )}
+        </span>
         <span className="text-xs text-muted-foreground">
           {updating ? tableCopy.gettingReady : state}
         </span>

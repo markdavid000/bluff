@@ -10,8 +10,8 @@ import { FlatBoard } from "./flat-board";
 
 function BoardPlaceholder() {
   return (
-    <div className="flex aspect-square w-full items-center justify-center font-game text-lg text-muted-foreground">
-      {tableCopy.loadingBoard}
+    <div className="aspect-square w-full">
+      <span className="sr-only">{tableCopy.loadingBoard}</span>
     </div>
   );
 }

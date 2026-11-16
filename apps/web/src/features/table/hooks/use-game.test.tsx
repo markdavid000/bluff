@@ -70,6 +70,8 @@ vi.mock("./use-table-events", () => ({
   },
 }));
 vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
+const forgetMyTable = vi.fn();
+vi.mock("@/hooks/use-my-table-id", () => ({ useForgetMyTable: () => forgetMyTable }));
 vi.mock("./use-own-dice", () => ({ useOwnDice: () => dice }));
 vi.mock("./use-game-end", () => ({ useGameEnd: () => end }));
 let caughtUp: RoundResult | null = null;
@@ -168,6 +170,8 @@ describe("useGame", () => {
     const { result } = render();
     act(() => viewOf(result).placeBid({ quantity: 3, face: 4 }));
     expect(viewOf(result).bid).toEqual({ quantity: 3, face: 4 });
+    expect(viewOf(result).bidderName).toBe("Me #1A2B");
+    expect(viewOf(result).bidder).toBe(ME);
     expect(viewOf(result).myTurn).toBe(false);
     expect(viewOf(result).seats[0]?.isTurn).toBe(false);
     expect(viewOf(result).line).toBe(tableCopy.placingBid);
@@ -343,6 +347,7 @@ describe("useGame", () => {
   });
 
   it("shows the last reveal before the results, with no flash between them", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     const { result, rerender } = render();
     show(game({ status: "finished" }));
     rerender();
@@ -356,6 +361,7 @@ describe("useGame", () => {
   });
 
   it("waits a moment for the last reveal, then shows the results anyway", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     const { result, rerender } = render();
     show(game({ status: "finished" }));
     rerender();
@@ -366,7 +372,25 @@ describe("useGame", () => {
     expect(viewOf(result).showResults).toBe(true);
   });
 
+  it("forgets the player's seat once the game is over, so the lobby opens without it", () => {
+    const { rerender } = render();
+    expect(forgetMyTable).not.toHaveBeenCalled();
+    show(game({ status: "finished" }));
+    rerender();
+    expect(forgetMyTable).toHaveBeenCalledWith(12n);
+  });
+
+  it("keeps the game on screen until the winner is known, so the results open complete", () => {
+    show(game({ status: "finished" }));
+    const { result, rerender } = render();
+    expect(viewOf(result).showResults).toBe(false);
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
+    rerender();
+    expect(viewOf(result).showResults).toBe(true);
+  });
+
   it("opens the results at once for a game that was already over", () => {
+    end = { status: "ready", reason: "last-standing", winners: [ME] };
     show(game({ status: "finished" }));
     expect(viewOf(render().result).showResults).toBe(true);
   });
@@ -487,6 +511,21 @@ describe("useGame", () => {
     expect(view.pot).toBe(20n * ONE_CHIP);
     expect(view.myShare).toBe(20n * ONE_CHIP);
     expect(view.winnerNames).toEqual([tableCopy.you]);
+  });
+
+  it("doesn't hand the turn back while a called bluff is still reaching the table", async () => {
+    vi.useRealTimers();
+    show(game({ bid: { quantity: 3, face: 4, bidder: 1 } }));
+    const { result, rerender } = render();
+    expect(viewOf(result).myTurn).toBe(true);
+    act(() => viewOf(result).callBluff());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    rerender();
+    expect(viewOf(result).myTurn).toBe(false);
+    show(game({ round: 2, bid: null }));
+    rerender();
+    expect(viewOf(result).myTurn).toBe(true);
   });
 
   it("shows the results once the game ends after the player leaves, with the winner known", async () => {
