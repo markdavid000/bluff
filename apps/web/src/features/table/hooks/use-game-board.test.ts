@@ -52,6 +52,33 @@ describe("useGameBoard", () => {
     expect(result.current.throwState.kind).toBe("shaking");
   });
 
+  it("waits for the player's dice until they leave the cup, from the first frame of each round", () => {
+    let round = 1;
+    const faces: Face[] = [5, 1];
+    const { result, rerender } = renderHook(() => useGameBoard({ round, faces, placement: MINE }));
+    expect(result.current.waitingForDice).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(SHAKE_MS);
+    });
+    expect(result.current.waitingForDice).toBe(false);
+    round = 2;
+    rerender();
+    expect(result.current.waitingForDice).toBe(true);
+  });
+
+  it("keeps waiting while the dice are still unknown", () => {
+    const { result } = renderHook(() => useGameBoard({ round: 1, faces: null, placement: MINE }));
+    act(() => {
+      vi.advanceTimersByTime(SHAKE_MS * 3);
+    });
+    expect(result.current.waitingForDice).toBe(true);
+  });
+
+  it("never waits for a player who isn't throwing", () => {
+    const { result } = renderHook(() => useGameBoard({ round: 1, faces: null, placement: null }));
+    expect(result.current.waitingForDice).toBe(false);
+  });
+
   it("stays still when the player has no dice to throw", () => {
     const { result } = renderHook(() => useGameBoard({ round: 1, faces: null, placement: null }));
     expect(result.current.throwState.kind).toBe("idle");

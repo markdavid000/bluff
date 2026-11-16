@@ -1,11 +1,14 @@
 "use client";
 
+import { Appear } from "@/components/shared/appear";
 import { Cowrie } from "@/components/shared/cowrie";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { formatChips } from "@/lib/chips";
 import { tableCopy } from "../copy";
 import type { useGame } from "../hooks/use-game";
 import { useGameBoard } from "../hooks/use-game-board";
+import { useGameHistory } from "../hooks/use-round-history";
 import { seatLayout } from "../lib/seat-layout";
 import { BidControl } from "./bid-control";
 import { BoardPlaceholder, LazyBoardScene } from "./board/lazy-board";
@@ -14,6 +17,7 @@ import { GameSeat } from "./game-seat";
 import { GameClock } from "./game-clock";
 import { LeaveGameButton } from "./leave-game-button";
 import { RoundBadge } from "./round-badge";
+import { RoundHistory } from "./round-history";
 import { TurnBanner } from "./turn-banner";
 import { RevealCard } from "./reveal-card";
 
@@ -27,28 +31,37 @@ const SLOT: Record<"top" | "left" | "right" | "bottom", string> = {
 };
 
 const POT_STACKS = 6;
+const WIDE = "(min-width: 64rem)";
 
 export function GameView({ game }: { game: Game }) {
   const colors = useThemeColors();
   const { table, seats } = game;
+  const wide = useMediaQuery(WIDE);
+  const history = useGameHistory(table, wide);
+  const nameOf = (player: string) => {
+    const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
+    return seat?.isMe ? tableCopy.you : (seat?.name ?? tableCopy.unnamed);
+  };
   const layout = seatLayout(table.seatCount, Math.max(game.mySeat, 0));
   const taken = layout.slice(0, seats.length);
   const mine = game.mySeat >= 0 ? (taken[game.mySeat] ?? null) : null;
-  const { throwState, othersShaking } = useGameBoard({
+  const { throwState, othersShaking, waitingForDice } = useGameBoard({
     round: game.boardRound,
     faces: game.dice.status === "ready" && game.boardRound === table.round ? game.dice.faces : null,
     placement: game.stillIn ? mine : null,
   });
 
   return (
-    <div className="flex max-h-full min-h-0 w-full max-w-5xl flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4">
-      <div className="flex w-full items-center justify-between gap-3 pb-1 text-sm">
+    <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4">
+      <div className="flex w-full items-center justify-between gap-3 pb-1 text-sm min-[68rem]:pr-8">
         <span className="flex min-w-0 items-center gap-2">
           <RoundBadge round={table.round} diceInPlay={table.diceInPlay} />
           <CurrentBid bid={game.bid} bidderName={game.bidderName} />
         </span>
         <span className="flex shrink-0 items-center gap-3">
-          {game.clockLeft > 0 ? <GameClock leftMs={game.clockLeft} /> : null}
+          <Appear show={game.clockLeft > 0} inline>
+            <GameClock leftMs={game.clockLeft} />
+          </Appear>
           {table.buyIn > 0n ? (
             <span className="flex items-center gap-1 font-game">
               <Cowrie size={18} />
@@ -65,7 +78,10 @@ export function GameView({ game }: { game: Game }) {
         </span>
       </div>
 
-      <div className="grid min-h-0 w-full flex-1 grid-cols-[minmax(4.5rem,auto)_minmax(0,1fr)_minmax(4.5rem,auto)] grid-rows-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1">
+      <Appear show={wide} className="absolute top-[4.5rem] left-2 z-10">
+        <RoundHistory history={history} nameOf={nameOf} />
+      </Appear>
+      <div className="grid min-h-0 w-full max-w-5xl flex-1 grid-cols-[minmax(4.5rem,auto)_minmax(0,1fr)_minmax(4.5rem,auto)] grid-rows-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1">
         {layout.map((placement, index) => {
           const seat = seats[index];
           return seat ? (
@@ -110,7 +126,7 @@ export function GameView({ game }: { game: Game }) {
         {game.myTurn && game.turnLow ? tableCopy.timeLow : ""}
       </span>
       <TurnBanner line={table.status === "playing" ? game.line : null} quiet={game.myTurn} />
-      {game.myTurn ? (
+      <Appear show={game.myTurn && !(waitingForDice && game.dice.status !== "failed")}>
         <BidControl
           choice={game.choice}
           bid={game.bid}
@@ -122,7 +138,7 @@ export function GameView({ game }: { game: Game }) {
           onRaise={game.placeBid}
           onCall={game.callBluff}
         />
-      ) : null}
+      </Appear>
       <RevealCard reveal={game.reveal} onContinue={game.dismissReveal} />
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { motion, useReducedMotion } from "motion/react";
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { Avatar } from "@/components/shared/avatar";
 import { DieFace } from "@/components/shared/die";
 import type { Bid } from "@/lib/bid-rules";
@@ -39,7 +39,6 @@ export function GameSeat({
   ownDice: OwnDice | null;
   matching: readonly boolean[] | null;
 }) {
-  const calm = useReducedMotion();
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(dice);
   return (
@@ -48,16 +47,16 @@ export function GameSeat({
       className={cn("flex flex-col items-center gap-1", !isActive && "opacity-50 grayscale")}
     >
       <span className="relative">
-        {isMe && isTurn ? (
-          <motion.span
-            initial={calm ? false : { scale: 0, y: 8 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 14 }}
-            className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]"
-          >
+        <Appear
+          show={isMe && isTurn}
+          inline
+          pop
+          className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2"
+        >
+          <span className="block rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]">
             {tableCopy.yourTurnTag}
-          </motion.span>
-        ) : null}
+          </span>
+        </Appear>
         <TurnRing active={isTurn} fraction={turnFraction}>
           {avatarSrc ? (
             <Avatar src={avatarSrc} size={52} className={cn(isMe && "ring-2 ring-seat-yellow")} />
@@ -68,18 +67,25 @@ export function GameSeat({
             />
           )}
         </TurnRing>
-        {lastBid ? (
-          <span
-            aria-label={tableCopy.lastBidOf(
-              shown,
-              tableCopy.bid(lastBid.quantity, word(lastBid.face))
-            )}
-            className="absolute top-1/2 left-full ml-1.5 flex -translate-y-1/2 items-center gap-1.5 rounded-full border-2 border-seat-yellow-edge bg-seat-yellow py-1 pr-1.5 pl-2.5 font-game text-lg leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]"
-          >
-            {tableCopy.timesMark(lastBid.quantity)}
-            <DieFace face={lastBid.face} className="size-7" />
-          </span>
-        ) : null}
+        <Appear
+          show={lastBid !== null}
+          swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
+          inline
+          className="absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2"
+        >
+          {lastBid ? (
+            <span
+              aria-label={tableCopy.lastBidOf(
+                shown,
+                tableCopy.bid(lastBid.quantity, word(lastBid.face))
+              )}
+              className="flex items-center gap-1.5 rounded-full border-2 border-seat-yellow-edge bg-seat-yellow py-1 pr-1.5 pl-2.5 font-game text-lg leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]"
+            >
+              {tableCopy.timesMark(lastBid.quantity)}
+              <DieFace face={lastBid.face} className="size-7" />
+            </span>
+          ) : null}
+        </Appear>
       </span>
       <figcaption className="max-w-28 truncate font-game text-sm leading-tight">{shown}</figcaption>
       {isActive ? <SeatDice dice={dice} ownDice={ownDice} matching={matching} /> : null}

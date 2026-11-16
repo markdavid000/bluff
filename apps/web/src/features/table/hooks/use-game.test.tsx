@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { type Notice, onNotice } from "@/lib/notify";
+import { settingsStore } from "@/lib/settings-store";
 import { tableCopy } from "../copy";
 import { NO_GAME } from "../lib/table-fixture.testing";
 import type { GameEnding } from "../lib/game-end";
@@ -287,6 +288,7 @@ describe("useGame", () => {
 
   it("coaches the player with a tip only on their own turn", async () => {
     vi.useRealTimers();
+    settingsStore().update({ seenTips: ["wild-ones", "at-least", "how-to-raise", "call-bluff"] });
     const shown: Notice[] = [];
     const stop = onNotice((event) => {
       if (event.type === "show") shown.push(event.notice);
@@ -296,6 +298,22 @@ describe("useGame", () => {
       expect(shown.map((notice) => notice.title)).toContain(tableCopy.coachTip.safe("3 × three"))
     );
     stop();
+    settingsStore().update({ seenTips: [] });
+  });
+
+  it("teaches a new player that ones are wild before any bid advice", async () => {
+    vi.useRealTimers();
+    settingsStore().update({ seenTips: [] });
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    render();
+    await waitFor(() =>
+      expect(shown.map((notice) => notice.title)).toEqual([tableCopy.firstTips["wild-ones"]])
+    );
+    stop();
+    settingsStore().update({ seenTips: [] });
   });
 
   it("gives no tip on someone else's turn", async () => {
@@ -385,6 +403,32 @@ describe("useGame", () => {
     const view = viewOf(render().result);
     expect(view.iWon).toBe(true);
     expect(view.winnerNames).toEqual([tableCopy.you]);
+  });
+
+  it("tells the bidder who called their bluff while the dice are revealed", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    show(game({ status: "revealing", bid: { quantity: 3, face: 4, bidder: 0 }, caller: 1 }));
+    render();
+    stop();
+    expect(shown.map((notice) => notice.title)).toContain(
+      tableCopy.calledYourBluff("Sly Fox #3C4D")
+    );
+  });
+
+  it("reminds the caller whose bluff they called while the dice are revealed", () => {
+    const shown: Notice[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice);
+    });
+    show(game({ status: "revealing", bid: { quantity: 3, face: 4, bidder: 1 }, caller: 0 }));
+    render();
+    stop();
+    expect(shown.map((notice) => notice.title)).toContain(
+      tableCopy.youCalledBluff("Sly Fox #3C4D")
+    );
   });
 
   it("closes the reveal card when the player presses Continue", () => {

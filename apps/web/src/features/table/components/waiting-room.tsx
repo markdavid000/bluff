@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { CountdownBadge } from "@/components/shared/countdown-badge";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { tableCopy } from "../copy";
@@ -42,18 +43,20 @@ export function WaitingRoom({ room }: { room: Room }) {
           const seat = seats[index];
           return (
             <div key={placement.side} className={SLOT[placement.side]}>
-              {seat ? (
-                <SeatBadge
-                  name={seat.name}
-                  avatarSrc={seat.avatarSrc}
-                  ready={seat.ready}
-                  isHost={seat.isHost}
-                  isMe={seat.isMe}
-                  updating={seat.isMe && room.toggling}
-                />
-              ) : waiting ? (
-                <InviteSeat onInvite={room.copyInvite} waiting={room.invite === "loading"} />
-              ) : null}
+              <Appear show={seat !== undefined || waiting} swapKey={seat?.player ?? "open"}>
+                {seat ? (
+                  <SeatBadge
+                    name={seat.name}
+                    avatarSrc={seat.avatarSrc}
+                    ready={seat.ready}
+                    isHost={seat.isHost}
+                    isMe={seat.isMe}
+                    updating={seat.isMe && room.toggling}
+                  />
+                ) : waiting ? (
+                  <InviteSeat onInvite={room.copyInvite} waiting={room.invite === "loading"} />
+                ) : null}
+              </Appear>
             </div>
           );
         })}
@@ -79,14 +82,16 @@ export function WaitingRoom({ room }: { room: Room }) {
       </div>
       <div className="flex flex-wrap items-center justify-center gap-4">
         <p role="status" aria-live="polite" className="text-center font-game text-xl">
-          {room.timeUp ? tableCopy.timeUp : room.line}
+          <Appear show swapKey={room.timeUp ? tableCopy.timeUp : room.line} inline>
+            {room.timeUp ? tableCopy.timeUp : room.line}
+          </Appear>
         </p>
-        {waiting && !room.timeUp ? (
+        <Appear show={waiting && !room.timeUp}>
           <CountdownBadge label={tableCopy.closesIn} remainingMs={room.timeLeft} />
-        ) : null}
+        </Appear>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        {waiting && room.role === "guest" ? (
+        <Appear show={waiting && room.role === "guest"}>
           <ActionButton
             tone={room.myReady ? "quiet" : "green"}
             icon={room.myReady ? "back" : "tick"}
@@ -97,8 +102,8 @@ export function WaitingRoom({ room }: { room: Room }) {
           >
             {room.myReady ? tableCopy.notReadyButton : tableCopy.readyButton}
           </ActionButton>
-        ) : null}
-        {waiting && room.role === "host" ? (
+        </Appear>
+        <Appear show={waiting && room.role === "host"}>
           <ActionButton
             tone="red"
             icon="play"
@@ -110,15 +115,15 @@ export function WaitingRoom({ room }: { room: Room }) {
           >
             {tableCopy.start}
           </ActionButton>
-        ) : null}
-        {waiting && room.freeSeats > 0 ? (
+        </Appear>
+        <Appear show={waiting && room.freeSeats > 0}>
           <CopyInviteButton
             invite={room.invite}
             unlocking={room.unlockingInvite}
             onPress={room.copyInvite}
           />
-        ) : null}
-        {room.timeUp ? (
+        </Appear>
+        <Appear show={room.timeUp}>
           <ActionButton
             tone="danger"
             icon="back"
@@ -129,7 +134,7 @@ export function WaitingRoom({ room }: { room: Room }) {
           >
             {tableCopy.closeTable}
           </ActionButton>
-        ) : null}
+        </Appear>
         <ActionButton
           tone="quiet"
           icon="back"

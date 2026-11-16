@@ -3,6 +3,7 @@
 import { cn } from "cn";
 import { useId } from "react";
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import {
   Dialog,
@@ -107,7 +108,9 @@ export function CreateTableDialog({
                 </span>
               </span>
             </div>
-            {problem ? <p className="text-sm text-destructive">{problem}</p> : null}
+            <Appear show={Boolean(problem)} swapKey={problem ?? ""}>
+              <p className="text-sm text-destructive">{problem}</p>
+            </Appear>
             <div className="flex flex-wrap gap-3">
               <ActionButton
                 type="submit"

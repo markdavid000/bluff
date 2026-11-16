@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { CountdownBadge } from "@/components/shared/countdown-badge";
 import { CountingAmount } from "@/components/shared/counting-amount";
 import { Cowrie } from "@/components/shared/cowrie";
@@ -84,25 +85,29 @@ export function ChipsPanel({ panel }: { panel: ReturnType<typeof useChipsPanel> 
             ) : null}
           </div>
         ) : null}
-        {panel.pendingRetry ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm text-muted-foreground">{chipsCopy.pendingProblem}</p>
-            <ActionButton tone="quiet" size="small" icon="target" onClick={panel.pendingRetry}>
-              {chipsCopy.tryAgain}
+        <Appear show={panel.pendingRetry !== null}>
+          {panel.pendingRetry ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-muted-foreground">{chipsCopy.pendingProblem}</p>
+              <ActionButton tone="quiet" size="small" icon="target" onClick={panel.pendingRetry}>
+                {chipsCopy.tryAgain}
+              </ActionButton>
+            </div>
+          ) : null}
+        </Appear>
+        <Appear show={panel.resume !== null}>
+          {panel.resume ? (
+            <ActionButton
+              tone="yellow"
+              icon="wallet"
+              working={cashOut.working}
+              workingLabel={chipsCopy.cashOutFinishing}
+              onClick={panel.resume}
+            >
+              {chipsCopy.cashOutResume}
             </ActionButton>
-          </div>
-        ) : null}
-        {panel.resume ? (
-          <ActionButton
-            tone="yellow"
-            icon="wallet"
-            working={cashOut.working}
-            workingLabel={chipsCopy.cashOutFinishing}
-            onClick={panel.resume}
-          >
-            {chipsCopy.cashOutResume}
-          </ActionButton>
-        ) : null}
+          ) : null}
+        </Appear>
         <div className="flex flex-wrap items-center gap-3">
           {claim.status === "ready" ? (
             <ActionButton

@@ -15,7 +15,6 @@ import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useSendMove } from "@/hooks/use-send-move";
 import { bidChance, bidRisk } from "@/lib/bid-odds";
 import { type Bid, isValidFace, quickPicks } from "@/lib/bid-rules";
-import { displayName } from "@/lib/player-tag";
 import { tableCopy } from "../copy";
 import type { GameEnding } from "../lib/game-end";
 import { gameLine } from "../lib/game-line";
@@ -23,6 +22,7 @@ import { potOf, shareOf } from "../lib/payout";
 import { revealedBySeat } from "../lib/reveal";
 import { useBidChoice } from "./use-bid-choice";
 import { useCoachTips } from "./use-coach-tips";
+import { useFirstGameTips } from "./use-first-game-tips";
 import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
@@ -30,6 +30,7 @@ import { type PlacedBid, type RoundResult, useTableEvents } from "./use-table-ev
 import { useTable } from "./use-table";
 import { useTableKeeper } from "./use-table-keeper";
 import { useWorkingNotice } from "./use-working-notice";
+import { revealNotice } from "../lib/reveal-notice";
 
 const TICK_MS = 1_000;
 const TURN_GRACE_MS = 15_000;
@@ -61,7 +62,7 @@ export function useGame(id: bigint) {
   );
   const nameOf = (address: string) =>
     (profiles.status === "ready" ? profiles.profileOf(address)?.name : undefined) ??
-    displayName(null, address, tableCopy.unnamed);
+    tableCopy.unnamed;
   const [shownResult, setShownResult] = useState<{ result: RoundResult; until: number } | null>(
     null
   );
@@ -129,6 +130,8 @@ export function useGame(id: bigint) {
     counts: number[];
     bidder: number | null;
     caller: number | null;
+    bidderPlayer: string | null;
+    callerPlayer: string | null;
     seenAt: bigint;
   } | null>(null);
   if (table?.status === "revealing" && revealCounts?.round !== table.round) {
@@ -138,6 +141,8 @@ export function useGame(id: bigint) {
       counts: table.seats.map((seat) => (seat.isActive ? seat.dice : 0)),
       bidder: table.bid?.bidder ?? null,
       caller: table.caller,
+      bidderPlayer: table.bid ? (table.seats[table.bid.bidder]?.player ?? null) : null,
+      callerPlayer: table.caller === null ? null : (table.seats[table.caller]?.player ?? null),
     });
   }
   const [closedRound, setClosedRound] = useState(0);
@@ -172,7 +177,11 @@ export function useGame(id: bigint) {
   const holdReveal = resultOpen || awaitingResult;
   useWorkingNotice(
     `reveal-${id}`,
-    tableCopy.revealing,
+    revealNotice(
+      revealCounts && { bidder: revealCounts.bidderPlayer, caller: revealCounts.callerPlayer },
+      me,
+      nameOf
+    ),
     table?.status === "revealing" || awaitingResult
   );
 
@@ -244,8 +253,14 @@ export function useGame(id: bigint) {
           (pick.quantity !== coachChoice.quantity || pick.face !== coachChoice.face)
       ) ?? null)
     : null;
+  const { tipTurn } = useFirstGameTips({
+    myTurn: coachTurn,
+    turnKey: `${table?.round ?? 0}-${table?.turn ?? 0}-${shownBid?.quantity ?? 0}-${shownBid?.face ?? 0}`,
+    hasBid: shownBid !== null,
+  });
   useCoachTips({
     myTurn: coachTurn,
+    paused: tipTurn,
     choice: coachChoice,
     risk: coachChoice ? riskOf(coachChoice) : null,
     safer,

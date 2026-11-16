@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
 import { aTable, gameView } from "../lib/game-view.testing";
@@ -8,9 +8,43 @@ import { GameView } from "./game-view";
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
 
+let wide = false;
+let waitingForDice = false;
+vi.mock("../hooks/use-game-board", () => ({
+  useGameBoard: () => ({ throwState: { kind: "idle" }, othersShaking: false, waitingForDice }),
+}));
+const historyWanted: boolean[] = [];
+vi.mock("@/hooks/use-media-query", () => ({ useMediaQuery: () => wide }));
+vi.mock("../hooks/use-round-history", () => ({
+  useGameHistory: (_table: unknown, enabled: boolean) => {
+    historyWanted.push(enabled);
+    return { status: "ready", rounds: [{ round: 3, bids: [], end: null }] };
+  },
+}));
+
+beforeEach(() => {
+  wide = false;
+  waitingForDice = false;
+  historyWanted.length = 0;
+});
+
 const playing = (buyIn = 0n) => aTable({ status: "playing", buyIn, round: 3 });
 
 describe("GameView", () => {
+  it("shows the rounds so far beside the board on a laptop", () => {
+    wide = true;
+    render(<GameView game={gameView({ table: playing() })} />);
+    expect(screen.getByText(tableCopy.history)).toBeInTheDocument();
+    expect(screen.getByText(tableCopy.historyNoBids)).toBeInTheDocument();
+    expect(historyWanted.every(Boolean)).toBe(true);
+  });
+
+  it("keeps phones to one screen, without the rounds panel or its reads", () => {
+    render(<GameView game={gameView({ table: playing() })} />);
+    expect(screen.queryByText(tableCopy.history)).toBeNull();
+    expect(historyWanted.some(Boolean)).toBe(false);
+  });
+
   it("shows the round, the dice in play and the game clock in one slim strip", () => {
     render(<GameView game={gameView({ table: playing() })} />);
     expect(screen.getByRole("group", { name: tableCopy.roundLine(3, 8) })).toBeInTheDocument();
@@ -47,6 +81,23 @@ describe("GameView", () => {
     expect(
       screen.getByRole("button", { name: tableCopy.callBluffOn("Sly Fox #3C4D") })
     ).toBeInTheDocument();
+  });
+
+  it("holds the bid control back while the player's dice are still in the cup", () => {
+    waitingForDice = true;
+    render(<GameView game={gameView({ table: playing() })} />);
+    expect(screen.queryByRole("button", { name: tableCopy.raise })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: tableCopy.callBluffOn("Sly Fox #3C4D") })
+    ).toBeNull();
+  });
+
+  it("still lets the player move when their dice couldn't be read", () => {
+    waitingForDice = true;
+    render(
+      <GameView game={gameView({ table: playing(), dice: { status: "failed", retry: vi.fn() } })} />
+    );
+    expect(screen.getByRole("button", { name: tableCopy.raise })).toBeInTheDocument();
   });
 
   it("says who everyone is waiting on in one line otherwise", () => {

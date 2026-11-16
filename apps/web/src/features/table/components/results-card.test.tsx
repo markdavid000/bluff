@@ -1,11 +1,23 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
 import { aTable, gameView, ME } from "../lib/game-view.testing";
 import { ResultsCard } from "./results-card";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
+
+const playAgain = vi.fn();
+const joinOffer = vi.fn();
+let again: Record<string, unknown> = {};
+vi.mock("../hooks/use-play-again", () => ({
+  usePlayAgain: () => ({ playAgain, joinOffer, ...again }),
+}));
+
+beforeEach(() => {
+  again = { offer: null, playing: false, joining: false, busy: false, confirm: false };
+  vi.clearAllMocks();
+});
 
 const finished = (buyIn = 0n) => aTable({ status: "finished", buyIn });
 
@@ -120,5 +132,54 @@ describe("ResultsCard", () => {
     render(<ResultsCard game={gameView({ table: finished(), end: { status: "unknown" } })} />);
     expect(screen.getByRole("heading", { name: tableCopy.gameOver })).toBeInTheDocument();
     expect(screen.getByText(tableCopy.winnerUnknown)).toBeInTheDocument();
+  });
+
+  describe("playing again", () => {
+    it("offers to play again with the same settings", () => {
+      render(<ResultsCard game={gameView({ table: finished() })} />);
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.playAgain }));
+      expect(playAgain).toHaveBeenCalledOnce();
+    });
+
+    it("offers the new table someone from the game set up", () => {
+      again = {
+        ...again,
+        offer: { id: 20n, hostName: "Sly Fox #3C4D", buyIn: 0n, isPrivate: false },
+      };
+      render(<ResultsCard game={gameView({ table: finished() })} />);
+      fireEvent.click(
+        screen.getByRole("button", { name: tableCopy.joinNewTable("Sly Fox #3C4D") })
+      );
+      expect(joinOffer).toHaveBeenCalledOnce();
+    });
+
+    it("names the chips when the new table is paid", () => {
+      again = {
+        ...again,
+        offer: { id: 20n, hostName: "Sly Fox #3C4D", buyIn: 10n * ONE_CHIP, isPrivate: false },
+      };
+      render(<ResultsCard game={gameView({ table: finished(10n * ONE_CHIP) })} />);
+      expect(
+        screen.getByRole("button", {
+          name: tableCopy.payAndJoinNewTable("10", "Sly Fox #3C4D"),
+        })
+      ).toBeInTheDocument();
+    });
+
+    it("says to ask for the link when the new table is private", () => {
+      again = {
+        ...again,
+        offer: { id: 20n, hostName: "Sly Fox #3C4D", buyIn: 0n, isPrivate: true },
+      };
+      render(<ResultsCard game={gameView({ table: finished() })} />);
+      expect(screen.getByText(tableCopy.newPrivateTable("Sly Fox #3C4D"))).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /new table/ })).toBeNull();
+    });
+
+    it("shows the table being set up while it lands", () => {
+      again = { ...again, playing: true, busy: true };
+      render(<ResultsCard game={gameView({ table: finished() })} />);
+      expect(screen.getByRole("button", { name: tableCopy.playingAgain })).toBeInTheDocument();
+    });
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { Cowrie } from "@/components/shared/cowrie";
 import { lobbyCopy } from "../copy";
 import type { LobbyTable } from "../lib/tables";
@@ -44,7 +45,9 @@ export function OpenTableCard({
           {lobbyCopy.join}
         </ActionButton>
       </div>
-      {problem ? <p className="text-sm text-muted-foreground">{problem}</p> : null}
+      <Appear show={Boolean(problem)} swapKey={problem ?? ""}>
+        <p className="text-sm text-muted-foreground">{problem}</p>
+      </Appear>
     </li>
   );
 }

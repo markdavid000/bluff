@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import { lobbyCopy } from "../copy";
 import { useLobby } from "../hooks/use-lobby";
@@ -57,9 +58,9 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
                   >
                     {lobbyCopy.playNow}
                   </ActionButton>
-                  {lobby.buyInProblem ? (
+                  <Appear show={lobby.buyInProblem !== null} swapKey={lobby.buyInProblem ?? ""}>
                     <p className="text-sm text-muted-foreground">{lobby.buyInProblem}</p>
-                  ) : null}
+                  </Appear>
                 </div>
               </div>
               <div className="flex flex-col gap-5 py-6">

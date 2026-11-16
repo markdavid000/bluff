@@ -40,7 +40,7 @@ describe("usePlayerProfiles", () => {
     );
   });
 
-  it("names every player and gives each a face, with a tag to tell them apart", () => {
+  it("names every player by their nickname alone and gives each a face", () => {
     read = { isPending: false, isError: false, data: ["Kola", [4, ""], "", [0, ""]] };
     const { result } = renderHook(() => usePlayerProfiles([KOLA, ADA], "Player"));
     expect(result.current).toMatchObject({ status: "ready" });
@@ -48,12 +48,10 @@ describe("usePlayerProfiles", () => {
     expect(result.current.profileOf(KOLA)).toEqual({
       address: KOLA,
       nickname: "Kola",
-      name: "Kola #1A2B",
+      name: "Kola",
       avatarSrc: avatarSource(4, KOLA),
     });
-    expect(result.current.profileOf(ADA.toUpperCase().replace("0X", "0x"))?.name).toBe(
-      "Player #3C4D"
-    );
+    expect(result.current.profileOf(ADA.toUpperCase().replace("0X", "0x"))?.name).toBe("Player");
     expect(asked[0]).toHaveLength(4);
   });
 
