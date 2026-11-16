@@ -139,7 +139,7 @@ describe("GameSeat", () => {
     );
     expect(screen.getByRole("img", { name: tableCopy.hiddenDice(2) })).toBeInTheDocument();
     expect(container.querySelector("[data-rolling-off]")).not.toBeNull();
-    await waitFor(() => expect(tiles()).toBe(2));
+    await waitFor(() => expect(tiles()).toBe(2), { timeout: 2_000 });
   });
 
   it("marks a player who is out, with no dice", () => {

@@ -15,11 +15,13 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 - **Settings menu:** the header's settings tile opens **Board**, with 3D board (the default) or Flat board saved as `board`, and **Calm motion** saved as `calmMotion`, which nothing used before.
 - **`GameBoard`** picks the board everywhere (the game, the waiting room and the design preview). It's the flat board only when the player chose it or the device has no WebGL. Calm motion and a slow device don't change the board, at the maintainer's request.
 - **Calm motion:** `useCalmMotion` (device or setting) replaces `useReducedMotion` in every component, and a `calm:` style variant (device or setting) replaces `motion-reduce:`.
-- **A lost die rolls off:** a seat keeps its old dice count while the reveal card is open. When the card closes, the lost face-down die rolls off the end of the row, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
+- **A lost die rolls off:** a seat keeps its old dice count from the moment a bluff is called until the reveal card closes. The lost face-down die then rolls off the end of the row, starting just after the card has faded, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
+- **First-game tips move to a dialog before the game:** the four tips no longer pop up as toasts during play. A player who hasn't seen them gets a "Before you play" dialog in the waiting room: one tip per card with a picture, "Tip 1 of 4", Next tip, and Got it. Closing it counts as seen. The safe and risky hints during play are unchanged.
 - **Cowries pour:** eight cowries tumble onto "You won 20 chips" on a paid win. With calm motion there's no pour.
 
 ## Removed
 
+- The per-turn tip toasts (`useFirstGameTips`) and the coach's pause for them.
 - `lazy-board.tsx`, `LazyBoardScene` and `BoardPlaceholder` as exports. `GameBoard` now owns the lazy 3D scene and its placeholder.
 - Direct uses of `useReducedMotion` and `motion-reduce:`, replaced as above.
 
@@ -33,10 +35,13 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - calm motion;
   - the settings menu's board choice and calm motion;
   - the lost die held during the reveal and then rolling off;
-  - the cowrie pour.
+  - the cowrie pour;
+  - the dice held from the call to the card closing;
+  - the tips dialog and its hook.
 - **`pnpm preflight`:** passes.
 - **In the browser:**
   - On `/design`, the flat board swaps in the same space, and Shake and throw and Lift the cups behave as in 3D.
   - In a waiting room, the flat board now sits inside its square, clear of the player's face.
+  - The tips dialog shows in the waiting room, steps from 1 to 4, and closes on Got it, remembering all four.
   - Settings shows 3D board ticked by default, and Flat board as the only other choice. Calm motion on keeps the 3D board. No console errors.
 - **Not checked live:** a full game on the flat board, and the cowrie pour and rolling die on Sepolia. They're covered by tests.

@@ -8,7 +8,7 @@ import { tableCopy } from "../copy";
 
 export const COACH_DELAY_MS = 600;
 export const COACH_STAYS_MS = 10_000;
-export const COACH_ID = "coach";
+const COACH_ID = "coach";
 
 function words(bid: Bid) {
   return tableCopy.bid(bid.quantity, tableCopy.faceWords[bid.face - 1] ?? String(bid.face));
@@ -19,18 +19,15 @@ export function useCoachTips({
   choice,
   risk,
   safer,
-  paused,
   onPick,
 }: {
   myTurn: boolean;
   choice: Bid | null;
   risk: BidRisk | null;
   safer: Bid | null;
-  paused: boolean;
   onPick: (bid: Bid) => void;
 }) {
-  const key =
-    myTurn && !paused && choice && risk ? `${choice.quantity}-${choice.face}-${risk}` : null;
+  const key = myTurn && choice && risk ? `${choice.quantity}-${choice.face}-${risk}` : null;
 
   const speak = useEffectEvent(() => {
     if (!choice || !risk) return;

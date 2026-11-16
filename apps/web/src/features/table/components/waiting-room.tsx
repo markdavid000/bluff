@@ -8,6 +8,7 @@ import { tableCopy } from "../copy";
 import type { useWaitingRoom } from "../hooks/use-waiting-room";
 import { seatLayout } from "../lib/seat-layout";
 import { GameBoard } from "./board/game-board";
+import { FirstGameTips } from "./first-game-tips";
 import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
@@ -142,6 +143,7 @@ export function WaitingRoom({ room }: { room: Room }) {
           {tableCopy.leave}
         </ActionButton>
       </div>
+      <FirstGameTips />
     </div>
   );
 }

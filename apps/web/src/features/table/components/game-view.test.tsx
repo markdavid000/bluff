@@ -83,6 +83,20 @@ describe("GameView", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps every seat's dice count from the call until the reveal card closes", () => {
+    const before = gameView({ table: playing(), boardRevealed: true, reveal: null, myTurn: false });
+    const { rerender } = render(<GameView game={before} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(4) })).toBeInTheDocument();
+    const after = {
+      ...before,
+      seats: before.seats.map((seat) => (seat.isMe ? seat : { ...seat, dice: seat.dice - 1 })),
+    };
+    rerender(<GameView game={after} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(4) })).toBeInTheDocument();
+    rerender(<GameView game={{ ...after, boardRevealed: false }} />);
+    expect(screen.getByRole("img", { name: tableCopy.hiddenDice(3) })).toBeInTheDocument();
+  });
+
   it("holds the bid control back while the player's dice are still in the cup", () => {
     waitingForDice = true;
     render(<GameView game={gameView({ table: playing() })} />);

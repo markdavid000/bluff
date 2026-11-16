@@ -115,7 +115,7 @@ function FaceDownTile() {
               y: [0, -14, 26],
               rotate: 300,
               opacity: [1, 1, 0],
-              transition: { duration: 0.8, ease: "easeIn" },
+              transition: { duration: 0.8, delay: 0.35, ease: "easeIn" },
             }
       }
       className="inline-flex"

@@ -22,7 +22,6 @@ import { potOf, shareOf } from "../lib/payout";
 import { revealedBySeat } from "../lib/reveal";
 import { useBidChoice } from "./use-bid-choice";
 import { useCoachTips } from "./use-coach-tips";
-import { useFirstGameTips } from "./use-first-game-tips";
 import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
@@ -253,14 +252,8 @@ export function useGame(id: bigint) {
           (pick.quantity !== coachChoice.quantity || pick.face !== coachChoice.face)
       ) ?? null)
     : null;
-  const { tipTurn } = useFirstGameTips({
-    myTurn: coachTurn,
-    turnKey: `${table?.round ?? 0}-${table?.turn ?? 0}-${shownBid?.quantity ?? 0}-${shownBid?.face ?? 0}`,
-    hasBid: shownBid !== null,
-  });
   useCoachTips({
     myTurn: coachTurn,
-    paused: tipTurn,
     choice: coachChoice,
     risk: coachChoice ? riskOf(coachChoice) : null,
     safer,

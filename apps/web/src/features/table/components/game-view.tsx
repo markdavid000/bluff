@@ -97,7 +97,7 @@ export function GameView({ game }: { game: Game }) {
                 lastBid={seat.lastBid}
                 ownDice={seat.isMe ? game.dice : null}
                 matching={seat.isMe ? game.matching : null}
-                holdDice={game.reveal !== null}
+                holdDice={game.boardRevealed}
               />
             </div>
           ) : null;
