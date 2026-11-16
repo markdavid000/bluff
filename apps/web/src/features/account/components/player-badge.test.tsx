@@ -20,8 +20,30 @@ const setOpen = vi.fn((next: boolean) => {
 let player: Record<string, unknown> = { status: "loading" };
 let signingOut = false;
 
+const profile = {
+  panel: "main",
+  nickname: "Dave",
+  nicknameInvalid: false,
+  face: 3,
+  faces: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  saving: false,
+  savingName: false,
+  savingFace: false,
+  confirmInWallet: false,
+  canSaveName: true,
+  editName: vi.fn(),
+  editFace: vi.fn(),
+  back: vi.fn(),
+  changeNickname: vi.fn(),
+  saveName: vi.fn(),
+  chooseFace: vi.fn(),
+};
+let edit: Record<string, unknown> = profile;
+const showTips = vi.fn();
+vi.mock("@/hooks/use-tips-request", () => ({ showTips: () => showTips() }));
+
 vi.mock("../hooks/use-player-badge", () => ({
-  usePlayerBadge: () => ({ player, signOut, signingOut, open, setOpen }),
+  usePlayerBadge: () => ({ player, signOut, signingOut, open, setOpen, profile: edit }),
 }));
 
 const ready = {
@@ -37,6 +59,7 @@ beforeEach(() => {
   player = { status: "loading" };
   open = false;
   signingOut = false;
+  edit = profile;
   vi.clearAllMocks();
 });
 
@@ -98,5 +121,66 @@ describe("PlayerBadge", () => {
     render(<PlayerBadge />);
     expect(screen.getByText("Dave #4E31", { selector: "span" })).toHaveClass("hidden", "sm:inline");
     expect(screen.getByRole("group", { name: "Screen controls" })).toHaveClass("sm:hidden");
+  });
+
+  describe("the profile", () => {
+    beforeEach(() => {
+      player = ready;
+      open = true;
+    });
+
+    it("offers to change the name and the face, the game tips, and signing out", () => {
+      render(<PlayerBadge />);
+      fireEvent.click(screen.getByRole("button", { name: accountCopy.changeName }));
+      expect(profile.editName).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByRole("button", { name: accountCopy.changeFace }));
+      expect(profile.editFace).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByRole("button", { name: accountCopy.gameTips }));
+      expect(showTips).toHaveBeenCalledOnce();
+      expect(setOpen).toHaveBeenCalledWith(false);
+    });
+
+    it("changes the name in the same field as the welcome screen", () => {
+      edit = { ...profile, panel: "name" };
+      render(<PlayerBadge />);
+      const field = screen.getByLabelText(accountCopy.nicknameLabel);
+      expect(field).toHaveValue("Dave");
+      fireEvent.change(field, { target: { value: "Brave Otter" } });
+      expect(profile.changeNickname).toHaveBeenCalledWith("Brave Otter");
+      fireEvent.submit(screen.getByRole("button", { name: accountCopy.saveName }));
+      expect(profile.saveName).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByRole("button", { name: accountCopy.backToProfile }));
+      expect(profile.back).toHaveBeenCalledOnce();
+    });
+
+    it("keeps Save off for a name someone else has", () => {
+      edit = { ...profile, panel: "name", canSaveName: false };
+      render(<PlayerBadge />);
+      expect(screen.getByRole("button", { name: accountCopy.saveName })).toBeDisabled();
+    });
+
+    it("changes the face from the same twelve as the welcome screen", () => {
+      edit = { ...profile, panel: "face" };
+      render(<PlayerBadge />);
+      expect(screen.getAllByRole("radio")).toHaveLength(12);
+      expect(screen.getByRole("radio", { name: accountCopy.faceNumber(3) })).toBeChecked();
+      fireEvent.click(screen.getByRole("radio", { name: accountCopy.faceNumber(7) }));
+      expect(profile.chooseFace).toHaveBeenCalledWith(7);
+    });
+
+    it("stays open while a change is saving, and says so", () => {
+      edit = { ...profile, panel: "face", saving: true, savingFace: true };
+      const shown: Notice[] = [];
+      const stop = onNotice((event) => {
+        if (event.type === "show") shown.push(event.notice);
+      });
+      render(<PlayerBadge />);
+      fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+      stop();
+      expect(setOpen).not.toHaveBeenCalledWith(false);
+      expect(shown.map((notice) => notice.title)).toContain(
+        errorCopy.stillGoing(accountCopy.savingFace)
+      );
+    });
   });
 });

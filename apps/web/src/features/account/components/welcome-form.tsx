@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "cn";
 import { AnimatePresence, motion } from "motion/react";
 import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { useId } from "react";
@@ -10,6 +9,8 @@ import { PatternFrame } from "@/components/shared/pattern-band";
 import { TumblingDie } from "@/components/shared/tumbling-die";
 import { accountCopy } from "../copy";
 import { useWelcome } from "../hooks/use-welcome";
+import { FacePicker } from "./face-picker";
+import { NicknameInput } from "./nickname-input";
 
 const OPPONENT_FACE = 11;
 
@@ -71,15 +72,12 @@ export function WelcomeForm() {
                       calm ? { duration: 0.12 } : { type: "spring", stiffness: 420, damping: 32 }
                     }
                   >
-                    <input
+                    <NicknameInput
                       id={nameId}
                       value={welcome.nickname}
-                      onChange={(event) => welcome.changeNickname(event.target.value)}
-                      maxLength={20}
-                      autoComplete="nickname"
-                      aria-describedby={helpId}
-                      aria-invalid={welcome.nicknameInvalid || undefined}
-                      className="min-h-12 w-full rounded-xl border-2 border-tile-edge bg-card px-4 font-game text-xl outline-none focus-visible:ring-4 focus-visible:ring-ring/60 aria-invalid:border-destructive"
+                      onChange={welcome.changeNickname}
+                      invalid={welcome.nicknameInvalid}
+                      describedBy={helpId}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -103,33 +101,11 @@ export function WelcomeForm() {
 
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-2 font-game text-lg">{accountCopy.faceLabel}</legend>
-            <div
-              role="radiogroup"
-              aria-label={accountCopy.faceLabel}
-              className="grid grid-cols-6 gap-2"
-            >
-              {welcome.faces.map((face) => {
-                const selected = welcome.avatar === face;
-                return (
-                  <button
-                    key={face}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    aria-label={accountCopy.faceNumber(face)}
-                    onClick={() => welcome.chooseAvatar(face)}
-                    className={cn(
-                      "rounded-full p-1 transition-transform duration-150 outline-none focus-visible:ring-4 focus-visible:ring-ring/60",
-                      selected
-                        ? "-translate-y-1 bg-accent shadow-[0_5px_0_0_var(--color-tile-edge)]"
-                        : "hover:-translate-y-0.5"
-                    )}
-                  >
-                    <Avatar src={`/avatars/${face}.svg`} size={52} className="size-full" />
-                  </button>
-                );
-              })}
-            </div>
+            <FacePicker
+              faces={welcome.faces}
+              chosen={welcome.avatar}
+              onChoose={welcome.chooseAvatar}
+            />
           </fieldset>
 
           <ActionButton
