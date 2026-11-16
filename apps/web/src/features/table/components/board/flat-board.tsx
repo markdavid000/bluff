@@ -152,11 +152,11 @@ export function FlatBoard({
     <div
       role="img"
       aria-label={label}
-      className="[container-type:inline-size] aspect-square w-full [perspective:1100px]"
+      className="[container-type:inline-size] aspect-square w-full p-[4%]"
     >
       <div
         aria-hidden
-        className="relative size-full [transform:rotateX(16deg)] rounded-[5%] border-[min(2.5cqw,14px)] border-board-edge bg-board shadow-[inset_0_0_0_3px_rgb(0_0_0/0.25),0_10px_0_0_var(--color-board-edge),0_24px_36px_-14px_rgb(0_0_0/0.55)]"
+        className="relative size-full rounded-[5%] border-[min(2.5cqw,14px)] border-board-edge bg-board shadow-[inset_0_0_0_3px_rgb(0_0_0/0.25),0_6px_0_0_var(--color-board-edge),0_14px_20px_-12px_rgb(0_0_0/0.5)]"
       >
         {CORNERS.map((corner) => (
           <span

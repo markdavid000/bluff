@@ -1,5 +1,6 @@
 const SLOW_FPS = 30;
 const SLOW_SECONDS = 3;
+const PAUSE_SECONDS = 0.25;
 
 export function createFrameWatch() {
   let elapsed = 0;
@@ -8,6 +9,12 @@ export function createFrameWatch() {
   let reported = false;
   return {
     tick(deltaSeconds: number): boolean {
+      if (deltaSeconds > PAUSE_SECONDS) {
+        elapsed = 0;
+        frames = 0;
+        slowSeconds = 0;
+        return false;
+      }
       elapsed += deltaSeconds;
       frames += 1;
       if (elapsed < 1) return false;

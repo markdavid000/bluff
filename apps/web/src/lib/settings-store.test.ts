@@ -25,7 +25,20 @@ describe("settings store", () => {
       calmMotion: false,
       theme: "auto",
       seenTips: [],
+      board: "auto",
     });
+  });
+
+  it("remembers the chosen board", () => {
+    const storage = memoryStorage();
+    createSettingsStore(storage).update({ board: "3d" });
+    expect(createSettingsStore(storage).get().board).toBe("3d");
+  });
+
+  it("falls back to choosing the board automatically for a value it doesn't know", () => {
+    const storage = memoryStorage();
+    storage.setItem("bluff.settings", JSON.stringify({ board: "hologram" }));
+    expect(createSettingsStore(storage).get().board).toBe("auto");
   });
 
   it("remembers which tips the player has seen", () => {

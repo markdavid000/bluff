@@ -30,4 +30,18 @@ describe("createFrameWatch", () => {
     expect(run(watch, 20, 3)).toBe(true);
     expect(run(watch, 20, 3)).toBe(false);
   });
+
+  it("doesn't count a pause, like a hidden tab, as a slow board", () => {
+    const watch = createFrameWatch();
+    let slow = false;
+    for (let pause = 0; pause < 6; pause += 1) slow = watch.tick(1.5) || slow;
+    expect(slow).toBe(false);
+  });
+
+  it("starts counting again after a pause", () => {
+    const watch = createFrameWatch();
+    run(watch, 20, 2);
+    watch.tick(2);
+    expect(run(watch, 20, 2)).toBe(false);
+  });
 });

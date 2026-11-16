@@ -12,10 +12,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useScreenControls } from "@/hooks/use-screen-controls";
-import { MUSIC_TRACKS, type MusicTrack } from "@/lib/settings-store";
+import {
+  BOARD_CHOICES,
+  type BoardSetting,
+  MUSIC_TRACKS,
+  type MusicTrack,
+} from "@/lib/settings-store";
 import { ActionButton } from "./action-button";
 import { sharedCopy } from "./copy";
 import { GameIcon, type GameIconName } from "./game-icon";
+
+const MENU =
+  "min-w-52 rounded-xl border-2 border-toast-edge bg-toast p-2 text-toast-foreground shadow-[0_5px_0_0_var(--color-toast-edge),0_16px_24px_-10px_rgb(0_0_0/0.55)]";
 
 const ITEM =
   "cursor-pointer rounded-lg py-2.5 pr-4 pl-11 font-game text-lg tracking-wide focus:bg-accent focus:text-accent-foreground [&>span:first-child]:left-3";
@@ -67,20 +75,11 @@ export function ScreenControls({ className }: { className?: string }) {
         label={controls.sounds ? sharedCopy.soundsOff : sharedCopy.soundsOn}
         onPress={controls.toggleSounds}
       />
-      <ControlTile
-        icon="setting"
-        on={controls.calm}
-        label={controls.calm ? sharedCopy.calmOff : sharedCopy.calmOn}
-        onPress={controls.toggleCalm}
-      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ControlTile icon="music" on={controls.music} label={sharedCopy.chooseMusic} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="min-w-52 rounded-xl border-2 border-toast-edge bg-toast p-2 text-toast-foreground shadow-[0_5px_0_0_var(--color-toast-edge),0_16px_24px_-10px_rgb(0_0_0/0.55)]"
-        >
+        <DropdownMenuContent align="end" className={MENU}>
           <DropdownMenuLabel className="px-3 pb-1 font-game text-base opacity-85">
             {sharedCopy.chooseMusic}
           </DropdownMenuLabel>
@@ -107,6 +106,40 @@ export function ScreenControls({ className }: { className?: string }) {
             indicator={<GameIcon name="tick" size={24} />}
           >
             {sharedCopy.musicPlaying}
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ControlTile icon="setting" on={false} label={sharedCopy.settings} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className={MENU}>
+          <DropdownMenuLabel className="px-3 pb-1 font-game text-base opacity-85">
+            {sharedCopy.board}
+          </DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={controls.board}
+            onValueChange={(value) => controls.chooseBoard(value as BoardSetting)}
+          >
+            {BOARD_CHOICES.map((choice) => (
+              <DropdownMenuRadioItem
+                key={choice}
+                value={choice}
+                className={ITEM}
+                indicator={<GameIcon name="tick" size={24} />}
+              >
+                {sharedCopy.boardChoices[choice]}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+          <DropdownMenuSeparator className="bg-toast-foreground/20" />
+          <DropdownMenuCheckboxItem
+            checked={controls.calm}
+            onCheckedChange={controls.toggleCalm}
+            className={ITEM}
+            indicator={<GameIcon name="tick" size={24} />}
+          >
+            {sharedCopy.calmMotion}
           </DropdownMenuCheckboxItem>
         </DropdownMenuContent>
       </DropdownMenu>

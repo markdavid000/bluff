@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { useCalmMotion } from "@/hooks/use-calm-motion";
+import { useSettings } from "@/hooks/use-settings";
 import { supportsWebGL } from "../lib/webgl";
 
 type Listener = () => void;
@@ -15,9 +16,10 @@ function subscribe(listener: Listener) {
   return () => listeners.delete(listener);
 }
 
-function canDraw3d(): boolean {
+function boardState(): "none" | "slow" | "fine" {
   webgl ??= supportsWebGL();
-  return webgl && !slow;
+  if (!webgl) return "none";
+  return slow ? "slow" : "fine";
 }
 
 export function resetSlowBoard() {
@@ -28,9 +30,11 @@ export function resetSlowBoard() {
 
 export function useBoardChoice() {
   const calm = useCalmMotion();
-  const can3d = useSyncExternalStore(subscribe, canDraw3d, () => true);
+  const { settings } = useSettings();
+  const device = useSyncExternalStore(subscribe, boardState, () => "fine" as const);
+  const automatic = settings.board === "auto" && (calm || device === "slow");
   return {
-    flat: calm || !can3d,
+    flat: device === "none" || settings.board === "flat" || automatic,
     reportSlow: () => {
       if (slow) return;
       slow = true;
