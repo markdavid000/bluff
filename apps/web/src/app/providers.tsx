@@ -8,6 +8,7 @@ import { GameToaster } from "@/components/shared/notify";
 import { gameChain, gameTransport } from "@/config/chain";
 import { publicEnv } from "@/config/env";
 import { SessionKeeper } from "@/features/account";
+import { FirstGameTips } from "@/features/table";
 import { activeWalletFor } from "@/lib/active-wallet";
 import { createQueryClient } from "@/lib/query-client";
 import { GameZamaProvider } from "./zama-provider";
@@ -38,6 +39,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <SessionKeeper />
             {children}
             <GameToaster />
+            <FirstGameTips />
           </GameZamaProvider>
         </WagmiProvider>
       </QueryClientProvider>

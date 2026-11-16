@@ -26,7 +26,7 @@ import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
 import { type PlacedBid, type RoundResult, useTableEvents } from "./use-table-events";
-import { useTable } from "./use-table";
+import { isNotTableRead, markLeftTable, useTable } from "./use-table";
 import { useTableKeeper } from "./use-table-keeper";
 import { useWorkingNotice } from "./use-working-notice";
 import { revealNotice } from "../lib/reveal-notice";
@@ -270,8 +270,9 @@ export function useGame(id: bigint) {
         report
       ),
     onDone: () => {
+      markLeftTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
-      void queryClient.invalidateQueries({ queryKey: ["readContract"] });
+      void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
       router.replace("/play");
     },
   });

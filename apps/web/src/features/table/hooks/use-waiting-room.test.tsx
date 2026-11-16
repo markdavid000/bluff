@@ -58,7 +58,12 @@ vi.mock("./use-invite-code", () => ({
   },
 }));
 vi.mock("./use-link-invite", () => ({ useLinkInvite: () => linkCode }));
-vi.mock("./use-table", () => ({ useTable: () => tableRead }));
+const markLeftTable = vi.fn();
+vi.mock("./use-table", () => ({
+  useTable: () => tableRead,
+  markLeftTable: (id: bigint) => markLeftTable(id),
+  isNotTableRead: () => true,
+}));
 vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
 vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
 
@@ -188,6 +193,7 @@ describe("useWaitingRoom", () => {
     const { result } = render();
     act(() => viewOf(result).leave());
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+    expect(markLeftTable).toHaveBeenCalledWith(12n);
   });
 
   describe("for a visitor", () => {

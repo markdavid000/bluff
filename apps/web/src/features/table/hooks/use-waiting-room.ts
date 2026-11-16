@@ -25,7 +25,7 @@ import { type Role, nextStep } from "../lib/next-step";
 import { type Table, freeSeats, notReady } from "../lib/table-view";
 import { useInviteCode } from "./use-invite-code";
 import { useLinkInvite } from "./use-link-invite";
-import { useTable } from "./use-table";
+import { isNotTableRead, markLeftTable, useTable } from "./use-table";
 import { useTableEvents } from "./use-table-events";
 import { useWorkingNotice } from "./use-working-notice";
 import { useTableKeeper } from "./use-table-keeper";
@@ -115,8 +115,9 @@ export function useWaitingRoom(id: bigint) {
         report
       ),
     onDone: () => {
+      markLeftTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
-      void queryClient.invalidateQueries({ queryKey: ["readContract"] });
+      void queryClient.invalidateQueries({ queryKey: ["readContract"], predicate: isNotTableRead });
       router.replace("/play");
     },
   });
@@ -130,6 +131,7 @@ export function useWaitingRoom(id: bigint) {
         report
       ),
     onDone: () => {
+      markLeftTable(id);
       invalidateBalanceQueries(queryClient, contracts.chips);
       router.replace("/play");
     },

@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useScreenControls } from "@/hooks/use-screen-controls";
+import { showTips } from "@/hooks/use-tips-request";
 import {
   BOARD_CHOICES,
   type BoardSetting,
@@ -111,7 +113,7 @@ export function ScreenControls({ className }: { className?: string }) {
       </DropdownMenu>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ControlTile icon="setting" on={false} label={sharedCopy.settings} />
+          <ControlTile icon="setting" on label={sharedCopy.settings} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className={MENU}>
           <DropdownMenuLabel className="px-3 pb-1 font-game text-base opacity-85">
@@ -132,6 +134,14 @@ export function ScreenControls({ className }: { className?: string }) {
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
+          <DropdownMenuSeparator className="bg-toast-foreground/20" />
+          <DropdownMenuItem
+            className={ITEM}
+            icon={<GameIcon name="target" size={24} />}
+            onSelect={showTips}
+          >
+            {sharedCopy.gameTips}
+          </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-toast-foreground/20" />
           <DropdownMenuCheckboxItem
             checked={controls.calm}

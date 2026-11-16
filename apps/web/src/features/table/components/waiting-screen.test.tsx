@@ -8,17 +8,9 @@ import { NO_GAME } from "../lib/table-fixture.testing";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
-let tipsOpen = false;
+const useTipsOnFirstVisit = vi.fn();
 vi.mock("../hooks/use-tips-dialog", () => ({
-  useTipsDialog: () => ({
-    open: tipsOpen,
-    step: 0,
-    total: 4,
-    tip: "wild-ones",
-    last: false,
-    next: vi.fn(),
-    done: vi.fn(),
-  }),
+  useTipsOnFirstVisit: () => useTipsOnFirstVisit(),
 }));
 vi.mock("../hooks/use-board-choice", () => ({
   useBoardChoice: () => false,
@@ -126,12 +118,9 @@ describe("WaitingScreen", () => {
   });
 
   describe("the waiting room", () => {
-    it("shows the tips before the game to a player who hasn't seen them", () => {
-      tipsOpen = true;
+    it("offers the tips before the game to a player who hasn't seen them", () => {
       show(room());
-      expect(screen.getByRole("dialog", { name: tableCopy.tipsTitle })).toBeInTheDocument();
-      expect(screen.getByText(tableCopy.firstTips["wild-ones"])).toBeInTheDocument();
-      tipsOpen = false;
+      expect(useTipsOnFirstVisit).toHaveBeenCalled();
     });
 
     it("names every player with their ready state and the line", () => {

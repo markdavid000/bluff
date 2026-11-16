@@ -16,8 +16,13 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
 - **`GameBoard`** picks the board everywhere (the game, the waiting room and the design preview). It's the flat board only when the player chose it or the device has no WebGL. Calm motion and a slow device don't change the board, at the maintainer's request.
 - **Calm motion:** `useCalmMotion` (device or setting) replaces `useReducedMotion` in every component, and a `calm:` style variant (device or setting) replaces `motion-reduce:`.
 - **A lost die rolls off:** a seat keeps its old dice count from the moment a bluff is called until the reveal card closes. The lost face-down die then rolls off the end of the row, starting just after the card has faded, or fades with calm motion. This plays on the seat's dice row, so it looks the same on both boards, in place of the plan's separate physics throw in 3D.
-- **First-game tips move to a dialog before the game:** the four tips no longer pop up as toasts during play. A player who hasn't seen them gets a "Before you play" dialog in the waiting room: one tip per card with a picture, "Tip 1 of 4", Next tip, and Got it. Closing it counts as seen. The safe and risky hints during play are unchanged.
+- **First-game tips move to a dialog before the game:** the four tips no longer pop up as toasts during play. A player who hasn't seen them gets a "Before you play" dialog in the waiting room: one tip per card with a picture, "Tip 1 of 4", Next tip, and Got it. Closing it counts as seen. **Game tips** in the Settings menu brings them back from any screen. The safe and risky hints during play are unchanged.
 - **Cowries pour:** eight cowries tumble onto "You won 20 chips" on a paid win. With calm motion there's no pour.
+
+## Changes after review
+
+- **No flash when leaving:** leaving a waiting room or a game, or closing a table, froze nothing before, so the fresh table read redrew the page (a visitor's Join card, or "This table has closed") before the lobby appeared. The table's read now stops the moment the player leaves, and the refresh skips it, so the page stays as it was until the lobby replaces it.
+- **The settings tile is in full colour,** since it opens a menu rather than switching something off.
 
 ## Removed
 
@@ -37,7 +42,9 @@ PR 5B-2 of the [game finish plan](../plans/2026-11-16-game-finish-plan.md). The 
   - the lost die held during the reveal and then rolling off;
   - the cowrie pour;
   - the dice held from the call to the card closing;
-  - the tips dialog and its hook.
+  - the tips dialog, its hooks and Game tips in Settings;
+  - freezing the table read after leaving;
+  - the settings tile's colour.
 - **`pnpm preflight`:** passes.
 - **In the browser:**
   - On `/design`, the flat board swaps in the same space, and Shake and throw and Lift the cups behave as in 3D.

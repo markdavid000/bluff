@@ -48,7 +48,12 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
-vi.mock("./use-table", () => ({ useTable: () => tableRead }));
+const markLeftTable = vi.fn();
+vi.mock("./use-table", () => ({
+  useTable: () => tableRead,
+  markLeftTable: (id: bigint) => markLeftTable(id),
+  isNotTableRead: () => true,
+}));
 vi.mock("./use-table-events", () => ({
   useTableEvents: ({
     onRoundSettled,
@@ -489,5 +494,6 @@ describe("useGame", () => {
     const { result } = render();
     act(() => viewOf(result).leave());
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+    expect(markLeftTable).toHaveBeenCalledWith(12n);
   });
 });

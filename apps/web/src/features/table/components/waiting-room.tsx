@@ -7,8 +7,8 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { tableCopy } from "../copy";
 import type { useWaitingRoom } from "../hooks/use-waiting-room";
 import { seatLayout } from "../lib/seat-layout";
+import { useTipsOnFirstVisit } from "../hooks/use-tips-dialog";
 import { GameBoard } from "./board/game-board";
-import { FirstGameTips } from "./first-game-tips";
 import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
@@ -25,6 +25,7 @@ const SLOT: Record<"top" | "left" | "right" | "bottom", string> = {
 const POT_STACKS = 6;
 
 export function WaitingRoom({ room }: { room: Room }) {
+  useTipsOnFirstVisit();
   const colors = useThemeColors();
   const { table, seats } = room;
   const seatCount = table.seatCount;
@@ -143,7 +144,6 @@ export function WaitingRoom({ room }: { room: Room }) {
           {tableCopy.leave}
         </ActionButton>
       </div>
-      <FirstGameTips />
     </div>
   );
 }
