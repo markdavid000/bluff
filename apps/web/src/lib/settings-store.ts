@@ -10,6 +10,7 @@ export interface Settings {
   sounds: boolean;
   calmMotion: boolean;
   theme: ThemeSetting;
+  seenTips: readonly string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sounds: true,
   calmMotion: false,
   theme: "auto",
+  seenTips: [],
 };
 
 const STORAGE_KEY = "bluff.settings";
@@ -41,6 +43,9 @@ function fromSaved(saved: Record<string, unknown>): Settings {
     sounds: flag(saved.sounds, DEFAULT_SETTINGS.sounds),
     calmMotion: flag(saved.calmMotion, DEFAULT_SETTINGS.calmMotion),
     theme: pick(saved.theme, THEMES, DEFAULT_SETTINGS.theme),
+    seenTips: Array.isArray(saved.seenTips)
+      ? saved.seenTips.filter((tip): tip is string => typeof tip === "string")
+      : DEFAULT_SETTINGS.seenTips,
   };
 }
 

@@ -24,7 +24,22 @@ describe("settings store", () => {
       sounds: true,
       calmMotion: false,
       theme: "auto",
+      seenTips: [],
     });
+  });
+
+  it("remembers which tips the player has seen", () => {
+    const storage = memoryStorage();
+    createSettingsStore(storage).update({ seenTips: ["wild-ones"] });
+    expect(createSettingsStore(storage).get().seenTips).toEqual(["wild-ones"]);
+  });
+
+  it("keeps only the readable tip names from saved settings", () => {
+    const storage = memoryStorage();
+    storage.setItem("bluff.settings", JSON.stringify({ seenTips: ["wild-ones", 7, null] }));
+    expect(createSettingsStore(storage).get().seenTips).toEqual(["wild-ones"]);
+    storage.setItem("bluff.settings", JSON.stringify({ seenTips: "wild-ones" }));
+    expect(createSettingsStore(storage).get().seenTips).toEqual([]);
   });
 
   it("remembers a change for the next visit", () => {

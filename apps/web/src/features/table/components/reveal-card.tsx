@@ -59,6 +59,11 @@ export function RevealCard({
                 {tableCopy.roundResult(shown.count, faceWord(shown.face))}{" "}
                 {shown.loserIsMe ? tableCopy.youLostADie : tableCopy.lostADie(shown.loserName)}
               </DialogDescription>
+              <p className="rounded-xl bg-muted/60 px-3 py-2 font-game text-base">
+                {shown.outcome === "caught"
+                  ? tableCopy.whyCaught(shown.quantity, shown.count)
+                  : tableCopy.whyHolds(shown.quantity, shown.count)}
+              </p>
               {shown.rows.length > 0 ? (
                 <ul className="flex w-full flex-col gap-2">
                   {shown.rows.map((row) => (

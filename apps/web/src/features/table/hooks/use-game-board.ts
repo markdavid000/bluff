@@ -21,6 +21,7 @@ export function useGameBoard({
   const dice = useDiceThrow();
   const [roundSeen, setRoundSeen] = useState(0);
   const [shakingRound, setShakingRound] = useState<number | null>(null);
+  const [thrownRound, setThrownRound] = useState(0);
   if (round > 0 && round !== roundSeen) {
     setRoundSeen(round);
     setShakingRound(round);
@@ -40,6 +41,7 @@ export function useGameBoard({
   const throwNow = useEffectEvent((forRound: number) => {
     if (!faces || !placement) return;
     thrownFor.current = forRound;
+    setThrownRound(forRound);
     dice.throwDice(faces, placement.throwFrom);
     play("roll");
   });
@@ -62,5 +64,9 @@ export function useGameBoard({
     return () => window.clearTimeout(timer);
   }, [playing, ready, facesKey, round]);
 
-  return { throwState: dice.state, othersShaking: shakingRound === round };
+  return {
+    throwState: dice.state,
+    othersShaking: shakingRound === round,
+    waitingForDice: playing && thrownRound !== round,
+  };
 }

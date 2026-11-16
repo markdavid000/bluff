@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { Avatar } from "@/components/shared/avatar";
 import { Cowrie } from "@/components/shared/cowrie";
 import { PatternFrame } from "@/components/shared/pattern-band";
@@ -39,22 +40,24 @@ export function VisitorView({ room }: { room: Room }) {
           {paid ? <Cowrie size={24} /> : null}
           {paid ? tableCopy.chipsToPlay(formatChips(table.buyIn)) : tableCopy.free}
         </p>
-        {room.joinProblem ? (
-          <p className="text-base">{room.joinProblem}</p>
-        ) : (
-          <ActionButton
-            tone="green"
-            size="large"
-            icon={paid ? "cowrie" : "rocket"}
-            working={room.joining}
-            workingLabel={label(
-              room.joinStep === "invite" ? tableCopy.checkingInvite : tableCopy.joining
-            )}
-            onClick={room.join}
-          >
-            {paid ? tableCopy.payAndJoin(formatChips(table.buyIn)) : tableCopy.join}
-          </ActionButton>
-        )}
+        <Appear show swapKey={room.joinProblem ?? "join"}>
+          {room.joinProblem ? (
+            <p className="text-base">{room.joinProblem}</p>
+          ) : (
+            <ActionButton
+              tone="green"
+              size="large"
+              icon={paid ? "cowrie" : "rocket"}
+              working={room.joining}
+              workingLabel={label(
+                room.joinStep === "invite" ? tableCopy.checkingInvite : tableCopy.joining
+              )}
+              onClick={room.join}
+            >
+              {paid ? tableCopy.payAndJoin(formatChips(table.buyIn)) : tableCopy.join}
+            </ActionButton>
+          )}
+        </Appear>
         <BackToLobby />
       </div>
     </PatternFrame>

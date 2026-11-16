@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { CountingAmount } from "@/components/shared/counting-amount";
 import { Cowrie } from "@/components/shared/cowrie";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -55,13 +56,13 @@ export function ChipBalance() {
               <span className="sr-only">{chipsCopy.balanceLoading}</span>
             </span>
           )}
-          {needsYou ? (
-            <span className="absolute -top-1 -right-1 flex size-3.5">
+          <Appear show={needsYou} inline pop className="absolute -top-1 -right-1 flex size-3.5">
+            <span className="relative flex size-3.5">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-seat-green opacity-75 motion-reduce:animate-none" />
               <span className="relative inline-flex size-3.5 rounded-full border-2 border-background bg-seat-green" />
               <span className="sr-only">{chipsCopy.needsYou}</span>
             </span>
-          ) : null}
+          </Appear>
         </button>
       </DialogTrigger>
       <DialogContent>

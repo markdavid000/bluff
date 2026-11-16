@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import { motion, useReducedMotion } from "motion/react";
+import { Appear } from "@/components/shared/appear";
 import { DieFace } from "@/components/shared/die";
 import type { Bid } from "@/lib/bid-rules";
 import { tableCopy } from "../copy";
@@ -10,17 +11,26 @@ const RAISED =
   "shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_4px_0_0_var(--color-seat-yellow-edge),0_8px_14px_-6px_rgb(0_0_0/0.4)]";
 
 export function CurrentBid({ bid, bidderName }: { bid: Bid | null; bidderName: string | null }) {
+  return (
+    <Appear show swapKey={bid ? "bid" : "none"} inline>
+      {bid ? <PlacedBid bid={bid} bidderName={bidderName} /> : <NoBid />}
+    </Appear>
+  );
+}
+
+function NoBid() {
+  return (
+    <span
+      aria-live="polite"
+      className="inline-flex h-12 items-center rounded-2xl border-2 border-dashed border-muted-foreground/50 px-3 font-game text-sm text-muted-foreground"
+    >
+      {tableCopy.noBidYet}
+    </span>
+  );
+}
+
+function PlacedBid({ bid, bidderName }: { bid: Bid; bidderName: string | null }) {
   const calm = useReducedMotion();
-  if (!bid) {
-    return (
-      <span
-        aria-live="polite"
-        className="inline-flex h-12 items-center rounded-2xl border-2 border-dashed border-muted-foreground/50 px-3 font-game text-sm text-muted-foreground"
-      >
-        {tableCopy.noBidYet}
-      </span>
-    );
-  }
   return (
     <span aria-live="polite" className="relative inline-flex">
       <motion.span

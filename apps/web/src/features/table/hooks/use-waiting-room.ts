@@ -19,7 +19,6 @@ import { useSendMove } from "@/hooks/use-send-move";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
 import { notify } from "@/lib/notify";
-import { displayName } from "@/lib/player-tag";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { type Role, nextStep } from "../lib/next-step";
@@ -58,7 +57,7 @@ export function useWaitingRoom(id: bigint) {
   );
   const nameOf = (address: string) =>
     (profiles.status === "ready" ? profiles.profileOf(address)?.name : undefined) ??
-    displayName(null, address, tableCopy.unnamed);
+    tableCopy.unnamed;
   useTableEvents({ id, me, nameOf });
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();

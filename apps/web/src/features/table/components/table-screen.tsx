@@ -3,9 +3,11 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { notFound } from "next/navigation";
 import { ActionButton } from "@/components/shared/action-button";
+import { Appear } from "@/components/shared/appear";
 import { tableCopy } from "../copy";
 import { useTable } from "../hooks/use-table";
 import { GameScreen } from "./game-screen";
+import { SCREEN_FRAME } from "./screen-frame";
 import { TableLoading } from "./table-loading";
 import { WaitingScreen } from "./waiting-screen";
 
@@ -30,9 +32,10 @@ export function TableScreen({ id }: { id: bigint }) {
   if (read.status !== "ready") return <TableLoading />;
 
   const seated = read.table.seats.some((seat) => seat.player.toLowerCase() === me);
-  return seated && IN_GAME.has(read.table.status) ? (
-    <GameScreen id={id} />
-  ) : (
-    <WaitingScreen id={id} />
+  const inGame = seated && IN_GAME.has(read.table.status);
+  return (
+    <Appear show swapKey={inGame ? "game" : "waiting"} className={SCREEN_FRAME}>
+      {inGame ? <GameScreen id={id} /> : <WaitingScreen id={id} />}
+    </Appear>
   );
 }

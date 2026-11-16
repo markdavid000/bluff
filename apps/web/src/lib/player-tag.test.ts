@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayName, tagOf } from "./player-tag";
+import { displayName, plainName, tagOf } from "./player-tag";
 
 const ADDRESS = "0xA020b219e476BFfdcC22b1A47392805e16893E6b";
 
@@ -16,5 +16,14 @@ describe("player tag", () => {
     expect(displayName("", ADDRESS, "Player")).toBe("Player #3E6B");
     expect(displayName(null, ADDRESS, "Player")).toBe("Player #3E6B");
     expect(displayName("   ", ADDRESS, "Player")).toBe("Player #3E6B");
+  });
+
+  it("gives the nickname alone for use at the table", () => {
+    expect(plainName(" Brave Otter ", "Player")).toBe("Brave Otter");
+  });
+
+  it("gives the fallback alone when there is no nickname", () => {
+    expect(plainName("", "Player")).toBe("Player");
+    expect(plainName(null, "Player")).toBe("Player");
   });
 });

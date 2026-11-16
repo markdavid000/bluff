@@ -37,6 +37,10 @@ You have **60 seconds**. Do one of two things:
 
 You guess numbers 2 to 6. Ones are wild, so you never guess them directly.
 
+**A guess means "at least".** "Two 4s" means there are at least two dice showing 4 across everyone's dice, ones included. If there are three or five, the guess is still true. It's only a bluff when there are fewer than guessed.
+
+For example: you have two 4s and your opponent has one. They guess "two 4s". There are three 4s on the table, which is at least two, so the guess is true. If you call bluff, you lose a die. "Four 4s" would have been a bluff.
+
 **Call bluff.** If you think the last guess is wrong, call it. The first player of a round has to guess; there is nothing to call yet.
 
 ## When a bluff is called

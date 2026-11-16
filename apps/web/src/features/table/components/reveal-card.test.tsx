@@ -46,6 +46,21 @@ describe("RevealCard", () => {
     expect(screen.getByRole("dialog", { name: tableCopy.bidHolds })).toBeInTheDocument();
   });
 
+  it("explains a caught bluff as fewer dice than the bid claimed", () => {
+    render(<RevealCard reveal={{ ...reveal, quantity: 4, count: 3 }} onContinue={vi.fn()} />);
+    expect(screen.getByText(tableCopy.whyCaught(4, 3))).toBeInTheDocument();
+  });
+
+  it("explains a holding bid as at least as many dice as it claimed", () => {
+    render(
+      <RevealCard
+        reveal={{ ...reveal, outcome: "holds", quantity: 2, count: 3 }}
+        onContinue={vi.fn()}
+      />
+    );
+    expect(screen.getByText(tableCopy.whyHolds(2, 3))).toBeInTheDocument();
+  });
+
   it("shows every player's dice, who bid and who called, and how many matched", () => {
     render(<RevealCard reveal={reveal} onContinue={vi.fn()} />);
     expect(screen.getByText(tableCopy.bidderTag)).toBeInTheDocument();

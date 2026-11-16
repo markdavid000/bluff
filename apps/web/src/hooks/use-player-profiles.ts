@@ -5,7 +5,7 @@ import type { Address } from "viem";
 import { useReadContracts } from "wagmi";
 import { contracts } from "@/config/chain";
 import { avatarSource } from "@/lib/avatar";
-import { displayName } from "@/lib/player-tag";
+import { plainName } from "@/lib/player-tag";
 
 interface PlayerProfile {
   address: Address;
@@ -55,7 +55,7 @@ export function usePlayerProfiles(addresses: Address[], unnamed: string): Player
     profiles.set(address.toLowerCase(), {
       address,
       nickname,
-      name: displayName(nickname, address, unnamed),
+      name: plainName(nickname, unnamed),
       avatarSrc: avatarSource(avatar[0], address),
     });
   }
