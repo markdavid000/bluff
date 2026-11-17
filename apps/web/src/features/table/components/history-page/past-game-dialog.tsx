@@ -21,7 +21,7 @@ export function PastGameDialog({
 }) {
   return (
     <Dialog open={game !== null} onOpenChange={(open) => (open ? null : onClose())}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-lg">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-2xl">
         {game ? <Details game={game} nameOf={nameOf} faceOf={faceOf} /> : null}
       </DialogContent>
     </Dialog>
@@ -42,8 +42,8 @@ function Details({
   const winners = outcome.winners;
   const chips = chipsLabel(outcome.chips);
   return (
-    <PatternFrame>
-      <div className="flex flex-col gap-5">
+    <PatternFrame roomy>
+      <div className="flex flex-col gap-7">
         <div className="flex items-center justify-between gap-4">
           <DialogTitle>{tableCopy.tableName(table.id.toString())}</DialogTitle>
           <DialogClose asChild>
@@ -52,39 +52,44 @@ function Details({
             </ActionButton>
           </DialogClose>
         </div>
-        <p className="font-game text-xl">
+        <p className="font-game text-2xl">
           {tableCopy.pastSummary(tableCopy.pastResult[outcome.result], chips)}
         </p>
-        <ul className="flex flex-col gap-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {table.seats.map((seat) => {
             const face = faceOf(seat.player);
             return (
-              <li key={seat.player} className="flex items-center gap-3">
+              <li
+                key={seat.player}
+                className="flex items-center gap-4 rounded-2xl border-2 border-tile-edge/40 bg-card p-3 shadow-[0_4px_0_0_var(--color-tile-edge)]"
+              >
                 {face ? (
-                  <Avatar src={face} size={36} />
+                  <Avatar src={face} size={52} />
                 ) : (
-                  <span className="size-9 rounded-full border-2 border-tile-edge bg-muted" />
+                  <span className="size-13 shrink-0 rounded-full border-2 border-tile-edge bg-muted" />
                 )}
-                <span className="flex-1 font-game text-base">{nameOf(seat.player)}</span>
-                <span className="text-sm text-muted-foreground">
-                  {tableCopy.pastDiceLeft(seat.dice)}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-game text-lg">{nameOf(seat.player)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {tableCopy.pastDiceLeft(seat.dice)}
+                  </span>
                 </span>
               </li>
             );
           })}
         </ul>
-        <div className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-col gap-2 text-base">
           {reason ? <p>{tableCopy.pastHowItEnded(tableCopy.pastEndedBy[reason])}</p> : null}
           {winners.length > 0 ? (
             <p>{tableCopy.pastWonBy(winners.map((winner) => nameOf(winner)).join(", "))}</p>
           ) : null}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {tableCopy.pastWhen(startedLabel(table.startedAt), tableCopy.pastRounds(table.round))}
         </p>
         {pot > 0n && winners.length > 0 ? (
-          <div className="flex flex-col gap-1 text-sm">
-            <p>{tableCopy.pastPot(formatChips(pot))}</p>
+          <div className="flex flex-col gap-2 border-t-2 border-dashed border-tile-edge/30 pt-5 text-base">
+            <p className="font-game text-lg">{tableCopy.pastPot(formatChips(pot))}</p>
             {winners.map((winner) => {
               const share = shareOf(pot, winners, winner);
               return share === null ? null : (

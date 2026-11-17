@@ -22,13 +22,13 @@ export function HistoryScreen() {
 
   return (
     <div className="mb-24 flex max-h-full min-h-0 w-full max-w-4xl flex-col">
-      <PatternFrame className="w-full">
-        <div className="flex flex-col gap-6">
+      <PatternFrame className="flex min-h-0 w-full flex-col" bodyClassName="flex min-h-0 flex-col">
+        <div className="flex min-h-0 flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="font-game text-3xl">{tableCopy.pastTitle}</h1>
             <BackToLobby />
           </div>
-          <Appear show swapKey={history.status}>
+          <Appear show swapKey={history.status} className="flex min-h-0 flex-col">
             {history.status === "loading" ? (
               <div role="status" className="grid gap-5 sm:grid-cols-2">
                 <span className="sr-only">{tableCopy.pastFinding}</span>
@@ -58,8 +58,8 @@ export function HistoryScreen() {
                 </Link>
               </div>
             ) : (
-              <div className="flex flex-col gap-5">
-                <ul className="grid max-h-[60dvh] gap-5 overflow-y-auto p-1 pb-3 sm:grid-cols-2">
+              <div className="flex min-h-0 flex-col gap-5">
+                <ul className="grid min-h-0 flex-1 gap-5 overflow-y-auto p-1 pb-3 sm:grid-cols-2">
                   {history.games.map((game) => (
                     <PastGameCard
                       key={game.table.id.toString()}
