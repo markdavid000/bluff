@@ -17,7 +17,7 @@ export const tableCopy = {
   youWereRemoved: "You were removed because your chips did not arrive",
   tableClosed: "The table was closed",
   checkingPaid: "Checking everyone paid…",
-  openAgain: "The table is open again",
+  openAgain: "The table is open again. Press Ready to play.",
   gameStarting: "The game is starting",
   bid: (quantity: number, face: string) => `${quantity} × ${face}`,
   ranOutOfTime: (name: string) => `${name} ran out of time and loses a die`,
