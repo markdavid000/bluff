@@ -91,4 +91,8 @@ describe("noticeFor", () => {
       expect(noticeFor({ eventName: "GameEnded", args: {} }, ME, names)).toBeNull();
     });
   });
+
+  it("asks everyone to press Ready again when the table reopens, since nobody is ready any more", () => {
+    expect(notice({ eventName: "TableReopened", args: {} })).toContain(`Press ${tableCopy.ready}`);
+  });
 });
