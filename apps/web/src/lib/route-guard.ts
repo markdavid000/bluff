@@ -1,7 +1,7 @@
 import { safeNextPath } from "./safe-redirect";
 import type { SessionCheck } from "./session-token";
 
-const PROTECTED_PREFIXES = ["/play", "/welcome", "/profile", "/table"] as const;
+const PROTECTED_PREFIXES = ["/play", "/welcome", "/profile", "/table", "/history"] as const;
 
 const SIGN_IN_PAGES = ["/sign-in", "/refresh"] as const;
 

@@ -7,9 +7,10 @@ import { ScreenControls } from "@/components/shared/screen-controls";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { accountCopy } from "../copy";
 import { usePlayerBadge } from "../hooks/use-player-badge";
-import { showTips } from "@/hooks/use-tips-request";
 import { holdOpenWhile } from "@/lib/hold-open";
+import Link from "next/link";
 import { useId } from "react";
+import { GameIcon } from "@/components/shared/game-icon";
 import { FacePicker } from "./face-picker";
 import { NicknameInput } from "./nickname-input";
 
@@ -141,18 +142,16 @@ export function PlayerBadge() {
                 <ActionButton tone="yellow" icon="setting" onClick={profile.editFace}>
                   {accountCopy.changeFace}
                 </ActionButton>
-                <ActionButton
-                  tone="quiet"
-                  icon="target"
-                  onClick={() => {
-                    setOpen(false);
-                    showTips();
-                  }}
+                <Link
+                  href="/history"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-seat-blue px-4 py-2.5 font-game text-base text-seat-foreground shadow-[0_5px_0_0_var(--color-seat-blue-edge)] transition-[translate,box-shadow] hover:brightness-105 focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none active:translate-y-1 active:shadow-[0_1px_0_0_var(--color-seat-blue-edge)] calm:transition-none"
                 >
-                  {accountCopy.gameTips}
-                </ActionButton>
+                  <GameIcon name="trophy" size={22} />
+                  {accountCopy.yourGames}
+                </Link>
               </div>
-              <ScreenControls className="sm:hidden" />
+              <ScreenControls />
               <ActionButton
                 tone="quiet"
                 icon="back"

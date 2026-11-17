@@ -37,17 +37,21 @@ export function PatternBand({ className }: { className?: string }) {
 export function PatternFrame({
   children,
   className,
+  bodyClassName,
   roomy = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  bodyClassName?: string;
   roomy?: boolean;
 }) {
   return (
     <div className={cn("overflow-hidden rounded-2xl border-4 border-pattern bg-card", className)}>
-      <PatternBand className="h-4 w-full" />
-      <div className={roomy ? "px-6 py-8 sm:px-10 sm:py-10" : "p-5"}>{children}</div>
-      <PatternBand className="h-4 w-full" />
+      <PatternBand className="h-4 w-full shrink-0" />
+      <div className={cn(roomy ? "px-6 py-8 sm:px-10 sm:py-10" : "p-5", bodyClassName)}>
+        {children}
+      </div>
+      <PatternBand className="h-4 w-full shrink-0" />
     </div>
   );
 }

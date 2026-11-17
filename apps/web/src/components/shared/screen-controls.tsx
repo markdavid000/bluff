@@ -5,7 +5,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -13,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useScreenControls } from "@/hooks/use-screen-controls";
-import { showTips } from "@/hooks/use-tips-request";
 import {
   BOARD_CHOICES,
   type BoardSetting,
@@ -25,7 +23,7 @@ import { sharedCopy } from "./copy";
 import { GameIcon, type GameIconName } from "./game-icon";
 
 const MENU =
-  "min-w-52 rounded-xl border-2 border-toast-edge bg-toast p-2 text-toast-foreground shadow-[0_5px_0_0_var(--color-toast-edge),0_16px_24px_-10px_rgb(0_0_0/0.55)]";
+  "min-w-64 rounded-xl border-2 border-toast-edge bg-toast p-2 text-toast-foreground shadow-[0_5px_0_0_var(--color-toast-edge),0_16px_24px_-10px_rgb(0_0_0/0.55)]";
 
 const ITEM =
   "cursor-pointer rounded-lg py-2.5 pr-4 pl-11 font-game text-lg tracking-wide focus:bg-accent focus:text-accent-foreground [&>span:first-child]:left-3";
@@ -134,14 +132,6 @@ export function ScreenControls({ className }: { className?: string }) {
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator className="bg-toast-foreground/20" />
-          <DropdownMenuItem
-            className={ITEM}
-            icon={<GameIcon name="target" size={24} />}
-            onSelect={showTips}
-          >
-            {sharedCopy.gameTips}
-          </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-toast-foreground/20" />
           <DropdownMenuCheckboxItem
             checked={controls.calm}

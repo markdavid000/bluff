@@ -23,6 +23,7 @@ describe("route coverage", () => {
         "/play/:path*",
         "/profile/:path*",
         "/table/:path*",
+        "/history/:path*",
         "/welcome/:path*",
         "/sign-in",
         "/refresh",

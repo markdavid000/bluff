@@ -25,3 +25,11 @@ To make the list reliable, the game itself will note down which games each playe
 
 - **The game's code is nearly at its size limit.** This change fits, with a little room left over. If a later change doesn't fit, it goes into a separate small add-on instead.
 - **The update to the live game could go wrong.** It gets the same safety checks as every earlier update, and only goes live when the maintainer says so.
+
+## Change on 17 November 2026
+
+While building it, we found the game's code has no room left. A safety rule keeps some spare room so future fixes can be tested safely, and recording games would use it up. So instead of the game writing down your games, the app now looks them up in the game's public activity log, which already lists every time someone takes a seat and every time a game ends. Nothing in the game itself changes.
+
+**For players:** your history includes every game you've ever played, not just ones after an update. The app remembers what it found, so it opens faster each time.
+
+**The risk:** it uses a free service to search that log. If the service is down, the page says so and offers Try again. We can switch to another service with one setting.

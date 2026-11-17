@@ -8,6 +8,7 @@ export const sharedCopy = {
   boardChoices: { "3d": "3D board", flat: "Flat board" },
   calmMotion: "Calm motion",
   gameTips: "Game tips",
+  tips: "Tips",
   musicOff: "Turn music off",
   musicOn: "Turn music on",
   chooseMusic: "Choose the music",

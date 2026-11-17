@@ -1,0 +1,104 @@
+import { ActionButton } from "@/components/shared/action-button";
+import { Avatar } from "@/components/shared/avatar";
+import { PatternFrame } from "@/components/shared/pattern-band";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { formatChips } from "@/lib/chips";
+import { tableCopy } from "../../copy";
+import type { HistoryGame } from "../../lib/game-log";
+import { potOf, shareOf } from "../../lib/payout";
+import { chipsLabel, startedLabel } from "./past-game-labels";
+
+export function PastGameDialog({
+  game,
+  nameOf,
+  faceOf,
+  onClose,
+}: {
+  game: HistoryGame | null;
+  nameOf: (address: string) => string;
+  faceOf: (address: string) => string | undefined;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={game !== null} onOpenChange={(open) => (open ? null : onClose())}>
+      <DialogContent aria-describedby={undefined} className="sm:max-w-2xl">
+        {game ? <Details game={game} nameOf={nameOf} faceOf={faceOf} /> : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Details({
+  game,
+  nameOf,
+  faceOf,
+}: {
+  game: HistoryGame;
+  nameOf: (address: string) => string;
+  faceOf: (address: string) => string | undefined;
+}) {
+  const { table, outcome, reason } = game;
+  const pot = potOf(table.buyIn, table.seats.length);
+  const winners = outcome.winners;
+  const chips = chipsLabel(outcome.chips);
+  return (
+    <PatternFrame roomy>
+      <div className="flex flex-col gap-7">
+        <div className="flex items-center justify-between gap-4">
+          <DialogTitle>{tableCopy.tableName(table.id.toString())}</DialogTitle>
+          <DialogClose asChild>
+            <ActionButton tone="quiet" size="small" icon="back">
+              {tableCopy.pastClose}
+            </ActionButton>
+          </DialogClose>
+        </div>
+        <p className="font-game text-2xl">
+          {tableCopy.pastSummary(tableCopy.pastResult[outcome.result], chips)}
+        </p>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {table.seats.map((seat) => {
+            const face = faceOf(seat.player);
+            return (
+              <li
+                key={seat.player}
+                className="flex items-center gap-4 rounded-2xl border-2 border-tile-edge/40 bg-card p-3 shadow-[0_4px_0_0_var(--color-tile-edge)]"
+              >
+                {face ? (
+                  <Avatar src={face} size={52} />
+                ) : (
+                  <span className="size-13 shrink-0 rounded-full border-2 border-tile-edge bg-muted" />
+                )}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-game text-lg">{nameOf(seat.player)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {tableCopy.pastDiceLeft(seat.dice)}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="flex flex-col gap-2 text-base">
+          {reason ? <p>{tableCopy.pastHowItEnded(tableCopy.pastEndedBy[reason])}</p> : null}
+          {winners.length > 0 ? (
+            <p>{tableCopy.pastWonBy(winners.map((winner) => nameOf(winner)).join(", "))}</p>
+          ) : null}
+        </div>
+        <p className="text-base text-muted-foreground">
+          {tableCopy.pastWhen(startedLabel(table.startedAt), tableCopy.pastRounds(table.round))}
+        </p>
+        {pot > 0n && winners.length > 0 ? (
+          <div className="flex flex-col gap-2 border-t-2 border-dashed border-tile-edge/30 pt-5 text-base">
+            <p className="font-game text-lg">{tableCopy.pastPot(formatChips(pot))}</p>
+            {winners.map((winner) => {
+              const share = shareOf(pot, winners, winner);
+              return share === null ? null : (
+                <p key={winner}>{tableCopy.pastShare(nameOf(winner), formatChips(share))}</p>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    </PatternFrame>
+  );
+}

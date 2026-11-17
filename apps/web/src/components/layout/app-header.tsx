@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PatternBand } from "@/components/shared/pattern-band";
-import { ScreenControls } from "@/components/shared/screen-controls";
+import { TipsButton } from "@/components/shared/tips-button";
 import { siteConfig } from "@/config/site";
 import { PlayerBadge } from "@/features/account";
 import { ChipBalance } from "@/features/chips";
@@ -15,7 +15,7 @@ export function AppHeader() {
         </Link>
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <ChipBalance />
-          <ScreenControls className="hidden sm:flex" />
+          <TipsButton />
           <PlayerBadge />
         </div>
       </div>

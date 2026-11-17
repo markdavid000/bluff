@@ -39,8 +39,6 @@ const profile = {
   chooseFace: vi.fn(),
 };
 let edit: Record<string, unknown> = profile;
-const showTips = vi.fn();
-vi.mock("@/hooks/use-tips-request", () => ({ showTips: () => showTips() }));
 
 vi.mock("../hooks/use-player-badge", () => ({
   usePlayerBadge: () => ({ player, signOut, signingOut, open, setOpen, profile: edit }),
@@ -115,12 +113,12 @@ describe("PlayerBadge", () => {
     expect(signOut).toHaveBeenCalledOnce();
   });
 
-  it("keeps the header small on phones: the face only, with night mode and sounds moved into the card", () => {
+  it("keeps the header small on phones, and holds night mode, sounds, music and settings in the card on every screen", () => {
     player = ready;
     open = true;
     render(<PlayerBadge />);
     expect(screen.getByText("Dave #4E31", { selector: "span" })).toHaveClass("hidden", "sm:inline");
-    expect(screen.getByRole("group", { name: "Screen controls" })).toHaveClass("sm:hidden");
+    expect(screen.getByRole("group", { name: "Screen controls" })).not.toHaveClass("sm:hidden");
   });
 
   describe("the profile", () => {
@@ -129,14 +127,21 @@ describe("PlayerBadge", () => {
       open = true;
     });
 
-    it("offers to change the name and the face, the game tips, and signing out", () => {
+    it("offers to change the name and the face, and signing out, with the tips left to the header", () => {
       render(<PlayerBadge />);
       fireEvent.click(screen.getByRole("button", { name: accountCopy.changeName }));
       expect(profile.editName).toHaveBeenCalledOnce();
       fireEvent.click(screen.getByRole("button", { name: accountCopy.changeFace }));
       expect(profile.editFace).toHaveBeenCalledOnce();
-      fireEvent.click(screen.getByRole("button", { name: accountCopy.gameTips }));
-      expect(showTips).toHaveBeenCalledOnce();
+      expect(screen.getByRole("button", { name: accountCopy.signOut })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /tips/i })).not.toBeInTheDocument();
+    });
+
+    it("opens your games, closing the card", () => {
+      render(<PlayerBadge />);
+      const link = screen.getByRole("link", { name: accountCopy.yourGames });
+      expect(link).toHaveAttribute("href", "/history");
+      fireEvent.click(link);
       expect(setOpen).toHaveBeenCalledWith(false);
     });
 
