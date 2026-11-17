@@ -19,7 +19,7 @@ No agent edits, creates or deletes anything before it has read the codebase it i
 
 ## Directive 1: Protected branches and worktree isolation
 
-- Never commit or push to `dev`, `staging` or `main`. While the repository is private, the local `branch guard` hook enforces it; GitHub branch protection takes over once it is public.
+- Never commit or push to `dev`, `staging` or `main`. GitHub branch protection enforces it for everyone, the owner included, and the local `branch guard` hook catches it before a commit is made.
 - Do all work in an isolated worktree cut from the branch the work is destined for, normally `origin/dev`:
   `git worktree add .worktrees/<branch> -b <branch> origin/dev`
 - Sync before you branch: `git fetch origin dev staging main`. Never trust a local long-lived branch.
