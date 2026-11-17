@@ -2,7 +2,11 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { arriveAtTable, useHeadingTo } from "@/hooks/use-go-to-table";
+import { forgetGoneSeats, useIsSeatGone } from "@/hooks/use-left-tables";
+import { useMyTableId } from "@/hooks/use-my-table-id";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { tablePath } from "@/lib/table-links";
 import { closeSession } from "../lib/session-client";
 import { usePlayer } from "./use-player";
 
@@ -18,6 +22,12 @@ export function useWelcomeGate() {
   const [closeFailed, setCloseFailed] = useState(false);
   const onWelcome = pathname === WELCOME;
   const signedOut = player.status === "signed-out";
+  const seat = useMyTableId();
+  const seatId = seat.status === "ready" ? seat.id : null;
+  const seatGone = useIsSeatGone(seatId);
+  const headingTo = useHeadingTo();
+  const myTable = seatId !== null && !seatGone && seatId !== headingTo ? tablePath(seatId) : null;
+  const named = player.status === "ready" && player.nickname !== null;
   const goTo =
     player.status !== "ready"
       ? null
@@ -25,9 +35,22 @@ export function useWelcomeGate() {
         ? onWelcome
           ? null
           : "welcome"
-        : onWelcome
-          ? "onward"
-          : null;
+        : myTable !== null
+          ? pathname === myTable
+            ? null
+            : "table"
+          : onWelcome
+            ? "onward"
+            : null;
+  const findingSeat = named && seat.status === "loading";
+
+  useEffect(() => {
+    if (seat.status === "ready") forgetGoneSeats(seat.id);
+  }, [seat]);
+
+  useEffect(() => {
+    if (headingTo !== null && pathname === tablePath(headingTo)) arriveAtTable();
+  }, [headingTo, pathname]);
 
   useEffect(() => {
     if (!signedOut) return;
@@ -51,17 +74,19 @@ export function useWelcomeGate() {
   }, [signedOut, pathname, router, closeAttempt]);
 
   useEffect(() => {
-    if (goTo === "onward") {
+    if (goTo === "table" && myTable !== null) {
+      router.replace(myTable);
+    } else if (goTo === "onward") {
       router.replace(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     } else if (goTo === "welcome") {
       router.replace(`${WELCOME}?next=${encodeURIComponent(`${pathname}${window.location.hash}`)}`);
     }
-  }, [goTo, pathname, router]);
+  }, [goTo, myTable, pathname, router]);
 
   const view: GateView =
     player.status === "failed" || (signedOut && closeFailed)
       ? "failed"
-      : player.status === "ready" && goTo === null
+      : player.status === "ready" && goTo === null && !findingSeat
         ? "page"
         : "waiting";
 

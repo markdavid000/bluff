@@ -18,6 +18,7 @@ export const tableCopy = {
   tableClosed: "The table was closed",
   checkingPaid: "Checking everyone paid…",
   openAgain: "The table is open again. Press Ready to play.",
+  openAgainForHost: "The table is open again.",
   gameStarting: "The game is starting",
   bid: (quantity: number, face: string) => `${quantity} × ${face}`,
   ranOutOfTime: (name: string) => `${name} ran out of time and loses a die`,

@@ -6,6 +6,7 @@ import { type Query, useQueryClient } from "@tanstack/react-query";
 import { type Address, isAddressEqual } from "viem";
 import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
+import { markSeatGone } from "./use-left-tables";
 
 const REFRESH_MS = 6_000;
 
@@ -50,6 +51,7 @@ export function useForgetMyTable() {
   const account = user?.wallet?.address as Address | undefined;
   const queryClient = useQueryClient();
   return (tableId: bigint) => {
+    markSeatGone(tableId);
     if (!account) return;
     queryClient.setQueriesData(
       { queryKey: ["readContract"], predicate: isSeatOf(account, tableId) },

@@ -1,7 +1,14 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { MyTableId } from "@/hooks/use-my-table-id";
+import { forgetGoneSeats, markLeftTable, markSeatGone } from "@/hooks/use-left-tables";
+import { arriveAtTable, headToTable } from "@/hooks/use-go-to-table";
 import { accountCopy } from "../copy";
 import { WelcomeGate } from "./welcome-gate";
+
+vi.mock("@/config/env", () => ({
+  publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
+}));
 
 const replace = vi.fn();
 let pathname = "/play";
@@ -13,6 +20,8 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 vi.mock("../hooks/use-player", () => ({ usePlayer: () => ({ refresh: vi.fn(), ...player }) }));
+let seat: MyTableId = { status: "ready", id: null };
+vi.mock("@/hooks/use-my-table-id", () => ({ useMyTableId: () => seat }));
 const closeSession = vi.fn(async () => undefined);
 vi.mock("../lib/session-client", () => ({ closeSession: () => closeSession() }));
 
@@ -30,8 +39,16 @@ function show() {
 beforeEach(() => {
   pathname = "/play";
   player = { status: "loading" };
+  seat = { status: "ready", id: null };
   vi.clearAllMocks();
 });
+
+afterEach(() =>
+  act(() => {
+    forgetGoneSeats();
+    arriveAtTable();
+  })
+);
 
 describe("WelcomeGate", () => {
   it("draws nothing of the page until it knows who the player is", () => {
@@ -150,5 +167,82 @@ describe("WelcomeGate", () => {
     retry.click();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/sign-in?next=%2Fplay"));
     expect(closeSession).toHaveBeenCalledTimes(2);
+  });
+
+  describe("a player with a seat", () => {
+    beforeEach(() => {
+      player = named;
+      seat = { status: "ready", id: 7n };
+    });
+
+    it.each(["/play", "/history", "/welcome", "/table/9"])(
+      "is taken from %s straight to their table, without drawing that page",
+      (path) => {
+        pathname = path;
+        show();
+        expect(screen.queryByText("the page")).not.toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(accountCopy.gettingReady);
+        expect(replace).toHaveBeenCalledWith("/table/7");
+      }
+    );
+
+    it("sees their own table", () => {
+      pathname = "/table/7";
+      show();
+      expect(screen.getByText("the page")).toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("waits, drawing nothing, while the seat is still being found", () => {
+      seat = { status: "loading" };
+      show();
+      expect(screen.queryByText("the page")).not.toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("still gets the page when the seat can't be read, rather than being locked out", () => {
+      seat = { status: "failed", retry: vi.fn() };
+      show();
+      expect(screen.getByText("the page")).toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("is never pulled back to a table they just left, while the network still reports it", () => {
+      act(() => markLeftTable(7n));
+      show();
+      expect(screen.getByText("the page")).toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("leaves the lobby alone while it's already taking the player to their new table", () => {
+      act(() => headToTable(7n));
+      show();
+      expect(screen.getByText("the page")).toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("is never pulled back to a game that just ended", () => {
+      act(() => markSeatGone(7n));
+      show();
+      expect(screen.getByText("the page")).toBeInTheDocument();
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it("is taken back to a table they left once they sit there again", () => {
+      act(() => markLeftTable(7n));
+      seat = { status: "ready", id: null };
+      const { rerender } = render(
+        <WelcomeGate>
+          <p>the page</p>
+        </WelcomeGate>
+      );
+      seat = { status: "ready", id: 7n };
+      rerender(
+        <WelcomeGate>
+          <p>the page</p>
+        </WelcomeGate>
+      );
+      expect(replace).toHaveBeenCalledWith("/table/7");
+    });
   });
 });

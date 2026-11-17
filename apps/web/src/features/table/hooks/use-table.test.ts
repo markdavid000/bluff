@@ -7,7 +7,8 @@ import {
 } from "viem";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { forgetBlocks, seeBlock } from "@/lib/block-clock";
-import { isNotTableRead, markLeftTable, useTable } from "./use-table";
+import { markLeftTable } from "@/hooks/use-left-tables";
+import { isNotTableRead, useTable } from "./use-table";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },

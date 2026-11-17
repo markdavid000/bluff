@@ -20,9 +20,11 @@ const invalidateBalanceQueries = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/hooks/use-take-seat", () => ({ useTakeSeat: () => takeSeat }));
 let arrive: () => void = () => undefined;
+const headingTo = vi.fn();
 vi.mock("@/hooks/use-go-to-table", () => ({
   useGoToTable: () => (id: bigint) =>
     new Promise<void>((resolve) => {
+      headingTo(id);
       arrive = () => {
         push(`/table/${id}`);
         resolve();
@@ -156,7 +158,7 @@ describe("useSitDown", () => {
     holdArrival = true;
     const { result } = render();
     act(() => result.current.join({ kind: "join", tableId: 12n, buyIn: 0n }));
-    await waitFor(() => expect(result.current.goingTo).toBe(12n));
+    await waitFor(() => expect(headingTo).toHaveBeenCalledWith(12n));
     expect(result.current.working).toBe(true);
     expect(push).not.toHaveBeenCalled();
     act(() => arrive());
@@ -168,7 +170,7 @@ describe("useSitDown", () => {
     holdArrival = true;
     const { result } = render();
     act(() => result.current.playNow(async () => [], 0n));
-    await waitFor(() => expect(result.current.goingTo).toBe(12n));
+    await waitFor(() => expect(headingTo).toHaveBeenCalledWith(12n));
     expect(result.current.findingSeat).toBe(true);
     expect(result.current.creating).toBe(false);
     act(() => arrive());
