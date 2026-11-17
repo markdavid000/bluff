@@ -1,6 +1,6 @@
 # ADR-2026-11-16: Profile and game history
 
-- **Status:** Proposed
+- **Status:** Approved; game history amended on 2026-11-17 (see Amendment)
 - **Approved by:** (name, date; filled in by the maintainer)
 - **Companion:** [ADR-2026-11-16-profile-and-game-history-for-dummies.md](ADR-2026-11-16-profile-and-game-history-for-dummies.md)
 
@@ -109,3 +109,26 @@ Option B, plus a profile dialog and a history page in the web app.
   - `/history`: loading, empty, failed, paging;
   - the result and winner rule for each end reason, and chips won or lost.
 - **Sepolia, after the approved upgrade:** play a free and a paid game with both test accounts. Both histories show them with the right results, and both players' renames and face changes show at the table.
+
+## Amendment, 2026-11-17: history from the event log, no contract change
+
+**What changed and why.** Building Option B showed that `Bluff` can't take it. `limits.test.ts` requires `Bluff` to stay at least 896 bytes under the 24,576-byte limit (`BLUFF_HEADROOM`), so a test copy with upgrade code can still deploy. `Bluff` is at 23,632 bytes, only 48 bytes inside that rule:
+
+- Option B as written comes to 24,381 bytes.
+- A leaner version with single-item reads comes to 24,134.
+- Both break the rule, and the test upgrade copy failed to deploy.
+
+The ADR measured only the hard limit and missed this rule. Option C has the same problem, since `Bluff` would still need code to call a second contract.
+
+**New decision (the maintainer chose it on 2026-11-17):** no contract change. The web app reads a player's games from `Bluff`'s event log:
+
+- **Which games:** `PlayerJoined` filtered by the player (an indexed topic), from `Bluff`'s deployment block (12,112,051), in spans of 50,000 blocks. It reads through a log-friendly public RPC (`https://sepolia.gateway.tenderly.co`), the one used for the nickname backfill. A probe found a 50,000-block search, wider than all of `Bluff`'s history, answered in under 0.5 s.
+- **Details:** `getTable` for each table, through the app's normal RPC. Tables that never started (still waiting, or cancelled) are dropped.
+- **Why each game ended:** `GameEnded` filtered by those table ids, from the same log RPC.
+- **Cache:** the found ids and the last block searched are kept in the browser per player, so later visits only search new blocks. If the cache can't be read, the app searches from the start again.
+
+**Consequences:**
+
+- **No storage change, no upgrade, no gas.** `Bluff` keeps its room for the ready-mark fix.
+- **All games, not only new ones:** history includes every game since launch, so the "games from the upgrade onward" note is dropped.
+- **Risk:** it depends on a free public log service. If it's down or refuses, the page shows Try again. The URL lives in one config constant, so it can be swapped for a paid or self-run service.

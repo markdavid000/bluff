@@ -2,12 +2,12 @@
 
 Builds [ADR-2026-11-16-profile-and-game-history](../adr/ADR-2026-11-16-profile-and-game-history.md), approved by the maintainer on 2026-11-16. Ships as two pull requests, each usable on its own:
 
-| PR       | Delivers                                                       | Usable result                               |
-| -------- | -------------------------------------------------------------- | ------------------------------------------- |
-| **10-1** | The profile: change name, change face, game tips, sign out     | Players can fix their name and face anytime |
-| **10-2** | `Bluff` 1.4.0 records each player's games; the `/history` page | Players can look back at every game played  |
+| PR       | Delivers                                                          | Usable result                               |
+| -------- | ----------------------------------------------------------------- | ------------------------------------------- |
+| **10-1** | The profile: change name, change face, game tips, sign out        | Players can fix their name and face anytime |
+| **10-2** | The `/history` page, read from the event log (no contract change) | Players can look back at every game played  |
 
-10-1 is web only. 10-2 changes the contract, so its live Sepolia upgrade waits for the maintainer's yes, as always.
+10-1 is web only. 10-2 was amended on 2026-11-17: it reads the event log instead of changing the contract.
 
 ## 10-1: The profile
 
@@ -35,21 +35,21 @@ Builds [ADR-2026-11-16-profile-and-game-history](../adr/ADR-2026-11-16-profile-a
 
 ## 10-2: Game history
 
-**Contract (`Bluff` 1.4.0):**
-
-- Append `mapping(address player => uint256[] tableIds) gamesOf;` and `mapping(uint256 tableId => uint8 reason) endReasons;` to `BluffStorage`.
-- `_beginPlay` pushes the id for each seat in the existing dice loop; `_endGame` stores `reason + 1`.
-- New views: `gamesOf(player, start, count)`, newest first, returning the total too; and `endReasonOf(id)`.
-- Measured at 24,381 bytes, under the 24,576 limit. A test checks the size.
-- `version()` becomes 1.4.0. `validate-layout` and the upgrade task run as before.
+Amended on 2026-11-17 (see the ADR's Amendment): **no contract change.**
 
 **Web:**
 
-- Route `app/(game)/history/page.tsx`, from the table feature (`HistoryScreen`).
-- **`useGameHistoryList`:**
-  - reads `gamesOf(me, start, 20)`, then `getTable` and `endReasonOf` for each id in one multicall, plus names;
-  - has Load more;
-  - is a plain function `gameOutcome(table, reason, me)`, sharing the contract's winner rule (most dice when the clock ran out), that gives Won, Lost, Left early or a draw, the winners, and chips won or lost.
+- **Config:** `config/chain.ts` adds `logsClient`, a viem public client on `https://sepolia.gateway.tenderly.co`, and `bluffDeployBlock` (12,112,051).
+- **`lib/game-log.ts`:** pure functions.
+  - `blockSpans(from, to, size)` splits a search into spans.
+  - `mergeGames(cached, found)` merges ids without duplicates, newest first.
+  - `gameOutcome(table, reason, me)` gives Won, Lost, Left early or Shared the win, the winners, and chips won or lost, using the contract's winner rule (most dice when the clock ran out).
+- **`hooks/use-game-history-list.ts`:**
+  - reads the player's cache from browser storage (wrapped in try/catch, with a fresh search if it fails);
+  - searches `PlayerJoined` with the player as a topic, from `bluffDeployBlock` or the cached block, in 50,000-block spans;
+  - saves the ids and the last block;
+  - then reads `getTable` for the newest 20 (Load more adds 20), and `GameEnded` for those ids, and drops tables that never started.
+- **The page:** route `app/(game)/history/page.tsx`, with `HistoryScreen` from the table feature.
 - **The list:** a card per game, newest first, showing:
   - the date;
   - the result, as a coloured tag;
@@ -66,7 +66,6 @@ Builds [ADR-2026-11-16-profile-and-game-history](../adr/ADR-2026-11-16-profile-a
   - empty: "No games yet. Play one!" with Play now;
   - failed: Try again;
   - the end of the list.
-- **The note:** "Games from 1.4.0 onward" under the title, with the date of the upgrade.
 - **Profile:** the **Your games** button appears.
 
 ## Wording (`copy.ts`)
@@ -92,19 +91,13 @@ Builds [ADR-2026-11-16-profile-and-game-history](../adr/ADR-2026-11-16-profile-a
   - the dialog stays open while saving;
   - Game tips and Sign out;
   - the welcome screen's tests still pass unchanged after the move to shared pieces.
-- **10-2, Hardhat:**
-  - a game appears once for every seated player, newest first, with paging and totals;
-  - cancelled or unstarted tables don't appear;
-  - `endReasonOf` for each reason, and 0 before the end;
-  - the size limit;
-  - the layout check.
 - **10-2, Vitest:**
   - `gameOutcome` for every reason and seat;
   - the list's loading, empty, failed and paging states;
   - the details dialog.
 - **Live:**
   - change name and face in both accounts and see them at a table;
-  - after the approved upgrade, play a free and a paid game and find both in each player's history with the right results.
+  - play a free and a paid game and find both, and earlier games, in each player's history with the right results.
 
 ## Removed
 

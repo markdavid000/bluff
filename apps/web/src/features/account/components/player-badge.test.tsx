@@ -140,6 +140,14 @@ describe("PlayerBadge", () => {
       expect(setOpen).toHaveBeenCalledWith(false);
     });
 
+    it("opens your games, closing the card", () => {
+      render(<PlayerBadge />);
+      const link = screen.getByRole("link", { name: accountCopy.yourGames });
+      expect(link).toHaveAttribute("href", "/history");
+      fireEvent.click(link);
+      expect(setOpen).toHaveBeenCalledWith(false);
+    });
+
     it("changes the name in the same field as the welcome screen", () => {
       edit = { ...profile, panel: "name" };
       render(<PlayerBadge />);

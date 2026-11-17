@@ -19,6 +19,7 @@ export const config = {
     "/welcome/:path*",
     "/profile/:path*",
     "/table/:path*",
+    "/history/:path*",
     "/sign-in",
     "/refresh",
   ],
