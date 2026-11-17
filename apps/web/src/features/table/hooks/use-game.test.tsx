@@ -48,10 +48,8 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
-const markLeftTable = vi.fn();
 vi.mock("./use-table", () => ({
   useTable: () => tableRead,
-  markLeftTable: (id: bigint) => markLeftTable(id),
   isNotTableRead: () => true,
 }));
 vi.mock("./use-table-events", () => ({
