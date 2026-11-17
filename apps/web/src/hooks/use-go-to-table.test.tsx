@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type * as WagmiQuery from "wagmi/query";
 import { hashFn } from "wagmi/query";
 import { createQueryClient } from "@/lib/query-client";
-import { useGoToTable } from "./use-go-to-table";
+import { arriveAtTable, useGoToTable, useHeadingTo } from "./use-go-to-table";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -45,5 +45,18 @@ describe("useGoToTable", () => {
       "table 30"
     );
     expect(queryClient.getQueryCache().find({ queryKey: key })?.queryHash).toBe(hashFn(key));
+  });
+
+  it("notes where it's heading, so nothing else moves the player meanwhile, until they arrive", async () => {
+    const queryClient = createQueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const heading = renderHook(() => useHeadingTo());
+    const goTo = renderHook(() => useGoToTable(), { wrapper }).result.current;
+    await act(() => goTo(31n));
+    expect(heading.result.current).toBe(31n);
+    act(() => arriveAtTable());
+    expect(heading.result.current).toBeNull();
   });
 });

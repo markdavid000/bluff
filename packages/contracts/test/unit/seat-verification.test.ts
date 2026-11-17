@@ -16,6 +16,7 @@ import {
   seatPaidTable,
 } from "../helpers/chips";
 import { readyAndStart } from "../helpers/tables";
+import type { Bluff } from "../../types";
 
 const WAITING = 1n;
 const VERIFYING = 2n;
@@ -157,5 +158,61 @@ describe("checking paid seats", function () {
     expect(await chipBalance(chips, alice)).to.equal(100n * CHIP);
     expect(await chipBalance(chips, bob)).to.equal(100n * CHIP);
     expect(await bluff.tableOf(alice.address)).to.equal(0n);
+  });
+
+  describe("ready marks after the table reopens", function () {
+    async function readiness(bluff: Bluff, id: bigint) {
+      const [, seats] = await bluff.getTable(id);
+      return seats.map((seat) => [seat.player, seat.ready]);
+    }
+
+    it("clears every mark when a payment is missing, so everyone readies again", async function () {
+      const { alice, bob, carol, bluff, chips, cashier, faucet } = await deployGameFixture();
+      await claimChips(faucet, alice);
+      await claimChips(faucet, carol);
+      await payToCreate(chips, cashier, alice, 3, BUY_IN);
+      const id = await bluff.tableOf(alice.address);
+      await payToJoin(chips, cashier, bob, id, BUY_IN);
+      await payToJoin(chips, cashier, carol, id, BUY_IN);
+      await readyAndStart(bluff, id, [alice, bob, carol]);
+      await confirmSeats(bluff, id, carol);
+      expect(await readiness(bluff, id)).to.deep.equal([
+        [alice.address, false],
+        [carol.address, false],
+      ]);
+      await expect(bluff.connect(alice).startTable(id))
+        .to.be.revertedWithCustomError(bluff, "NotEveryoneReady")
+        .withArgs(id);
+      await bluff.connect(carol).setReady(id, true);
+      await expect(bluff.connect(alice).startTable(id)).to.emit(bluff, "SeatVerificationStarted");
+    });
+
+    it("clears every mark when a player leaves during the check", async function () {
+      const contracts = await deployGameFixture();
+      const { alice, bob, carol, bluff } = contracts;
+      const id = await seatPaidTable(contracts, [alice, bob, carol], BUY_IN);
+      await bluff.connect(bob).leaveTable(id);
+      expect(await readiness(bluff, id)).to.deep.equal([
+        [alice.address, false],
+        [carol.address, false],
+      ]);
+      await expect(bluff.connect(alice).startTable(id))
+        .to.be.revertedWithCustomError(bluff, "NotEveryoneReady")
+        .withArgs(id);
+    });
+
+    it("keeps the marks at a waiting table when someone leaves before the start", async function () {
+      const { alice, bob, carol, bluff } = await deployGameFixture();
+      await bluff.connect(alice).createFreeTable(3, false);
+      const id = await bluff.tableOf(alice.address);
+      await bluff.connect(bob).joinFreeTable(id);
+      await bluff.connect(carol).joinFreeTable(id);
+      await bluff.connect(bob).setReady(id, true);
+      await bluff.connect(carol).leaveTable(id);
+      expect(await readiness(bluff, id)).to.deep.equal([
+        [alice.address, false],
+        [bob.address, true],
+      ]);
+    });
   });
 });

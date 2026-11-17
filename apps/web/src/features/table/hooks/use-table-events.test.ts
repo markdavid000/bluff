@@ -56,6 +56,23 @@ describe("useTableEvents", () => {
     expect(newestBlock()).toBe(101n);
   });
 
+  it("asks the others to get ready when the table reopens, and only tells the host it reopened", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: KOLA, nameOf: () => "Kola #3C4D" }));
+    deliver([log("TableReopened", { id: 12n }, 100n)]);
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: ME, nameOf: () => "Me" }));
+    deliver([log("TableReopened", { id: 12n }, 101n)]);
+    expect(shown).toEqual([tableCopy.openAgain, tableCopy.openAgainForHost]);
+  });
+
+  it("treats a player who becomes host as the table reopens as the host", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: KOLA, nameOf: () => "Kola #3C4D" }));
+    deliver([
+      log("HostChanged", { id: 12n, host: ME }, 100n, 0),
+      log("TableReopened", { id: 12n }, 100n, 1),
+    ]);
+    expect(shown).toEqual([tableCopy.youAreHost, tableCopy.openAgainForHost]);
+  });
+
   it("ignores moves at other tables", () => {
     renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D" }));
     deliver([log("PlayerJoined", { id: 13n, player: KOLA }, 100n)]);
