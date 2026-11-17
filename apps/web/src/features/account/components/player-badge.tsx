@@ -7,7 +7,6 @@ import { ScreenControls } from "@/components/shared/screen-controls";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { accountCopy } from "../copy";
 import { usePlayerBadge } from "../hooks/use-player-badge";
-import { showTips } from "@/hooks/use-tips-request";
 import { holdOpenWhile } from "@/lib/hold-open";
 import Link from "next/link";
 import { useId } from "react";
@@ -151,18 +150,8 @@ export function PlayerBadge() {
                   <GameIcon name="trophy" size={22} />
                   {accountCopy.yourGames}
                 </Link>
-                <ActionButton
-                  tone="quiet"
-                  icon="target"
-                  onClick={() => {
-                    setOpen(false);
-                    showTips();
-                  }}
-                >
-                  {accountCopy.gameTips}
-                </ActionButton>
               </div>
-              <ScreenControls className="sm:hidden" />
+              <ScreenControls />
               <ActionButton
                 tone="quiet"
                 icon="back"

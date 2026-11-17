@@ -36,9 +36,18 @@ A new **Your games** page lists every game you've played, newest first, with how
   - it remembers what it found in the browser, so later visits only search new blocks.
   - On a new device, or after clearing browser data, the first visit searches everything again. Nothing is lost.
 
+- **A tidier header:** on every screen it shows only your chips, a new **Tips** button and your profile.
+  - **Tips** has an icon and its name on wide screens, and the icon only on phones. It opens the same tips as before.
+  - **Day/night, sound, music and Settings** moved into the profile on every screen size, as they already were on phones.
+  - **Game tips** left the Settings menu and the profile, since the header button replaces both.
+  - **The Settings and music menus** are a little wider: 256 px instead of 208.
+  - **The home page and sign-in screen** keep their tiles in the corner, minus Game tips.
+
 ## Removed
 
-- Nothing. The contract change in the original ADR was dropped before it was merged.
+- The original ADR's contract change, dropped before it was merged.
+- Game tips in the Settings menu and in the profile, with `DropdownMenuItem`, the menu item they alone used, and the account copy's `gameTips`.
+- The header's own day/night, sound, music and Settings tiles; the same controls live in the profile.
 
 ## Verification
 

@@ -39,7 +39,6 @@ export const accountCopy = {
   nameSaved: "Name saved.",
   faceSaved: "Face saved.",
   backToProfile: "Back",
-  gameTips: "Game tips",
   yourGames: "Your games",
   nicknameInvalid: "Pick a name with 3 to 20 letters or numbers.",
   suggestAnother: "Suggest another",

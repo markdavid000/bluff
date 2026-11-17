@@ -1,6 +1,5 @@
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hideTips, useTipsRequested } from "@/hooks/use-tips-request";
 import { settingsStore } from "@/lib/settings-store";
 import { sharedCopy } from "./copy";
 import { ScreenControls } from "./screen-controls";
@@ -46,10 +45,9 @@ describe("ScreenControls", () => {
     expect(settingsStore().get().calmMotion).toBe(true);
   });
 
-  it("brings the game tips back from the settings", async () => {
+  it("keeps the game tips out of the settings, since the header has its own tips button", async () => {
     openSettings();
-    fireEvent.click(await screen.findByRole("menuitem", { name: sharedCopy.gameTips }));
-    expect(renderHook(() => useTipsRequested()).result.current).toBe(true);
-    act(() => hideTips());
+    await screen.findByRole("menuitemcheckbox", { name: sharedCopy.calmMotion });
+    expect(screen.queryByRole("menuitem", { name: sharedCopy.gameTips })).not.toBeInTheDocument();
   });
 });
