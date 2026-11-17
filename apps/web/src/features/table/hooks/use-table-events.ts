@@ -95,6 +95,7 @@ export function toRoundResult(args: unknown): RoundResult | null {
 export function useTableEvents({
   id,
   me,
+  host,
   nameOf,
   onBidPlaced,
   onRoundSettled,
@@ -102,14 +103,18 @@ export function useTableEvents({
 }: {
   id: bigint;
   me: string | undefined;
+  host?: string;
   nameOf: (address: string) => string;
   onBidPlaced?: (bid: PlacedBid) => void;
   onRoundSettled?: (result: RoundResult) => void;
   onGameEnded?: (ending: GameEnding) => void;
 }) {
   function handle(logs: readonly WatchedLog[]) {
+    let tableHost = host;
     for (const log of logs) {
       if (field(log.args, "id") !== id) continue;
+      const newHost = field(log.args, "host");
+      if (log.eventName === "HostChanged" && typeof newHost === "string") tableHost = newHost;
       if (log.blockNumber !== null) seeBlock(log.blockNumber);
       if (log.eventName === "BidPlaced") {
         const bid = toPlacedBid(log.args);
@@ -123,7 +128,7 @@ export function useTableEvents({
         const ending = toGameEnding(log.args);
         if (ending) onGameEnded?.(ending);
       }
-      const words = noticeFor(toEvent(log), me, nameOf);
+      const words = noticeFor(toEvent(log), me, nameOf, tableHost);
       if (words) notify.info(words, { id: `table-${log.transactionHash}-${log.logIndex}` });
     }
   }

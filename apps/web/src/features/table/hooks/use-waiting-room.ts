@@ -67,7 +67,7 @@ export function useWaitingRoom(id: bigint) {
     return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
   };
   const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
-  useTableEvents({ id, me, nameOf: noticeName });
+  useTableEvents({ id, me, host: table?.host, nameOf: noticeName });
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
