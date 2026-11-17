@@ -95,4 +95,10 @@ describe("noticeFor", () => {
   it("asks everyone to press Ready again when the table reopens, since nobody is ready any more", () => {
     expect(notice({ eventName: "TableReopened", args: {} })).toContain(`Press ${tableCopy.ready}`);
   });
+
+  it("tells the host the table reopened without asking them to get ready, since hosts never do", () => {
+    const words = noticeFor({ eventName: "TableReopened", args: {} }, ME, nameOf, ME);
+    expect(words).toBe(tableCopy.openAgainForHost);
+    expect(words).not.toContain(tableCopy.ready);
+  });
 });

@@ -16,7 +16,8 @@ function same(a: string | undefined, b: string | undefined): boolean {
 export function noticeFor(
   event: TableEvent,
   me: string | undefined,
-  nameOf: (address: string) => string
+  nameOf: (address: string) => string,
+  tableHost?: string
 ): string | null {
   const { player, host, ready } = event.args;
   const mine = same(player, me);
@@ -37,7 +38,7 @@ export function noticeFor(
     case "TableCancelled":
       return tableCopy.tableClosed;
     case "TableReopened":
-      return tableCopy.openAgain;
+      return same(tableHost, me) ? tableCopy.openAgainForHost : tableCopy.openAgain;
     case "GameStarted":
       return tableCopy.gameStarting;
     case "TurnTimedOut":

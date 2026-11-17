@@ -80,6 +80,7 @@ export function useGame(id: bigint) {
   useTableEvents({
     id,
     me,
+    host: table?.host,
     nameOf: noticeName,
     onBidPlaced: (placed: PlacedBid) => {
       const { face } = placed;
