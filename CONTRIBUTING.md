@@ -145,14 +145,15 @@ feature branch ──squash──► dev ──merge──► staging ──merg
 | `staging` | Testing. Developed features are promoted here and tested. | `dev` only                 | the repository owner | Vercel staging URL |
 | `main`    | Production. Tested features are promoted here.            | `staging` only             | the repository owner | Vercel production  |
 
-The rules, enforced by GitHub once the repository is public (see the last point):
+The rules, enforced by two GitHub rulesets since the repository went public on 2026-11-17:
 
 - No direct pushes to any of the three, for anyone. Every change arrives by pull request.
 - The `quality` check must pass before any merge, and the branch must be up to date with its base.
 - The `branch flow` check rejects a pull request into `staging` that is not from `dev`, and one into `main` that is not from `staging`.
 - Feature pull requests into `dev` are squash-merged. Promotions use a merge commit.
 - Only the repository owner can merge into `staging` and `main`.
-- While the repository is private on a free GitHub plan, GitHub cannot enforce these rules. Until it is public, two local guards stand in: the `branch guard` pre-commit hook refuses commits on `dev`, `staging` and `main`, and `.vscode/settings.json` turns on VS Code's branch protection, which shows a lock on those branches and prompts before committing to them.
+- **"dev: squash-merged features"** covers `dev`, and **"staging and main: promotions by merge commit"** covers `staging` and `main`. Each requires a pull request and the `quality` check, with the branch up to date with its base, and allows only its merge method. Nobody can bypass them, the owner included, and force pushes and deletion are blocked. No review approval is required, since GitHub does not let an author approve their own pull request.
+- Two local guards still catch mistakes before they reach GitHub: the `branch guard` pre-commit hook refuses commits on `dev`, `staging` and `main`, and `.vscode/settings.json` turns on VS Code's branch protection, which shows a lock on those branches and prompts before committing to them.
 
 Feature branches are named `<type>/<short-description>`, using the same types as commits: `feat/place-bid`, `fix/reveal-order`, `chore/upgrade-next`.
 
