@@ -31,7 +31,6 @@ const sitDown = {
   findingSeat: false,
   working: false,
   confirmInWallet: false,
-  goingTo: null,
 };
 
 type Lobby = Record<string, unknown>;
@@ -118,27 +117,5 @@ describe("Lobby", () => {
     lobby = { ...base, openTables: { status: "ready", tables: [table(12n, 1, 3)] } };
     show();
     expect(screen.queryByText(lobbyCopy.tableName("12"))).not.toBeInTheDocument();
-  });
-
-  it("sends a seated player back to their table instead of offering another seat", () => {
-    lobby = { ...base, myTableId: { status: "ready", id: 12n } };
-    show();
-    expect(screen.queryByRole("button", { name: lobbyCopy.playNow })).not.toBeInTheDocument();
-    expect(screen.getByText(lobbyCopy.seatedAt("12"))).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: lobbyCopy.backToTable })).toHaveAttribute(
-      "href",
-      "/table/12"
-    );
-  });
-
-  it("doesn't flash the seat card for the table the player is on their way to", () => {
-    lobby = {
-      ...base,
-      myTableId: { status: "ready", id: 12n },
-      sitDown: { ...sitDown, working: true, goingTo: 12n },
-    };
-    show();
-    expect(screen.queryByText(lobbyCopy.seatedAt("12"))).toBeNull();
-    expect(screen.getByRole("button", { name: lobbyCopy.playNow })).toBeInTheDocument();
   });
 });

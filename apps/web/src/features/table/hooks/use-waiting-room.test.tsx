@@ -63,9 +63,9 @@ vi.mock("./use-invite-code", () => ({
 }));
 vi.mock("./use-link-invite", () => ({ useLinkInvite: () => linkCode }));
 const markLeftTable = vi.fn();
+vi.mock("@/hooks/use-left-tables", () => ({ markLeftTable: (id: bigint) => markLeftTable(id) }));
 vi.mock("./use-table", () => ({
   useTable: () => tableRead,
-  markLeftTable: (id: bigint) => markLeftTable(id),
   isNotTableRead: () => true,
 }));
 vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
