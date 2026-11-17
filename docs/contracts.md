@@ -29,7 +29,7 @@ On Sepolia the chip token is Zama's `cUSDTMock` (`0x4E7B06D78965594eB5EF5414c357
 | --------------------------------------- | --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                      | Creates a free table; the creator takes seat 0 and hosts. A private table gets an invite code. Returns the id.                                                             |
 | `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused  | Takes the next seat; a private table needs the player invited. A full table waits for its host.                                                                            |
-| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark.                                                                            |
+| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark, and every mark clears when a paid table reopens (`TableReopened`).         |
 | `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready | Starts a free game, or the payment check of a paid one. Dice are dealt by the players who start: 6 minus the player count each. Otherwise reverts with `NotEveryoneReady`. |
 | `leaveTable(id)`                        | seated player         | any open status                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left.                                                          |
 | `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed                   | Cancels and refunds everyone.                                                                                                                                              |
@@ -40,13 +40,13 @@ On Sepolia the chip token is Zama's `cUSDTMock` (`0x4E7B06D78965594eB5EF5414c357
 
 These keep a table moving; the web app sends them automatically.
 
-| Function                               | Allowed when                    | Does                                                                                                                                  |
-| -------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `confirmSeats(id, clearValues, proof)` | `Verifying`                     | Checks the paid-in-full reveal with `FHE.checkSignatures`. Removes unpaid seats and reopens, or rolls round 1.                        |
-| `cancelVerification(id)`               | `Verifying`, 10 minutes passed  | Cancels and refunds everyone.                                                                                                         |
-| `settleReveal(id, clearValues, proof)` | `Revealing`                     | Checks the dice reveal, counts the bid face and ones, takes a die from whoever was wrong, then rolls the next round or ends the game. |
-| `claimTimeout(id)`                     | `Playing`, turn deadline passed | The idle player loses a die, or is removed on a second miss; the next player starts a new round.                                      |
-| `cancelStuckReveal(id)`                | `Revealing`, 10 minutes passed  | Ends the game, shared by everyone still in it.                                                                                        |
+| Function                               | Allowed when                    | Does                                                                                                                                         |
+| -------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `confirmSeats(id, clearValues, proof)` | `Verifying`                     | Checks the paid-in-full reveal with `FHE.checkSignatures`. Removes unpaid seats and reopens with every ready mark cleared, or rolls round 1. |
+| `cancelVerification(id)`               | `Verifying`, 10 minutes passed  | Cancels and refunds everyone.                                                                                                                |
+| `settleReveal(id, clearValues, proof)` | `Revealing`                     | Checks the dice reveal, counts the bid face and ones, takes a die from whoever was wrong, then rolls the next round or ends the game.        |
+| `claimTimeout(id)`                     | `Playing`, turn deadline passed | The idle player loses a die, or is removed on a second miss; the next player starts a new round.                                             |
+| `cancelStuckReveal(id)`                | `Revealing`, 10 minutes passed  | Ends the game, shared by everyone still in it.                                                                                               |
 
 ### Called only by the cashier
 
@@ -160,7 +160,7 @@ Every proxy and implementation is verified on Etherscan, so its source is readab
 
 | Contract       | Proxy                                                                                                 | Implementation                                                                                                |
 | -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x10f1…609f`](https://sepolia.etherscan.io/address/0x10f13f5eAc28799083555FD69A3De0834A77609f#code) (1.3.0) |
+| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0xB5d0…88f8`](https://sepolia.etherscan.io/address/0xB5d0eAd59e9cD5cAC7DBeA3c309cdE54dF9A88f8#code) (1.4.0) |
 | `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xA10e…c322`](https://sepolia.etherscan.io/address/0xA10e003BfE989b4651602BC310208461bF96c322#code)         |
 | `BluffInvites` | [`0x5bAC…F140`](https://sepolia.etherscan.io/address/0x5bACDa7BACa6f67754122F49b59B404471C3F140#code) | [`0x7a96…975B`](https://sepolia.etherscan.io/address/0x7a9637Be08c5E8002B38db785F3F4DE0F809975B#code) (1.0.0) |
 | `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0x1E16…9C85`](https://sepolia.etherscan.io/address/0x1E16DD83Ac787FeB6F5998900EbB5E05907D9C85#code) (1.2.0) |

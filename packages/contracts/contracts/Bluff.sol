@@ -339,7 +339,7 @@ contract Bluff is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.3.0";
+        return "1.4.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
@@ -441,6 +441,8 @@ contract Bluff is
         }
         table.status = TableStatus.Waiting;
         table.deadline = uint64(block.timestamp) + TableRules.LOBBY_LIMIT;
+        Seat[] storage seats = $.seats[id];
+        for (uint256 i = 0; i < seats.length; ++i) delete $.ready[id][seats[i].player];
         _ensureHost($, id);
         if (!table.isPrivate) _list($, id);
         emit TableReopened(id, table.deadline);

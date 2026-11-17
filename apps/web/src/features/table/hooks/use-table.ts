@@ -2,10 +2,11 @@
 
 import { bluffAbi } from "@bluff/contracts";
 import { BaseError, ContractFunctionRevertedError } from "viem";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useBlockClock } from "@/hooks/use-block-clock";
+import { forgetLeftTable, useHasLeftTable } from "@/hooks/use-left-tables";
 import { type Table, toTable } from "../lib/table-view";
 
 const READ_ATTEMPTS = 4;
@@ -25,19 +26,6 @@ function isMissingTable(error: unknown): boolean {
   );
 }
 
-const leftTables = new Set<string>();
-const leftListeners = new Set<() => void>();
-
-function onLeftTables(listener: () => void) {
-  leftListeners.add(listener);
-  return () => leftListeners.delete(listener);
-}
-
-function changeLeftTables(change: () => void) {
-  change();
-  leftListeners.forEach((listener) => listener());
-}
-
 export function isNotTableRead(query: { queryKey: readonly unknown[] }): boolean {
   const request = query.queryKey[1];
   return !(
@@ -48,17 +36,9 @@ export function isNotTableRead(query: { queryKey: readonly unknown[] }): boolean
   );
 }
 
-export function markLeftTable(id: bigint) {
-  changeLeftTables(() => leftTables.add(id.toString()));
-}
-
 export function useTable(id: bigint): TableRead {
-  const left = useSyncExternalStore(
-    onLeftTables,
-    () => leftTables.has(id.toString()),
-    () => false
-  );
-  useEffect(() => () => changeLeftTables(() => leftTables.delete(id.toString())), [id]);
+  const left = useHasLeftTable(id);
+  useEffect(() => () => forgetLeftTable(id), [id]);
   const block = useBlockClock();
   const [shownId, setShownId] = useState<bigint | null>(null);
   const pinned = shownId === id && block > 0n;

@@ -6,7 +6,6 @@ import { Appear } from "@/components/shared/appear";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import { lobbyCopy } from "../copy";
 import { useLobby } from "../hooks/use-lobby";
-import { BackToTableCard } from "./back-to-table-card";
 import { BuyInPicker } from "./buy-in-picker";
 import { CreateTableDialog } from "./create-table-dialog";
 import { JoinLinkForm } from "./join-link-form";
@@ -18,18 +17,12 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
   const { sitDown } = lobby;
   const label = (working: string) =>
     sitDown.confirmInWallet ? lobbyCopy.confirmInWallet : working;
-  const seatedAt =
-    lobby.myTableId.status === "ready" && lobby.myTableId.id !== sitDown.goingTo
-      ? lobby.myTableId.id
-      : null;
   const busy = sitDown.working;
 
   return (
     <div className="mb-24 flex max-h-full min-h-0 w-full max-w-4xl flex-col">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
-        {seatedAt !== null ? (
-          <BackToTableCard id={seatedAt} />
-        ) : lobby.myTableId.status === "failed" ? (
+        {lobby.myTableId.status === "failed" ? (
           <p className="flex flex-wrap items-center justify-center gap-3 text-base">
             {lobbyCopy.yourTableProblem}
             <ActionButton tone="quiet" size="small" icon="target" onClick={lobby.myTableId.retry}>
@@ -98,7 +91,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         )}
       </div>
       <OpenTablesDialog
-        open={lobby.tablesOpen && seatedAt === null}
+        open={lobby.tablesOpen}
         onOpenChange={lobby.setTablesOpen}
         openTables={lobby.openTables}
         problemFor={lobby.problemFor}
@@ -109,7 +102,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         onCreate={lobby.createFromTables}
       />
       <CreateTableDialog
-        open={lobby.createOpen && seatedAt === null}
+        open={lobby.createOpen}
         onOpenChange={lobby.setCreateOpen}
         buyIn={lobby.buyIn}
         onBuyInChange={lobby.chooseBuyIn}

@@ -9,7 +9,7 @@ describe("admin", function () {
       expect(await bluff.owner()).to.equal(owner.address);
       expect(await bluff.cashier()).to.equal(await cashier.getAddress());
       expect(await bluff.invites()).to.equal(await invites.getAddress());
-      expect(await bluff.version()).to.equal("1.3.0");
+      expect(await bluff.version()).to.equal("1.4.0");
       expect(await invites.owner()).to.equal(owner.address);
       expect(await invites.bluff()).to.equal(await bluff.getAddress());
       expect(await invites.version()).to.equal("1.0.0");

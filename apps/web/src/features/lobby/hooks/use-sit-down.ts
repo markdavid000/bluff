@@ -83,7 +83,6 @@ export function useSitDown() {
     findingSeat: playNow.working || heading?.from === "play-now",
     working:
       heading !== null || create.working || createPaid.working || join.working || playNow.working,
-    goingTo: heading?.id ?? null,
     confirmInWallet:
       create.confirmInWallet ||
       createPaid.confirmInWallet ||
