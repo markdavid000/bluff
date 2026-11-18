@@ -17,11 +17,12 @@ bluff/
 └── .github/                CI, Dependabot, issue and pull request templates
 ```
 
-| Package              | Name               | Holds                                                                                                                                                                                                              |
-| -------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/web`           | `@bluff/web`       | The game players see. Reads and writes the contracts through feature hooks.                                                                                                                                        |
-| `packages/contracts` | `@bluff/contracts` | The game contracts, their tests, deploy scripts and Hardhat tasks.                                                                                                                                                 |
-| `packages/game`      | `@bluff/game`      | The game's pure rules, shared by the web app and the computer player: bid rules and odds, the die `Face` type, the table mapper (`toTable`) and the keeper's duties. Test helpers are under `@bluff/game/testing`. |
+| Package              | Name               | Holds                                                                                                                                                                                                                                       |
+| -------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`           | `@bluff/web`       | The game players see. Reads and writes the contracts through feature hooks.                                                                                                                                                                 |
+| `apps/bot`           | `@bluff/bot`       | The computer player: a Node 24 service with `POST /seat` and `GET /health` that seats computer players at free tables and plays them, decrypting only their own dice. See [the computer player ADR](adr/ADR-2026-11-18-computer-player.md). |
+| `packages/contracts` | `@bluff/contracts` | The game contracts, their tests, deploy scripts and Hardhat tasks.                                                                                                                                                                          |
+| `packages/game`      | `@bluff/game`      | The game's pure rules, shared by the web app and the computer player: bid rules and odds, the die `Face` type, the table mapper (`toTable`) and the keeper's duties. Test helpers are under `@bluff/game/testing`.                          |
 
 The web app depends on the contracts package for contract ABIs and deployed addresses, and on the game package for the rules. The game package depends only on the contracts package, for ABI-derived types. The contracts package depends on nothing in the web app.
 
@@ -213,3 +214,15 @@ Game data does not use server caching: it is read in the browser and cached by T
 
 - **Web app:** [Vercel](https://vercel.com), Hobby plan, with `apps/web` as the project root. `main` deploys production, `staging` deploys to the staging URL, and every pull request gets a preview link. `siteConfig.url` reads Vercel's production host at build time.
 - **Contracts:** UUPS proxies on Sepolia, deployed with `pnpm --filter @bluff/contracts deploy:sepolia` and upgraded in place with `upgrade:sepolia`. Addresses live in `packages/contracts/deployments/sepolia.json`, which the web app reads; the proxy addresses never change.
+- **Computer player (`apps/bot`):** a [Railway](https://railway.com) service ([ADR-2026-11-18-computer-player](adr/ADR-2026-11-18-computer-player.md)). Its settings live in Railway's dashboard, not in a file, since Railway's `railway.json` stops being read for new services on 2026-12-01.
+  - **Root directory:** the repository root, so the whole pnpm workspace installs.
+  - **Build command:** `pnpm --filter @bluff/bot build`.
+  - **Start command:** `pnpm --filter @bluff/bot start`.
+  - **Health check:** `/health`.
+  - **App sleeping:** on.
+  - **Variables:**
+    - `BOT_MNEMONIC`: secret;
+    - `SEPOLIA_RPC_URL`: secret, an https RPC key not limited to a domain;
+    - `ALLOWED_ORIGINS`: the web app's sites, separated by commas;
+    - optionally `BOT_MAX_PLAYERS` (1 to 24, default 20).
+  - Railway sets `PORT`. Node 24 comes from `engines` and `.nvmrc`, and pnpm from `packageManager`.

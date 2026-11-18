@@ -56,7 +56,7 @@ apps/bot/
 │   └── log.ts             JSON lines, with no dice, secrets or keys
 ├── build.mjs              esbuild bundle → dist/main.js
 ├── package.json           @bluff/bot; esbuild pinned
-└── railway.json           build and start commands, health check, sleep
+└── scripts/smoke.sh       the bundle loads and refuses to start without its settings
 ```
 
 - **Tests sit next to each module,** as in the ADR's Verification. The chain, relayer, clock and randomness are the only mocks.

@@ -12,6 +12,9 @@ const config: KnipConfig = {
     ".": {
       entry: ["scripts/*.mjs"],
     },
+    "apps/bot": {
+      entry: ["src/main.ts"],
+    },
     "packages/contracts": {
       entry: [
         "contracts/**/*.sol",

@@ -53,5 +53,6 @@ pnpm build
 
 step "10/10" "Smoke test (production server)"
 pnpm --filter @bluff/web smoke
+pnpm --filter @bluff/bot smoke
 
 echo -e "\n${GREEN}All preflight gates passed.${NC}"

@@ -185,7 +185,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/). The
 ```
 
 Types: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`, `revert`, `style`.
-Scopes: `web`, `contracts`, `docs`, `ci`, `deps`, `repo`.
+Scopes: `web`, `bot`, `contracts`, `docs`, `ci`, `deps`, `repo`.
 
 ```
 feat(contracts): roll hidden dice when a round starts

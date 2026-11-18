@@ -5,6 +5,7 @@ coverage
 apps/web/.next
 apps/web/.vercel
 apps/web/next-env.d.ts
+apps/bot/dist
 packages/contracts/artifacts
 packages/contracts/cache
 packages/contracts/types

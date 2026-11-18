@@ -160,6 +160,7 @@ jobs:
       - run: pnpm compile
       - run: pnpm build
       - run: pnpm --filter @bluff/web smoke
+      - run: pnpm --filter @bluff/bot smoke
 
   secrets:
     name: secrets
