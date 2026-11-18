@@ -1,4 +1,4 @@
-import type { Face } from "./dice-physics";
+import type { Face } from "./face";
 
 export type BidFace = 2 | 3 | 4 | 5 | 6;
 

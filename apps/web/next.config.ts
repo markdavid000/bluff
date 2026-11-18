@@ -4,7 +4,7 @@ import { SECURITY_HEADERS } from "./src/config/security-headers";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   agentRules: false,
-  transpilePackages: ["@bluff/contracts"],
+  transpilePackages: ["@bluff/contracts", "@bluff/game"],
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },

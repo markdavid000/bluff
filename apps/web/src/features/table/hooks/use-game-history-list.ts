@@ -18,7 +18,7 @@ import {
   mergeGames,
 } from "../lib/game-log";
 import { type GameLogMemory, rememberGames, rememberedGames } from "../lib/remembered-games";
-import { toTable } from "../lib/table-view";
+import { toTable } from "@bluff/game";
 
 const PAGE = 20;
 const SPAN = 50_000n;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type Face, faceUpRotation, flatness, shownFace, throwDice } from "./dice-physics";
+import type { Face } from "@bluff/game";
+import { faceUpRotation, flatness, shownFace, throwDice } from "./dice-physics";
 import { seededRandom } from "./random";
 
 const SIDES = [

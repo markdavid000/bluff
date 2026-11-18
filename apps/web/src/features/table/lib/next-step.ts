@@ -1,5 +1,5 @@
 import { tableCopy } from "../copy";
-import { type Table, notReady } from "./table-view";
+import { type Table, notReady } from "@bluff/game";
 
 const MIN_PLAYERS = 2;
 

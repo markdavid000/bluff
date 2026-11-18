@@ -1,5 +1,5 @@
 import { CanvasTexture, SRGBColorSpace } from "three";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 
 const SIZE = 256;
 

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Bid } from "@/lib/bid-rules";
+import type { Bid } from "@bluff/game";
 import { tableCopy } from "../copy";
 import { useBidChoice } from "../hooks/use-bid-choice";
 import { BidControl } from "./bid-control";

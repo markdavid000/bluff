@@ -4,7 +4,7 @@ import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../../copy";
 import type { GameHistoryList } from "../../hooks/use-game-history-list";
 import type { HistoryGame } from "../../lib/game-log";
-import { NO_DICE, NO_GAME } from "../../lib/table-fixture.testing";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 import { HistoryScreen } from "./history-screen";
 
 const ME = "0x0000000000000000000000000000000000001a2b";

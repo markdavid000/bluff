@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { Appear } from "@/components/shared/appear";
 import { DieFace } from "@/components/shared/die";
-import type { Bid } from "@/lib/bid-rules";
+import type { Bid } from "@bluff/game";
 import { tableCopy } from "../copy";
 
 const RAISED =

@@ -2,9 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
-import type { Table } from "../lib/table-view";
+import type { Table } from "@bluff/game";
 import { WaitingScreen } from "./waiting-screen";
-import { NO_GAME } from "../lib/table-fixture.testing";
+import { NO_GAME } from "@bluff/game/testing";
 
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));

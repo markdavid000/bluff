@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { tableCopy } from "../copy";
 import { nextStep } from "./next-step";
-import type { Table, TableSize, TableStatus } from "./table-view";
-import { NO_DICE, NO_GAME } from "./table-fixture.testing";
+import type { Table, TableSize, TableStatus } from "@bluff/game";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";

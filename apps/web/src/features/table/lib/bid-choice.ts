@@ -6,8 +6,8 @@ import {
   isValidQuantity,
   legalBids,
   quickPicks,
-} from "@/lib/bid-rules";
-import type { Face } from "@/lib/dice-physics";
+  type Face,
+} from "@bluff/game";
 
 export function lowestFor(face: BidFace, current: Bid | null): number {
   if (current === null) return 1;

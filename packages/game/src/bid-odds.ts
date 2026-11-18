@@ -1,5 +1,5 @@
 import { type Bid, countMatching } from "./bid-rules";
-import type { Face } from "./dice-physics";
+import type { Face } from "./face";
 
 const MATCH_CHANCE = 1 / 3;
 const SAFE_FROM = 0.6;

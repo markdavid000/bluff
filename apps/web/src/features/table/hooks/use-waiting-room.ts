@@ -23,7 +23,7 @@ import { notify } from "@/lib/notify";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { type Role, nextStep } from "../lib/next-step";
-import { type Table, freeSeats, notReady } from "../lib/table-view";
+import { type Table, freeSeats, notReady } from "@bluff/game";
 import { useInviteCode } from "./use-invite-code";
 import { useLinkInvite } from "./use-link-invite";
 import { isNotTableRead, useTable } from "./use-table";

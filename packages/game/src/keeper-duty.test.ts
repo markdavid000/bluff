@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CHAIN_LAG_MS, KEEPER_STAGGER_MS, keeperDuty } from "./keeper-duty";
 import type { Table, TableStatus } from "./table-view";
-import { NO_DICE, NO_GAME } from "./table-fixture.testing";
+import { NO_DICE, NO_GAME } from "./testing";
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";

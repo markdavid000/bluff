@@ -634,6 +634,8 @@ Target: PR 0 approved by 2026-11-16, PRs 1 to 4 by 2026-11-23, PR 5 by 2026-11-2
 
 ## 10. The computer player
 
+Superseded by [ADR-2026-11-18-computer-player](../adr/ADR-2026-11-18-computer-player.md) and its [plan](2026-11-18-computer-player-plan.md); the rest of this section is the original 2026-11-11 plan.
+
 The full decision is in [The computer player](../adr/ADR-2026-11-11-computer-player.md).
 
 ```

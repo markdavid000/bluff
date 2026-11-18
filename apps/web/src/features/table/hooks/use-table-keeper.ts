@@ -11,8 +11,7 @@ import { MoveNotReadyError } from "@/lib/errors";
 import { keepTrying } from "@/lib/keep-trying";
 import { notify } from "@/lib/notify";
 import { tableCopy } from "../copy";
-import { type KeeperAction, keeperDuty } from "../lib/keeper-duty";
-import { type Table, toTable } from "../lib/table-view";
+import { type KeeperAction, keeperDuty, type Table, toTable } from "@bluff/game";
 
 const RETRY_MS = 15_000;
 const REVEAL_DEADLINE_MS = 30_000;

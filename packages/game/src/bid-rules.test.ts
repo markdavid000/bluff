@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Face } from "./dice-physics";
+import type { Face } from "./face";
 import {
   type Bid,
   countMatching,
