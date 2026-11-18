@@ -8,7 +8,7 @@ import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useBlockClock } from "@/hooks/use-block-clock";
 import { usePermit } from "@/hooks/use-permit";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { tableCopy } from "../copy";
 
 const LAST_DIE_VALUE = 5;

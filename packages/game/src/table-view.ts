@@ -1,6 +1,6 @@
 import type { bluffAbi } from "@bluff/contracts";
 import type { Address, ContractFunctionReturnType } from "viem";
-import { type Bid, isValidFace } from "@/lib/bid-rules";
+import { type Bid, isValidFace } from "./bid-rules";
 
 type TableRead = ContractFunctionReturnType<typeof bluffAbi, "view", "getTable">;
 

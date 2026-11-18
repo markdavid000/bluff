@@ -17,12 +17,13 @@ bluff/
 └── .github/                CI, Dependabot, issue and pull request templates
 ```
 
-| Package              | Name               | Holds                                                                       |
-| -------------------- | ------------------ | --------------------------------------------------------------------------- |
-| `apps/web`           | `@bluff/web`       | The game players see. Reads and writes the contracts through feature hooks. |
-| `packages/contracts` | `@bluff/contracts` | The game contracts, their tests, deploy scripts and Hardhat tasks.          |
+| Package              | Name               | Holds                                                                                                                                                                                                              |
+| -------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/web`           | `@bluff/web`       | The game players see. Reads and writes the contracts through feature hooks.                                                                                                                                        |
+| `packages/contracts` | `@bluff/contracts` | The game contracts, their tests, deploy scripts and Hardhat tasks.                                                                                                                                                 |
+| `packages/game`      | `@bluff/game`      | The game's pure rules, shared by the web app and the computer player: bid rules and odds, the die `Face` type, the table mapper (`toTable`) and the keeper's duties. Test helpers are under `@bluff/game/testing`. |
 
-The web app depends on the contracts package for contract ABIs and deployed addresses. The contracts package depends on nothing in the web app.
+The web app depends on the contracts package for contract ABIs and deployed addresses, and on the game package for the rules. The game package depends only on the contracts package, for ABI-derived types. The contracts package depends on nothing in the web app.
 
 ## How the pieces talk
 
@@ -149,19 +150,20 @@ A feature folder is created by the change that first needs it.
 
 ## Where does this go?
 
-| You are adding                                | Put it in                                                |
-| --------------------------------------------- | -------------------------------------------------------- |
-| A page                                        | `src/app/`, as thin as possible, delegating to a feature |
-| UI used by one feature                        | that feature's `components/`, even if it looks generic   |
-| UI two or more features need                  | `src/components/shared/`                                 |
-| A primitive that knows nothing about the game | `src/components/ui/`, via `pnpm dlx shadcn add`          |
-| Stateful logic used by one feature            | that feature's `hooks/`                                  |
-| A hook two or more features need              | `src/hooks/`                                             |
-| A pure function two or more features need     | `src/lib/`                                               |
-| A contract read or write                      | a feature hook, built on that feature's `queries.ts`     |
-| Text a player reads                           | the feature's `copy.ts`                                  |
-| A contract address or chain setting           | `src/config/`                                            |
-| Game logic that must be enforced              | `packages/contracts/contracts/`, never only in the app   |
+| You are adding                                            | Put it in                                                |
+| --------------------------------------------------------- | -------------------------------------------------------- |
+| A page                                                    | `src/app/`, as thin as possible, delegating to a feature |
+| UI used by one feature                                    | that feature's `components/`, even if it looks generic   |
+| UI two or more features need                              | `src/components/shared/`                                 |
+| A primitive that knows nothing about the game             | `src/components/ui/`, via `pnpm dlx shadcn add`          |
+| Stateful logic used by one feature                        | that feature's `hooks/`                                  |
+| A hook two or more features need                          | `src/hooks/`                                             |
+| A pure function two or more features need                 | `src/lib/`                                               |
+| A game rule the web app and the computer player both need | `packages/game/src/`                                     |
+| A contract read or write                                  | a feature hook, built on that feature's `queries.ts`     |
+| Text a player reads                                       | the feature's `copy.ts`                                  |
+| A contract address or chain setting                       | `src/config/`                                            |
+| Game logic that must be enforced                          | `packages/contracts/contracts/`, never only in the app   |
 
 When two features keep needing each other, they are one feature. Merge them; do not open a path between them. When one feature must show another's UI, the route composes them and passes a slot (`children`, a render prop, or a callback).
 

@@ -1,6 +1,5 @@
-import { isMaximal } from "@/lib/bid-rules";
+import { isMaximal, type Table } from "@bluff/game";
 import { tableCopy } from "../copy";
-import type { Table } from "./table-view";
 
 export function gameLine(
   table: Pick<Table, "status" | "turn" | "bid" | "diceInPlay">,

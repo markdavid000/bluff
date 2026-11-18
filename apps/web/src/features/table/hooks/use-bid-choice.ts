@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Bid, BidFace } from "@/lib/bid-rules";
-import type { Face } from "@/lib/dice-physics";
+import type { Bid, BidFace, Face } from "@bluff/game";
 import { faceAvailable, fewer, isAllowed, more, startingChoice, withFace } from "../lib/bid-choice";
 
 export function useBidChoice(current: Bid | null, diceInPlay: number, ownFaces: readonly Face[]) {

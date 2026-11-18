@@ -1,4 +1,4 @@
-import type { TableStatus } from "./table-view";
+import type { TableStatus } from "@bluff/game";
 
 export interface NewTable {
   id: bigint;

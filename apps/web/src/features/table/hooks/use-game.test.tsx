@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { type Notice, onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
-import { NO_GAME } from "../lib/table-fixture.testing";
+import { NO_GAME } from "@bluff/game/testing";
 import type { GameEnding } from "../lib/game-end";
-import type { Table } from "../lib/table-view";
+import type { Table } from "@bluff/game";
 import type { PlacedBid, RoundResult } from "./use-table-events";
 import { useGame } from "./use-game";
 

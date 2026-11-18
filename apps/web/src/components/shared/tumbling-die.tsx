@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { DieFace } from "./die";
 
 const SIDES: { face: Face; placement: string }[] = [

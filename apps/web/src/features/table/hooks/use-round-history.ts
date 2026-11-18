@@ -5,8 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAbiItem } from "viem";
 import { contracts, gameClient } from "@/config/chain";
 import { type HistoryRound, roundHistory, withCurrentBid } from "../lib/round-history";
-import type { Bid } from "@/lib/bid-rules";
-import type { Table } from "../lib/table-view";
+import type { Bid, Table } from "@bluff/game";
 
 const LOOK_BACK_BLOCKS = 400n;
 const CHECK_EVERY_MS = 10_000;

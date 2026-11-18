@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
-import { NO_DICE, NO_GAME } from "./table-fixture.testing";
-import type { Table } from "./table-view";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
+import type { Table } from "@bluff/game";
 import { blockSpans, gameOutcome, historyGames, mergeGames } from "./game-log";
 
 const ME = "0x0000000000000000000000000000000000001a2b";

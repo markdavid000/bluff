@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSound } from "@/hooks/use-sound";
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { seatLayout } from "../lib/seat-layout";
 import { useDiceThrow } from "./use-dice-throw";
 

@@ -1,6 +1,6 @@
 # ADR-2026-11-11: The computer player
 
-- **Status:** Approved
+- **Status:** Superseded by [ADR-2026-11-18-computer-player](ADR-2026-11-18-computer-player.md)
 - **Approved by:** (MarkDavid, 11th Nov 2026; filled in by the maintainer)
 - **Companion:** [ADR-2026-11-11-computer-player-for-dummies.md](ADR-2026-11-11-computer-player-for-dummies.md)
 - **Builds on:** [The web app](ADR-2026-11-11-web-app.md), [Game flow and timing](ADR-2026-11-10-game-flow-and-timing.md)

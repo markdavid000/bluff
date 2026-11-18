@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { BidRisk } from "@/lib/bid-odds";
-import type { Bid } from "@/lib/bid-rules";
+import type { BidRisk, Bid } from "@bluff/game";
 import { type Notice, onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { COACH_DELAY_MS, COACH_STAYS_MS, useCoachTips } from "./use-coach-tips";

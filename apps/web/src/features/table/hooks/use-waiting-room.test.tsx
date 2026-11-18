@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
-import type { Table } from "../lib/table-view";
+import type { Table } from "@bluff/game";
 import { useWaitingRoom } from "./use-waiting-room";
-import { NO_DICE, NO_GAME } from "../lib/table-fixture.testing";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },

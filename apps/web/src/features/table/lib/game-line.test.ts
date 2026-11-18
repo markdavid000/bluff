@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { tableCopy } from "../copy";
 import { gameLine } from "./game-line";
-import type { Table } from "./table-view";
+import type { Table } from "@bluff/game";
 
 const name = (seat: number) => ["You", "Sly Fox", "Ada"][seat] ?? "Player";
 

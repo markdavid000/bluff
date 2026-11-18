@@ -10,7 +10,7 @@ import { RaisedCard } from "@/components/shared/raised-card";
 import { ToastTile } from "@/components/shared/toast-tile";
 import { ScreenControls } from "@/components/shared/screen-controls";
 import { TumblingDie } from "@/components/shared/tumbling-die";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { designCopy } from "../copy";
 import { useDesignShowcase } from "../hooks/use-design-showcase";
 import { DEMO_KIND, type DemoMessage } from "../hooks/use-toast-demo";

@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { tableCopy } from "../copy";
 
 interface RevealRow {

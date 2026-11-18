@@ -6,7 +6,7 @@ import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
 import { PatternBand } from "@/components/shared/pattern-band";
-import { isValidFace } from "@/lib/bid-rules";
+import { isValidFace } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { RoundHistoryState } from "../hooks/use-round-history";
 import type { HistoryBid, RoundEnd } from "../lib/round-history";

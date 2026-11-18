@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import type { useGame } from "../hooks/use-game";
-import { NO_GAME } from "./table-fixture.testing";
-import type { Table } from "./table-view";
+import { NO_GAME } from "@bluff/game/testing";
+import type { Table } from "@bluff/game";
 
 export type GameView = NonNullable<ReturnType<typeof useGame>["view"]>;
 

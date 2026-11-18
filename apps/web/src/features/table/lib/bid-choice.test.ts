@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Bid } from "@/lib/bid-rules";
+import type { Bid } from "@bluff/game";
 import { faceAvailable, fewer, lowestFor, more, startingChoice, withFace } from "./bid-choice";
 
 const bid = (quantity: number, face: Bid["face"]): Bid => ({ quantity, face });

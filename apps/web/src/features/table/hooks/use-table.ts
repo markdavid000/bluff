@@ -7,7 +7,7 @@ import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useBlockClock } from "@/hooks/use-block-clock";
 import { forgetLeftTable, useHasLeftTable } from "@/hooks/use-left-tables";
-import { type Table, toTable } from "../lib/table-view";
+import { type Table, toTable } from "@bluff/game";
 
 const READ_ATTEMPTS = 4;
 

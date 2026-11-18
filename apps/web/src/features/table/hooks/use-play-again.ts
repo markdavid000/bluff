@@ -16,7 +16,7 @@ import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
 import { notify } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { type NewTable, newTableOffer } from "../lib/play-again";
-import { toTable } from "../lib/table-view";
+import { toTable } from "@bluff/game";
 
 const CHECK_EVERY_MS = 6_000;
 const LOOK_FOR_MS = 10 * 60 * 1000;

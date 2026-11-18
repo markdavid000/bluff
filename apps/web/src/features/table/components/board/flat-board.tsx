@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { motion } from "motion/react";
 import { DieFace } from "@/components/shared/die";
 import { useCalmMotion } from "@/hooks/use-calm-motion";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import type { ThrowState } from "../../hooks/use-dice-throw";
 import { cupMotion } from "../../lib/cup-motion";
 import type { RevealedSeat } from "../../lib/reveal";

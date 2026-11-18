@@ -1,5 +1,6 @@
 # The computer player, explained simply
 
+- **Status:** Superseded by [ADR-2026-11-18-computer-player](ADR-2026-11-18-computer-player.md)
 - **Technical version:** [ADR-2026-11-11-computer-player.md](ADR-2026-11-11-computer-player.md)
 
 ## What is being decided

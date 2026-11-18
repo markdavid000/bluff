@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 import { seatLayout } from "../lib/seat-layout";
 import { OTHERS_SHAKE_MS, SHAKE_MS, useGameBoard } from "./use-game-board";
 

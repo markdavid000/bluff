@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
-import { NO_DICE, NO_GAME } from "../lib/table-fixture.testing";
-import type { Table, TableStatus } from "../lib/table-view";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
+import type { Table, TableStatus } from "@bluff/game";
 import { TableScreen } from "./table-screen";
 
 const ME = "0x0000000000000000000000000000000000001a2b";

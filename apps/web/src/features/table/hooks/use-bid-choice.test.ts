@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Bid } from "@/lib/bid-rules";
+import type { Bid } from "@bluff/game";
 import { useBidChoice } from "./use-bid-choice";
 
 const bid = (quantity: number, face: Bid["face"]): Bid => ({ quantity, face });

@@ -3,10 +3,9 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
-import { KEEPER_STAGGER_MS } from "../lib/keeper-duty";
-import type { Table, TableStatus } from "../lib/table-view";
+import { KEEPER_STAGGER_MS, type Table, type TableStatus } from "@bluff/game";
 import { useTableKeeper } from "./use-table-keeper";
-import { NO_DICE, NO_GAME } from "../lib/table-fixture.testing";
+import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },

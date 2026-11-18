@@ -1,7 +1,8 @@
 "use client";
 
 import { useReducer } from "react";
-import { type Face, type Throw, type Vector, throwDice } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
+import { type Throw, type Vector, throwDice } from "@/lib/dice-physics";
 import { seededRandom } from "@/lib/random";
 
 export type ThrowState =

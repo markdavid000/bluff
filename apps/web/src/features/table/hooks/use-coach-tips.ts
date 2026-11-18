@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent } from "react";
-import type { BidRisk } from "@/lib/bid-odds";
-import type { Bid } from "@/lib/bid-rules";
+import type { BidRisk, Bid } from "@bluff/game";
 import { notify } from "@/lib/notify";
 import { tableCopy } from "../copy";
 

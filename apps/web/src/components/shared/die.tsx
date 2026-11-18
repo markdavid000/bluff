@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import type { Face } from "@/lib/dice-physics";
+import type { Face } from "@bluff/game";
 
 const PIPS: Record<Face, readonly number[]> = {
   1: [4],

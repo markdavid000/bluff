@@ -1,7 +1,6 @@
 import { Body, Box, Material, ContactMaterial, Plane, Quaternion, Vec3, World } from "cannon-es";
 import { between, type Random } from "./random";
-
-export type Face = 1 | 2 | 3 | 4 | 5 | 6;
+import type { Face } from "@bluff/game";
 
 export type Vector = readonly [number, number, number];
 

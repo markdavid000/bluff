@@ -3,7 +3,7 @@
 import { cn } from "cn";
 import { ActionButton } from "@/components/shared/action-button";
 import { DieFace } from "@/components/shared/die";
-import { BID_FACES, type Bid } from "@/lib/bid-rules";
+import { BID_FACES, type Bid } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { useBidChoice } from "../hooks/use-bid-choice";
 

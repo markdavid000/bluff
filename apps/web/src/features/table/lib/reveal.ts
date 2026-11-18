@@ -1,5 +1,4 @@
-import { type BidFace, countMatching } from "@/lib/bid-rules";
-import type { Face } from "@/lib/dice-physics";
+import { type BidFace, countMatching, type Face } from "@bluff/game";
 
 export interface RevealedSeat {
   faces: Face[];

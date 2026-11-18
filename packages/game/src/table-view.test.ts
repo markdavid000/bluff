@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ONE_CHIP } from "@/lib/chips";
 import { type SeatView, type TableView, freeSeats, notReady, toTable } from "./table-view";
+
+const BUY_IN = 25_000_000n;
 
 const HOST = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";
@@ -15,7 +16,7 @@ const view: TableView = {
   playerCount: 3,
   dicePerPlayer: 2,
   diceInPlay: 0,
-  buyIn: 25n * ONE_CHIP,
+  buyIn: BUY_IN,
   createdAt: 1_700_000_000n,
   startedAt: 0n,
   deadline: 1_700_000_600n,
@@ -40,7 +41,7 @@ describe("toTable", () => {
       host: HOST,
       status: "waiting",
       seatCount: 4,
-      buyIn: 25n * ONE_CHIP,
+      buyIn: BUY_IN,
       deadline: 1_700_000_600_000,
     });
     expect(table.seats.map((entry) => [entry.player, entry.ready, entry.isHost])).toEqual([

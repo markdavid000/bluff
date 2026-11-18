@@ -1,6 +1,6 @@
 import type { GameEnding } from "./game-end";
 import { potOf, shareOf } from "./payout";
-import type { Table } from "./table-view";
+import type { Table } from "@bluff/game";
 
 export interface FoundGame {
   id: bigint;
