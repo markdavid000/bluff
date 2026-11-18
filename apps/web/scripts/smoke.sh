@@ -17,6 +17,10 @@ for _ in $(seq 1 60); do
 done
 
 FAILED=0
+HEADERS="$(curl -s -D - -o /dev/null --max-time 30 "$BASE/sign-in" | tr -d '\r')"
+for header in "strict-transport-security: max-age=63072000; includeSubDomains" "x-content-type-options: nosniff" "referrer-policy: strict-origin-when-cross-origin" "x-frame-options: DENY" "content-security-policy: frame-ancestors 'none'"; do
+  if echo "$HEADERS" | grep -qiF "$header"; then echo "header ok: $header"; else echo "header missing: $header"; FAILED=1; fi
+done
 for route in "${OPEN_ROUTES[@]}"; do
   status="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$BASE$route")"
   echo "$status $route"
