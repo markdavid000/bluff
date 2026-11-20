@@ -28,6 +28,7 @@ PR 8-2 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
     - Players are topped up below 0.01 ETH, and new games pause while the bank is below 0.05 ETH.
     - The names run from Baba Dice to Kemi Dice, plus 4 spares.
     - After a restart, seated players resume.
+  - **Ready before reporting:** `POST /seat` answers only after the computer has joined **and** got ready, so a player never sees it "Not ready". The table is read at a known block and the join is dry-run at that same block, with join stumbles retried for up to 15 s.
   - **`seat-service.ts` and `server.ts`:** `POST /seat` and `GET /health`, on Node's `http`, with an origin allowlist, 5 requests per IP per 10 minutes, and refusals as `409 { reason }`. A table not yet visible is retried for 15 s.
   - **`chain-watch.ts`:** one 2 s event search for every seated table, in 10-block spans (Alchemy's free limit), plus a sweep every 10 s. When a lagging server can't search yet, it reads every seated table instead.
   - **`chain.ts`:** viem and `@zama-fhe/sdk/node`, with one SDK and wallet per player.
@@ -58,3 +59,4 @@ PR 8-2 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
   5. it retried a reveal that was already settled;
   6. a just-made table wasn't found, and dry runs were checked against a lagging latest block;
   7. new blocks weren't recorded while busy, so a settled reveal trapped it.
+  8. the join's dry run used a lagging "latest" block and failed with "Execution reverted for an unknown reason" (now pinned to the block the table was read at, and retried).

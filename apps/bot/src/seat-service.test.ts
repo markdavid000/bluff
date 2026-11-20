@@ -41,13 +41,20 @@ function harness({
   join?: () => Promise<{ blockNumber: bigint }>;
 } = {}) {
   const sent: { index: number; call: BluffCall }[] = [];
+  const readAt: (bigint | undefined)[] = [];
+  const sentAt: (bigint | undefined)[] = [];
   const released: number[] = [];
   const started: { index: number; tableId: bigint; seatedAt: number; seatedBlock: bigint }[] = [];
   let waited = 0;
   const chain: ServiceChain = {
-    readTable: read ?? (async () => quickTable()),
-    send: async (index, call) => {
+    blockNumber: async () => 150n,
+    readTable: async (id, atBlock) => {
+      readAt.push(atBlock);
+      return read ? read() : quickTable();
+    },
+    send: async (index, call, atBlock) => {
       sent.push({ index, call });
+      sentAt.push(atBlock);
       return join ? join() : { blockNumber: 200n };
     },
     balanceOf: async () => 10n ** 17n,
@@ -69,15 +76,51 @@ function harness({
     },
     log: createLog(() => undefined),
   });
-  return { service, sent, released, started, waited: () => waited };
+  return { service, sent, released, started, readAt, sentAt, waited: () => waited };
 }
 
 describe("seat service", () => {
   it("joins the table with a free player and starts playing", async () => {
     const h = harness();
     expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
-    expect(h.sent).toEqual([{ index: 1, call: { functionName: "joinFreeTable", args: [12n] } }]);
+    expect(h.sent).toEqual([
+      { index: 1, call: { functionName: "joinFreeTable", args: [12n] } },
+      { index: 1, call: { functionName: "setReady", args: [12n, true] } },
+    ]);
     expect(h.started).toEqual([{ index: 1, tableId: 12n, seatedAt: NOW, seatedBlock: 200n }]);
+  });
+
+  it("still reports the seat when getting ready fails, leaving the seat to get ready itself", async () => {
+    let calls = 0;
+    const h = harness({
+      join: async () => {
+        calls += 1;
+        if (calls === 2) throw new Error("network blip");
+        return { blockNumber: 200n };
+      },
+    });
+    expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
+    expect(h.started).toHaveLength(1);
+  });
+
+  it("reads the table and checks the join at the same, newest block, so a lagging server can't refuse it", async () => {
+    const h = harness();
+    await h.service.seat(12n);
+    expect(h.readAt).toEqual([150n]);
+    expect(h.sentAt[0]).toBe(150n);
+  });
+
+  it("tries the join again when a server stumbles, rather than giving up at once", async () => {
+    let calls = 0;
+    const h = harness({
+      join: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error("Execution reverted for an unknown reason.");
+        return { blockNumber: 200n };
+      },
+    });
+    expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
+    expect(h.released).toEqual([]);
   });
 
   it("refuses a table that doesn't qualify, without using a player", async () => {
