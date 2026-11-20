@@ -17,6 +17,8 @@ apps/web/out/
 apps/web/next-env.d.ts
 apps/web/.vercel/
 
+apps/bot/dist/
+
 packages/contracts/artifacts/
 packages/contracts/cache/
 packages/contracts/types/

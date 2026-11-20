@@ -152,7 +152,7 @@ The request body is `{ "tableId": "<decimal>" }`. Everything checked is onchain 
 
 1. the table exists, is **waiting**, is **free** (`buyIn == 0`) and is **public** (private tables need an invite the computer doesn't have);
 2. it is a **2-seat table with exactly one player in it**, the shape Play the computer creates and the only one the computer joins. This also means **one computer per table** and never a computer at a table of strangers;
-3. it was created in the last 10 minutes (`createdAt`);
+3. it was created in the last 10 minutes. The table view has no creation time, so this is checked as "its waiting deadline, which is creation time plus 10 minutes for a free table, is at least a minute away", which also stops a computer joining a table about to close;
 4. a pool wallet is free and funded.
 
 Abuse limits:

@@ -15,7 +15,7 @@ const config = {
   ],
   rules: {
     "body-max-line-length": [0],
-    "scope-enum": [2, "always", ["web", "contracts", "docs", "ci", "deps", "repo"]],
+    "scope-enum": [2, "always", ["web", "bot", "contracts", "docs", "ci", "deps", "repo"]],
     "no-ai-attribution": [2, "always"],
   },
 };

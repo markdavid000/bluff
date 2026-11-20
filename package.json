@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @bluff/web dev",
-    "build": "pnpm --filter @bluff/web build",
+    "build": "pnpm --filter @bluff/web build && pnpm --filter @bluff/bot build",
     "compile": "pnpm --filter @bluff/contracts compile",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
