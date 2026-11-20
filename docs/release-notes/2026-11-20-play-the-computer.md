@@ -21,7 +21,12 @@ PR 8-3 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
 - **Computer badge:** on the computer's seat in the waiting room and in the game, and in a past game's details, from `config/computer-players.ts` (the 20 public addresses).
 - **Toast fix:** a working toast that got new words just after news pushed it out could vanish, because the toast library finished removing the old copy and took the new one with it. Each showing of a toast now has its own id, stale copies are dismissed until they're gone, and an unmounted toast host stops acting.
 - **`NEXT_PUBLIC_BOT_URL`:** the service's public address, in `.env.example`, CI and the architecture doc.
-- **Computer service:** its "unavailable" reply now carries CORS headers, so the browser can read it rather than seeing a network failure.
+- **Computer service:**
+  - its "unavailable" reply now carries CORS headers, so the browser can read it rather than seeing a network failure;
+  - **it leaves straight after the player.** Its leave estimated gas while it was alone (134k, closing the table), but the player rejoined in the same block, and leaving with someone there costs 408k, so the leave ran out of gas and a second try was needed. Every computer move now gets at least 1.5× its estimate, and never less than 600k (unused gas isn't charged), so the leave lands in the block after the player's;
+  - **it joins and gets ready in the same block:** both transactions are sent back to back with consecutive nonces, instead of waiting a block between them. If only the ready fails, the seat is kept and the seat gets ready itself;
+  - it checks for its transactions every second instead of every 4, and retries a just-made table every second instead of every 3.
+- **The app checks for its own moves every second** instead of every 4, so every move, not just this one, feels quicker.
 - **Docs:** the ADR describes the waiting-room toast; the architecture doc lists `NEXT_PUBLIC_BOT_URL` and the address list.
 
 ## Verification
@@ -37,6 +42,9 @@ PR 8-3 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
   - the toast fix (red first);
   - the badge on both kinds of seat and in the details;
   - the address list.
+- **Speed, live:**
+  - Mark's leave landed in block 264, and the computer's leave and the table closing in block 265, 12 s later, on the first try. Before, it took 24 s with a failed try;
+  - the computer arrived already Ready, with join and ready in one block, 40 s after the press instead of 52 s. What's left is Sepolia's 12 s blocks: Mark's table, then the computer's block, plus a lagging public RPC at times.
 - **Live on Sepolia,** with Mark (Google) and the service run locally:
   - "Setting up your table…" in the lobby, with Open tables at 0 throughout;
   - the waiting room after 14 s, with "The computer is joining…";
