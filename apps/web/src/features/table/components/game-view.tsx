@@ -93,6 +93,7 @@ export function GameView({ game }: { game: Game }) {
                 name={seat.name}
                 avatarSrc={seat.avatarSrc}
                 isMe={seat.isMe}
+                isComputer={seat.isComputer}
                 dice={seat.dice}
                 isActive={seat.isActive}
                 isTurn={seat.isTurn}

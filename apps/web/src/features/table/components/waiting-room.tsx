@@ -53,6 +53,7 @@ export function WaitingRoom({ room }: { room: Room }) {
                     ready={seat.ready}
                     isHost={seat.isHost}
                     isMe={seat.isMe}
+                    isComputer={seat.isComputer}
                     updating={seat.isMe && room.toggling}
                   />
                 ) : waiting ? (

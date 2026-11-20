@@ -3,9 +3,11 @@ import { Avatar } from "@/components/shared/avatar";
 import { PatternFrame } from "@/components/shared/pattern-band";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatChips } from "@/lib/chips";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { tableCopy } from "../../copy";
 import type { HistoryGame } from "../../lib/game-log";
 import { potOf, shareOf } from "../../lib/payout";
+import { ComputerTag } from "../computer-tag";
 import { chipsLabel, startedLabel } from "./past-game-labels";
 
 export function PastGameDialog({
@@ -69,7 +71,10 @@ function Details({
                   <span className="size-13 shrink-0 rounded-full border-2 border-tile-edge bg-muted" />
                 )}
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate font-game text-lg">{nameOf(seat.player)}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate font-game text-lg">{nameOf(seat.player)}</span>
+                    {isComputerPlayer(seat.player) ? <ComputerTag /> : null}
+                  </span>
                   <span className="text-sm text-muted-foreground">
                     {tableCopy.pastDiceLeft(seat.dice)}
                   </span>

@@ -8,9 +8,9 @@ Everyone rolls dice that only they can see. Players take turns guessing how many
 
 ## Getting started
 
-1. Press **Play now** and sign in with Google, your email or your own wallet.
+1. Sign in with Google, your email or your own wallet.
 2. The first time, you get a nickname (change it if you like) and **100 practice chips**. They are not real money.
-3. Press **Play now** again to be seated at a table straight away, or **Create a table** and share the link with friends.
+3. Press **Quick play** to be seated at a table straight away, **Play the computer** to start a game against the computer at once, or **Create a table** and share the link with friends.
 
 Need more chips? You can get 100 more once a day.
 

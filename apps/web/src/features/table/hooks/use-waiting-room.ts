@@ -19,6 +19,7 @@ import { useProveInvite } from "@/hooks/use-prove-invite";
 import { useSendMove } from "@/hooks/use-send-move";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { notify } from "@/lib/notify";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
@@ -181,6 +182,7 @@ export function useWaitingRoom(id: bigint) {
     ...seat,
     ready: same(seat.player, me) && showPending && pendingReady ? pendingReady.value : seat.ready,
     isMe: same(seat.player, me),
+    isComputer: isComputerPlayer(seat.player),
     name: nameOf(seat.player),
     avatarSrc: profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,
   }));

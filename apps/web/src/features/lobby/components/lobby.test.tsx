@@ -26,9 +26,11 @@ function table(id: bigint, players: number, seats: number, buyIn = 0n): LobbyTab
 const sitDown = {
   create: vi.fn(),
   join: vi.fn(),
-  playNow: vi.fn(),
+  quickPlay: vi.fn(),
+  playComputer: vi.fn(),
   creating: false,
   findingSeat: false,
+  callingComputer: false,
   working: false,
   confirmInWallet: false,
 };
@@ -49,7 +51,7 @@ const base: Lobby = {
   setTablesOpen: vi.fn(),
   createFromTables: vi.fn(),
   sitDown,
-  playNow: vi.fn(),
+  quickPlay: vi.fn(),
   createTable: vi.fn(),
 };
 
@@ -66,20 +68,40 @@ beforeEach(() => {
 });
 
 describe("Lobby", () => {
-  it("offers Play now, the chips to play, a new table and a link", () => {
+  it("offers Play the computer beside Quick play", () => {
     show();
-    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.playNow }));
-    expect(base.playNow).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.playComputer }));
+    expect(sitDown.playComputer).toHaveBeenCalledOnce();
+  });
+
+  it("keeps Play the computer open when the chips to play are out of reach, since it's free", () => {
+    lobby = { ...base, buyInProblem: lobbyCopy.notEnough("25") };
+    show();
+    expect(screen.getByRole("button", { name: lobbyCopy.quickPlay })).toBeDisabled();
+    expect(screen.getByRole("button", { name: lobbyCopy.playComputer })).toBeEnabled();
+  });
+
+  it("shows the computer is being set up, and holds the other buttons meanwhile", () => {
+    lobby = { ...base, sitDown: { ...sitDown, working: true, callingComputer: true } };
+    show();
+    expect(screen.getByRole("button", { name: lobbyCopy.playComputerWorking })).toBeDisabled();
+    expect(screen.getByRole("button", { name: lobbyCopy.quickPlay })).toBeDisabled();
+  });
+
+  it("offers Quick play, the chips to play, a new table and a link", () => {
+    show();
+    fireEvent.click(screen.getByRole("button", { name: lobbyCopy.quickPlay }));
+    expect(base.quickPlay).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: lobbyCopy.createTable }));
     expect(base.setCreateOpen).toHaveBeenCalledWith(true);
     expect(screen.getByRole("radiogroup", { name: lobbyCopy.buyIn })).toBeInTheDocument();
     expect(screen.getByLabelText(lobbyCopy.joinWithLink)).toBeInTheDocument();
   });
 
-  it("does not show Play now until it knows whether the player already has a table", () => {
+  it("does not show Quick play until it knows whether the player already has a table", () => {
     lobby = { ...base, myTableId: { status: "loading" } };
     show();
-    expect(screen.queryByRole("button", { name: lobbyCopy.playNow })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: lobbyCopy.quickPlay })).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(lobbyCopy.findingYourTable);
   });
 
@@ -87,15 +109,15 @@ describe("Lobby", () => {
     const retry = vi.fn();
     lobby = { ...base, myTableId: { status: "failed", retry } };
     show();
-    expect(screen.queryByRole("button", { name: lobbyCopy.playNow })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: lobbyCopy.quickPlay })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: lobbyCopy.tryAgain }));
     expect(retry).toHaveBeenCalledOnce();
   });
 
-  it("says why Play now is held when the chips to play are out of reach", () => {
+  it("says why Quick play is held when the chips to play are out of reach", () => {
     lobby = { ...base, buyIn: 25n * ONE_CHIP, buyInProblem: lobbyCopy.notEnough("25") };
     show();
-    expect(screen.getByRole("button", { name: lobbyCopy.playNow })).toBeDisabled();
+    expect(screen.getByRole("button", { name: lobbyCopy.quickPlay })).toBeDisabled();
     expect(screen.getByText(lobbyCopy.notEnough("25"))).toBeInTheDocument();
   });
 

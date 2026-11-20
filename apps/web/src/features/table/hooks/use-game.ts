@@ -13,6 +13,7 @@ import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useForgetMyTable } from "@/hooks/use-my-table-id";
 import { useSendMove } from "@/hooks/use-send-move";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { bidChance, bidRisk, type Bid, isValidFace, quickPicks } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { GameEnding } from "../lib/game-end";
@@ -382,6 +383,7 @@ export function useGame(id: bigint) {
           index === mySeat && pendingShown && pendingBid
             ? pendingBid.bid
             : lastBidOf(seat.player, index),
+        isComputer: isComputerPlayer(seat.player),
         name: nameOf(seat.player),
         avatarSrc:
           profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,

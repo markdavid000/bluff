@@ -100,6 +100,7 @@ export const tableCopy = {
   hiddenDice: (count: number) => `${count} hidden ${count === 1 ? "die" : "dice"}`,
   unlockingDice: "Unlocking your dice…",
   unnamed: "Player",
+  computer: "Computer",
   you: "You",
   youInLine: "you",
   host: "Host",
@@ -219,5 +220,5 @@ export const tableCopy = {
   pastWhen: (started: string, rounds: string) => `${started} · ${rounds}`,
   pastSummary: (result: string, chips: string | null) => (chips ? `${result} · ${chips}` : result),
   pastClose: "Close",
-  playNow: "Play now",
+  quickPlay: "Quick play",
 } as const;
