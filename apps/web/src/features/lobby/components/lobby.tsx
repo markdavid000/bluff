@@ -42,7 +42,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
               <div className="flex flex-col gap-8 pb-7">
                 {greeting}
                 <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap justify-center gap-3">
                     <ActionButton
                       tone="red"
                       size="large"
@@ -62,14 +62,16 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
                       sound="drum"
                       disabled={busy}
                       working={sitDown.callingComputer}
-                      workingLabel={label(lobbyCopy.playComputerWorking)}
+                      workingLabel={label(lobbyCopy.createWorking)}
                       onClick={sitDown.playComputer}
                     >
                       {lobbyCopy.playComputer}
                     </ActionButton>
                   </div>
                   <Appear show={lobby.buyInProblem !== null} swapKey={lobby.buyInProblem ?? ""}>
-                    <p className="text-sm text-muted-foreground">{lobby.buyInProblem}</p>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {lobby.buyInProblem}
+                    </p>
                   </Appear>
                 </div>
               </div>

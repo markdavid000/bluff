@@ -11,25 +11,34 @@ PR 8-3 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
 
 ## Changes
 
-- **Play the computer** (lobby), beside Quick play:
-  - creates a free, public table for two through the usual create path and action status;
-  - asks the computer service (`POST /seat`) to sit down, retrying a sleeping service 3 times over about 20 s with "Waking the computer…";
-  - keeps the player in the lobby, showing "Setting up a game with the computer…", until the computer is seated **and ready**, then opens the waiting room. The player never sees the computer "Not ready". The table is claimed as the player's destination as soon as it exists, so the "back to your table" redirect doesn't open it early;
-  - if the computer can't come, the player still lands at their table, with a toast saying why: a person sat down first, the computer is busy, too many requests, it can't play right now, or it couldn't be reached.
+- **Play the computer** (lobby), beside Quick play, both centred in the card:
+  - creates a free, public table for two through the usual create path and action status ("Setting up your table…"), then takes the player straight to the waiting room;
+  - asks the computer service (`POST /seat`) to sit down in the background, retrying a sleeping service 3 times over about 20 s;
+  - in the waiting room, one toast follows the computer: "Waking the computer…" while a sleeping service starts, "The computer is joining…" until it sits down, "The computer is getting ready…" until it's ready, then it clears. It's driven by the table itself (`computerArrival`) and the call's progress (`useComputerCall`, a small shared store, so the call outlives the lobby);
+  - if the computer can't come, the same toast says why: a person sat down first, the computer is busy, too many requests, it can't play right now, or it couldn't be reached.
 - **Quick play** is the new name for Play now: the lobby, the empty open-tables list, the empty Your games page, the design page and how-to-play. Its behaviour is unchanged.
+- **Open tables leaves out the player's own table,** so making a table through Quick play or Play the computer no longer briefly shows "1" on the button.
 - **Computer badge:** on the computer's seat in the waiting room and in the game, and in a past game's details, from `config/computer-players.ts` (the 20 public addresses).
-- **`useAction`** gains `patienceMs`, so a known-slow action can wait longer before saying the network is busy. Play the computer waits 60 s.
+- **Toast fix:** a working toast that got new words just after news pushed it out could vanish, because the toast library finished removing the old copy and took the new one with it. Each showing of a toast now has its own id, stale copies are dismissed until they're gone, and an unmounted toast host stops acting.
 - **`NEXT_PUBLIC_BOT_URL`:** the service's public address, in `.env.example`, CI and the architecture doc.
 - **Computer service:** its "unavailable" reply now carries CORS headers, so the browser can read it rather than seeing a network failure.
-- **Docs:** the ADR describes waiting for the ready computer; the architecture doc lists `NEXT_PUBLIC_BOT_URL` and the address list.
+- **Docs:** the ADR describes the waiting-room toast; the architecture doc lists `NEXT_PUBLIC_BOT_URL` and the address list.
 
 ## Verification
 
 - **Vitest:**
-  - the seat request: seated, taken, busy, too many, other refusals, waking and retrying, giving up, a slow answer, and a service failure not retried;
-  - Play the computer: the create, then the seat, then the table, holding the player until ready, the waking message, each refusal toast, an unexpected failure, and a failed create staying in the lobby;
+  - the seat request;
+  - the call store;
+  - the arrival rule (joining, waking, getting ready, arrived, refused, table over);
+  - the arrival toast (one toast changing, the reason kept, cleared on leaving);
+  - Play the computer (the create, the call, straight to the table; a failed create stays in the lobby);
   - the lobby button;
+  - own tables left out of Open tables;
+  - the toast fix (red first);
   - the badge on both kinds of seat and in the details;
-  - the patience option;
   - the address list.
-- **Live on Sepolia,** with Mark (Google) and the service run locally. The first try opened the waiting room early, through the back-to-your-table redirect, and showed Baba Dice "Not ready" for about 25 s. A test reproduced it, and with the fix Mark stayed in the lobby and arrived to Baba Dice already **Ready**, with the Computer badge.
+- **Live on Sepolia,** with Mark (Google) and the service run locally:
+  - "Setting up your table…" in the lobby, with Open tables at 0 throughout;
+  - the waiting room after 14 s, with "The computer is joining…";
+  - Baba Dice sitting down at 40 s, with "The computer is getting ready…" staying on screen. Before the toast fix it vanished at this point, and a test reproduced it;
+  - "Baba Dice is ready" at 52 s, and the toast cleared.

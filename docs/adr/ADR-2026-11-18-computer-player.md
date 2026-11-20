@@ -221,7 +221,7 @@ Every seated computer runs the same duties as a seated browser: `settleReveal`, 
   - **Play the computer** is new, and sits beside it. It sets up a game against the computer straight away:
     1. It creates a free, public 2-seat table, using the existing create path and action status.
     2. It calls `POST /seat`.
-    3. The service answers only once the computer has joined **and** got ready, and the app waits for that answer, showing "Setting up a game with the computer…". The player lands in the waiting room with the computer already seated and **already ready**, never "Not ready". The player presses **Start the game**: the normal flow, with nothing new to learn.
+    3. The player goes straight to the waiting room once the table exists. One toast follows the computer there: "The computer is joining…" until it sits down, "The computer is getting ready…" until it's ready, then it clears. The service joins and readies in one request, so the computer never stays "Not ready". The player presses **Start the game**: the normal flow, with nothing new to learn.
     4. If a person happens to take the seat first (`409 full`), the app says so and the game goes ahead with that person.
 - **Nothing new in the waiting room.** The computer only sits down through Play the computer.
 - **Computer badge:** shown on every seat whose address is in `config/computer-players.ts`. It's also shown in Your games and the game details.

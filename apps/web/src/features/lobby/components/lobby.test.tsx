@@ -84,7 +84,7 @@ describe("Lobby", () => {
   it("shows the computer is being set up, and holds the other buttons meanwhile", () => {
     lobby = { ...base, sitDown: { ...sitDown, working: true, callingComputer: true } };
     show();
-    expect(screen.getByRole("button", { name: lobbyCopy.playComputerWorking })).toBeDisabled();
+    expect(screen.getByRole("button", { name: lobbyCopy.createWorking })).toBeDisabled();
     expect(screen.getByRole("button", { name: lobbyCopy.quickPlay })).toBeDisabled();
   });
 

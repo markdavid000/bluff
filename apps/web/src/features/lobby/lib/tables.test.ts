@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { lobbyCopy } from "../copy";
-import { BUY_INS, affordProblem, type TableView, openSeats, toLobbyTable } from "./tables";
+import {
+  BUY_INS,
+  affordProblem,
+  othersTables,
+  type TableView,
+  openSeats,
+  toLobbyTable,
+} from "./tables";
 
 const view: TableView = {
   id: 12n,
@@ -74,5 +81,24 @@ describe("affordProblem", () => {
 
   it("allows a player with exactly enough", () => {
     expect(affordProblem(25n * ONE_CHIP, { status: "ready", amount: 25n * ONE_CHIP })).toBeNull();
+  });
+});
+
+describe("othersTables", () => {
+  it("leaves out the player's own table, so a table they just made never counts as open to them", () => {
+    const mine = toLobbyTable(view);
+    const theirs = toLobbyTable({
+      ...view,
+      id: 13n,
+      host: "0x0000000000000000000000000000000000003c4d",
+    });
+    expect(othersTables([mine, theirs], "0x00000000000000000000000000000000000A11CE")).toEqual([
+      theirs,
+    ]);
+  });
+
+  it("keeps every table while the player's address isn't known yet", () => {
+    const mine = toLobbyTable(view);
+    expect(othersTables([mine], undefined)).toEqual([mine]);
   });
 });

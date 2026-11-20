@@ -126,27 +126,6 @@ describe("useAction", () => {
     ).toEqual(new Set(["bid"]));
   });
 
-  it("waits longer before saying the network is busy when the action is known to be slow", () => {
-    const move = deferred();
-    const { result } = renderHook(() =>
-      useAction({
-        id: "computer",
-        working: "Setting up…",
-        patienceMs: 60_000,
-        run: () => move.promise,
-      })
-    );
-    act(() => result.current.start());
-    act(() => vi.advanceTimersByTime(BUSY_AFTER_MS));
-    expect(notices.at(-1)).toEqual({ id: "computer", kind: "loading", title: "Setting up…" });
-    act(() => vi.advanceTimersByTime(60_000 - BUSY_AFTER_MS));
-    expect(notices.at(-1)).toEqual({
-      id: "computer",
-      kind: "loading",
-      title: errorCopy.stillWorking("Setting up…"),
-    });
-  });
-
   it("reports each step the move goes through", async () => {
     const steps: string[] = [];
     const { result } = renderHook(() =>

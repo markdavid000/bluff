@@ -23,6 +23,7 @@ import { isComputerPlayer } from "@/lib/computer-players";
 import { notify } from "@/lib/notify";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
+import { useComputerArrival } from "./use-computer-arrival";
 import { type Role, nextStep } from "../lib/next-step";
 import { type Table, freeSeats, notReady } from "@bluff/game";
 import { useInviteCode } from "./use-invite-code";
@@ -54,6 +55,7 @@ export function useWaitingRoom(id: bigint) {
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
   const table = read.status === "ready" ? read.table : null;
+  useComputerArrival(table);
   const tableOver = table?.status === "cancelled" || table?.status === "finished";
   const forgetSeat = useEffectEvent(() => forgetMyTable(id));
   useEffect(() => {

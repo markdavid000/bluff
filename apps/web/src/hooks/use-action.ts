@@ -18,7 +18,6 @@ interface ActionOptions<Args extends unknown[], Result> {
   working: string;
   done?: string;
   quiet?: boolean;
-  patienceMs?: number;
   run: (report: (step: MoveStep) => void, ...args: Args) => Promise<Result>;
   onDone?: (result: Result) => void;
 }
@@ -28,7 +27,6 @@ export function useAction<Args extends unknown[], Result = unknown>({
   working,
   done,
   quiet = false,
-  patienceMs = BUSY_AFTER_MS,
   run,
   onDone,
 }: ActionOptions<Args, Result>) {
@@ -62,7 +60,10 @@ export function useAction<Args extends unknown[], Result = unknown>({
           shownAt.current = Date.now();
           notify.loading(working, { id });
         }, SHOW_AFTER_MS),
-        window.setTimeout(() => notify.loading(errorCopy.stillWorking(working), { id }), patienceMs)
+        window.setTimeout(
+          () => notify.loading(errorCopy.stillWorking(working), { id }),
+          BUSY_AFTER_MS
+        )
       );
     }
     try {

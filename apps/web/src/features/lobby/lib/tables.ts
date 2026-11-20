@@ -37,6 +37,12 @@ export function toLobbyTable(view: TableView): LobbyTable {
   };
 }
 
+export function othersTables(tables: LobbyTable[], me: string | undefined): LobbyTable[] {
+  if (me === undefined) return tables;
+  const mine = me.toLowerCase();
+  return tables.filter((table) => table.host.toLowerCase() !== mine);
+}
+
 export function openSeats(table: LobbyTable): number {
   return table.seatCount - table.playerCount;
 }
