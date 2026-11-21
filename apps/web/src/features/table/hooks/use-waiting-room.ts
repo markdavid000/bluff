@@ -54,7 +54,19 @@ export function useWaitingRoom(id: bigint) {
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
-  const table = read.status === "ready" ? read.table : null;
+  const live = read.status === "ready" ? read.table : null;
+  const [departingFrom, setDepartingFrom] = useState<Table | null>(null);
+  const table = departingFrom ?? live;
+
+  async function departWith(run: () => Promise<unknown>) {
+    setDepartingFrom(live);
+    try {
+      return await run();
+    } catch (error) {
+      setDepartingFrom(null);
+      throw error;
+    }
+  }
   const { computerComing } = useComputerArrival(table);
   const tableOver = table?.status === "cancelled" || table?.status === "finished";
   const forgetSeat = useEffectEvent(() => forgetMyTable(id));
@@ -126,9 +138,11 @@ export function useWaitingRoom(id: bigint) {
     working: tableCopy.leaving,
     done: tableCopy.leftTable,
     run: (report) =>
-      sendMove(
-        { address: contracts.bluff, abi: bluffAbi, functionName: "leaveTable", args: [id] },
-        report
+      departWith(() =>
+        sendMove(
+          { address: contracts.bluff, abi: bluffAbi, functionName: "leaveTable", args: [id] },
+          report
+        )
       ),
     onDone: () => {
       markLeftTable(id);
@@ -143,9 +157,11 @@ export function useWaitingRoom(id: bigint) {
     id: "close",
     working: tableCopy.closing,
     run: (report) =>
-      sendMove(
-        { address: contracts.bluff, abi: bluffAbi, functionName: "cancelTable", args: [id] },
-        report
+      departWith(() =>
+        sendMove(
+          { address: contracts.bluff, abi: bluffAbi, functionName: "cancelTable", args: [id] },
+          report
+        )
       ),
     onDone: () => {
       markLeftTable(id);

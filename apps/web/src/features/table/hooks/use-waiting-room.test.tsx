@@ -201,6 +201,49 @@ describe("useWaitingRoom", () => {
     expect(forgetMyTable).toHaveBeenCalledWith(12n);
   });
 
+  it("keeps showing the room as it was while leaving, never the screen for someone opening a link", async () => {
+    let landed: (value: { blockNumber: bigint }) => void = () => undefined;
+    sendMove.mockReturnValue(new Promise((resolve) => (landed = resolve)));
+    const { result, rerender } = render();
+    expect(viewOf(result).role).toBe("guest");
+    act(() => viewOf(result).leave());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    tableRead = { ...tableRead, table: table([[HOST, true]]) };
+    rerender();
+    expect(viewOf(result).role).toBe("guest");
+    await act(async () => landed({ blockNumber: 101n }));
+    rerender();
+    expect(viewOf(result).role).toBe("guest");
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+    expect(viewOf(result).role).toBe("guest");
+  });
+
+  it("shows the table as it is again if leaving fails", async () => {
+    sendMove.mockRejectedValue(new Error("rejected"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { result, rerender } = render();
+    act(() => viewOf(result).leave());
+    await waitFor(() => expect(viewOf(result).leaving).toBe(false));
+    tableRead = { ...tableRead, table: table([[HOST, true]]) };
+    rerender();
+    expect(viewOf(result).role).toBe("visitor");
+  });
+
+  it("keeps showing the room as it was while closing it, never the closed screen", async () => {
+    me = HOST;
+    let landed: (value: { blockNumber: bigint }) => void = () => undefined;
+    sendMove.mockReturnValue(new Promise((resolve) => (landed = resolve)));
+    const { result, rerender } = render();
+    act(() => viewOf(result).close());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    tableRead = { ...tableRead, table: { ...(tableRead.table as Table), status: "cancelled" } };
+    rerender();
+    expect(viewOf(result).table.status).toBe("waiting");
+    await act(async () => landed({ blockNumber: 101n }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/play"));
+    expect(viewOf(result).table.status).toBe("waiting");
+  });
+
   it("keeps saying it's starting until the table shows the game has begun", async () => {
     me = HOST;
     sendMove.mockResolvedValue({ blockNumber: 101n });
