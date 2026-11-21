@@ -32,4 +32,6 @@ export function useComputerArrival(table: ArrivalTable | null) {
     if (!showing) return;
     return () => notify.dismiss(COMPUTER_ARRIVAL);
   }, [showing]);
+
+  return { computerComing: showing };
 }

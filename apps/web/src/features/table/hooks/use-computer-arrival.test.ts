@@ -74,6 +74,28 @@ describe("useComputerArrival", () => {
     expect(finishComputerCall).toHaveBeenCalledWith(12n);
   });
 
+  it("says the computer is coming only while it's on its way", () => {
+    call = { tableId: 12n, phase: "asking", outcome: null };
+    const { result, rerender } = renderHook(
+      (current: ArrivalTable) => useComputerArrival(current),
+      { initialProps: table([{ player: ME, ready: false }]) }
+    );
+    expect(result.current.computerComing).toBe(true);
+    rerender(
+      table([
+        { player: ME, ready: false },
+        { player: BABA, ready: true },
+      ])
+    );
+    expect(result.current.computerComing).toBe(false);
+  });
+
+  it("says the computer isn't coming once it has said why", () => {
+    call = { tableId: 12n, phase: "answered", outcome: { kind: "busy" } };
+    const { result } = renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
+    expect(result.current.computerComing).toBe(false);
+  });
+
   it("shows nothing when the computer was not called here", () => {
     renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
     expect(events).toEqual([]);

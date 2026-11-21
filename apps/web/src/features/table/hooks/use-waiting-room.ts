@@ -55,7 +55,7 @@ export function useWaitingRoom(id: bigint) {
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
   const table = read.status === "ready" ? read.table : null;
-  useComputerArrival(table);
+  const { computerComing } = useComputerArrival(table);
   const tableOver = table?.status === "cancelled" || table?.status === "finished";
   const forgetSeat = useEffectEvent(() => forgetMyTable(id));
   useEffect(() => {
@@ -247,6 +247,7 @@ export function useWaitingRoom(id: bigint) {
       joinStep,
       invite: invite.status,
       unlockingInvite: invite.status === "locked" && invite.unlocking,
+      computerComing,
       toggleReady: () => ready.start(!(mine?.ready ?? false)),
       start: start.start,
       leave: leave.start,

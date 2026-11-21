@@ -9,6 +9,7 @@ import type { useWaitingRoom } from "../hooks/use-waiting-room";
 import { seatLayout } from "../lib/seat-layout";
 import { useTipsOnFirstVisit } from "../hooks/use-tips-dialog";
 import { GameBoard } from "./board/game-board";
+import { ComputerSeat } from "./computer-seat";
 import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
@@ -45,7 +46,10 @@ export function WaitingRoom({ room }: { room: Room }) {
           const seat = seats[index];
           return (
             <div key={placement.side} className={SLOT[placement.side]}>
-              <Appear show={seat !== undefined || waiting} swapKey={seat?.player ?? "open"}>
+              <Appear
+                show={seat !== undefined || waiting}
+                swapKey={seat?.player ?? (room.computerComing ? "computer" : "open")}
+              >
                 {seat ? (
                   <SeatBadge
                     name={seat.name}
@@ -56,6 +60,8 @@ export function WaitingRoom({ room }: { room: Room }) {
                     isComputer={seat.isComputer}
                     updating={seat.isMe && room.toggling}
                   />
+                ) : waiting && room.computerComing ? (
+                  <ComputerSeat />
                 ) : waiting ? (
                   <InviteSeat onInvite={room.copyInvite} waiting={room.invite === "loading"} />
                 ) : null}
@@ -115,7 +121,7 @@ export function WaitingRoom({ room }: { room: Room }) {
             {tableCopy.start}
           </ActionButton>
         </Appear>
-        <Appear show={waiting && room.freeSeats > 0}>
+        <Appear show={waiting && room.freeSeats > 0 && !room.computerComing}>
           <CopyInviteButton
             invite={room.invite}
             unlocking={room.unlockingInvite}

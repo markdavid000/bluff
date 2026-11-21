@@ -102,6 +102,7 @@ export const tableCopy = {
   unnamed: "Player",
   computer: "Computer",
   computerJoining: "The computer is joining…",
+  computerSeatJoining: "Joining…",
   computerWaking: "Waking the computer…",
   computerGettingReady: "The computer is getting ready…",
   computerOutcome: {
