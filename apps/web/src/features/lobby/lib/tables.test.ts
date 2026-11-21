@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { ONE_CHIP } from "@/lib/chips";
 import { lobbyCopy } from "../copy";
 import {
   BUY_INS,
   affordProblem,
   othersTables,
+  peopleTables,
   type TableView,
   openSeats,
   toLobbyTable,
@@ -100,5 +102,14 @@ describe("othersTables", () => {
   it("keeps every table while the player's address isn't known yet", () => {
     const mine = toLobbyTable(view);
     expect(othersTables([mine], undefined)).toEqual([mine]);
+  });
+});
+
+describe("peopleTables", () => {
+  it("leaves out a table a computer was left holding after its person left", () => {
+    const computer = COMPUTER_PLAYERS[0] ?? view.host;
+    const left = toLobbyTable({ ...view, id: 13n, host: computer, playerCount: 1 });
+    const open = toLobbyTable(view);
+    expect(peopleTables([left, open])).toEqual([open]);
   });
 });

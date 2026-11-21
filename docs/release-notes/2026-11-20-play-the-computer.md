@@ -18,6 +18,7 @@ PR 8-3 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
   - if the computer can't come, the same toast says why: a person sat down first, the computer is busy, too many requests, it can't play right now, or it couldn't be reached.
 - **Quick play** is the new name for Play now: the lobby, the empty open-tables list, the empty Your games page, the design page and how-to-play. Its behaviour is unchanged.
 - **Open tables leaves out the player's own table,** so making a table through Quick play or Play the computer no longer briefly shows "1" on the button.
+- **Open tables and Quick play leave out a table a computer was left holding.** Computers never create tables; they only become host when the person leaves. So a table hosted by a computer is never shown or joined while the computer is on its way out.
 - **Computer badge:** on the computer's seat in the waiting room and in the game, and in a past game's details, from `config/computer-players.ts` (the 20 public addresses).
 - **Toast fix:** a working toast that got new words just after news pushed it out could vanish, because the toast library finished removing the old copy and took the new one with it. Each showing of a toast now has its own id, stale copies are dismissed until they're gone, and an unmounted toast host stops acting.
 - **`NEXT_PUBLIC_BOT_URL`:** the service's public address, in `.env.example`, CI and the architecture doc.
