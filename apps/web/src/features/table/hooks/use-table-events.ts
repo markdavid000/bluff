@@ -157,7 +157,6 @@ export function useTableEvents({
 
   function handle(logs: readonly WatchedLog[]) {
     let tableHost = host;
-    let iLeft = false;
     const pending: { event: TableEvent; key: string; tableHost?: string }[] = [];
     for (const log of logs) {
       if (field(log.args, "id") !== id) continue;
@@ -176,16 +175,11 @@ export function useTableEvents({
         const ending = toGameEnding(log.args);
         if (ending) onGameEnded?.(ending);
       }
-      const event = toEvent(log);
-      if (
-        event.eventName === "PlayerLeft" &&
-        me &&
-        event.args.player?.toLowerCase() === me.toLowerCase()
-      ) {
-        iLeft = true;
-      }
-      if (iLeft && event.eventName === "HostChanged") continue;
-      pending.push({ event, key: `table-${log.transactionHash}-${log.logIndex}`, tableHost });
+      pending.push({
+        event: toEvent(log),
+        key: `table-${log.transactionHash}-${log.logIndex}`,
+        tableHost,
+      });
     }
     show(pending);
   }

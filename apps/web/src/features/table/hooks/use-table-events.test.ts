@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { forgetBlocks, newestBlock } from "@/lib/block-clock";
 import { onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
@@ -11,6 +12,7 @@ vi.mock("@/config/env", () => ({
 
 const ME = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";
+const COMPUTER = COMPUTER_PLAYERS[0] ?? KOLA;
 
 type OnLogs = (logs: unknown[]) => void;
 let deliver: OnLogs = () => undefined;
@@ -75,11 +77,20 @@ describe("useTableEvents", () => {
     expect(shown).toEqual([tableCopy.youAreHost, tableCopy.openAgainForHost]);
   });
 
-  it("says nothing about the new host when the player is the one leaving", () => {
+  it("tells the host who leaves which person is host now", () => {
     renderHook(() => useTableEvents({ id: 12n, me: ME, host: ME, nameOf: () => "Kola #3C4D" }));
     deliver([
       log("PlayerLeft", { id: 12n, player: ME }, 100n, 0),
       log("HostChanged", { id: 12n, host: KOLA }, 100n, 1),
+    ]);
+    expect(shown).toEqual([tableCopy.isHost("Kola #3C4D")]);
+  });
+
+  it("says nothing about the computer becoming host when the host leaves it", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: ME, nameOf: () => "Baba Dice" }));
+    deliver([
+      log("PlayerLeft", { id: 12n, player: ME }, 100n, 0),
+      log("HostChanged", { id: 12n, host: COMPUTER }, 100n, 1),
     ]);
     expect(shown).toEqual([]);
   });
