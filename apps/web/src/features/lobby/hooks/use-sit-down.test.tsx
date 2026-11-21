@@ -5,10 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contracts } from "@/config/chain";
 import { ONE_CHIP } from "@/lib/chips";
 import type { LobbyTable } from "../lib/tables";
-import { PLAY_NOW_SEATS, pickTableToJoin, useSitDown } from "./use-sit-down";
+import { QUICK_PLAY_SEATS, pickTableToJoin, useSitDown } from "./use-sit-down";
 
 vi.mock("@/config/env", () => ({
-  publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
+  publicEnv: {
+    privyAppId: "test-app",
+    sepoliaRpcUrl: "http://127.0.0.1:8545",
+    botUrl: "https://bot.example",
+  },
+}));
+
+const callComputer = vi.fn();
+vi.mock("@/hooks/use-computer-call", () => ({
+  callComputer: (id: bigint) => callComputer(id),
 }));
 
 const ACCOUNT = "0x00000000000000000000000000000000000a11ce";
@@ -113,7 +122,7 @@ describe("useSitDown", () => {
 
   it("plays now by joining the fullest matching table", async () => {
     const { result } = render();
-    act(() => result.current.playNow(async () => [table(4n, 1, 4, 0n), table(5n, 2, 3, 0n)], 0n));
+    act(() => result.current.quickPlay(async () => [table(4n, 1, 4, 0n), table(5n, 2, 3, 0n)], 0n));
     await waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(takeSeat).toHaveBeenCalledWith(
       { kind: "join", tableId: 5n, buyIn: 0n },
@@ -123,10 +132,10 @@ describe("useSitDown", () => {
 
   it("plays now by opening a public table for two when nothing matches", async () => {
     const { result } = render();
-    act(() => result.current.playNow(async () => [table(4n, 1, 2, 10n * ONE_CHIP)], 0n));
+    act(() => result.current.quickPlay(async () => [table(4n, 1, 2, 10n * ONE_CHIP)], 0n));
     await waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(takeSeat).toHaveBeenCalledWith(
-      { kind: "create", seatCount: PLAY_NOW_SEATS, buyIn: 0n, isPrivate: false },
+      { kind: "create", seatCount: QUICK_PLAY_SEATS, buyIn: 0n, isPrivate: false },
       expect.any(Function)
     );
   });
@@ -134,7 +143,7 @@ describe("useSitDown", () => {
   it("reads the open tables at the moment of the press, so it never misses one just opened", async () => {
     const latest = vi.fn(async () => [table(9n, 1, 2, 0n)]);
     const { result } = render();
-    act(() => result.current.playNow(latest, 0n));
+    act(() => result.current.quickPlay(latest, 0n));
     await waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(latest).toHaveBeenCalledOnce();
     expect(takeSeat).toHaveBeenCalledWith(
@@ -146,7 +155,7 @@ describe("useSitDown", () => {
   it("never sets up a new table when the open tables can't be read", async () => {
     const { result } = render();
     act(() =>
-      result.current.playNow(async () => {
+      result.current.quickPlay(async () => {
         throw new Error("busy");
       }, 0n)
     );
@@ -166,10 +175,10 @@ describe("useSitDown", () => {
     holdArrival = false;
   });
 
-  it("keeps Play now showing it's finding a seat until the table opens", async () => {
+  it("keeps Quick play showing it's finding a seat until the table opens", async () => {
     holdArrival = true;
     const { result } = render();
-    act(() => result.current.playNow(async () => [], 0n));
+    act(() => result.current.quickPlay(async () => [], 0n));
     await waitFor(() => expect(headingTo).toHaveBeenCalledWith(12n));
     expect(result.current.findingSeat).toBe(true);
     expect(result.current.creating).toBe(false);
@@ -184,5 +193,34 @@ describe("useSitDown", () => {
     act(() => result.current.join({ kind: "join", tableId: 12n, buyIn: 0n }));
     await waitFor(() => expect(result.current.working).toBe(false));
     expect(push).not.toHaveBeenCalled();
+  });
+
+  describe("Play the computer", () => {
+    it("makes a free public table for two, calls the computer to it, and goes straight there", async () => {
+      holdArrival = true;
+      const { result } = render();
+      act(() => result.current.playComputer());
+      await waitFor(() => expect(headingTo).toHaveBeenCalledWith(12n));
+      expect(takeSeat).toHaveBeenCalledWith(
+        { kind: "create", seatCount: 2, buyIn: 0n, isPrivate: false },
+        expect.any(Function)
+      );
+      expect(callComputer).toHaveBeenCalledWith(12n);
+      expect(result.current.callingComputer).toBe(true);
+      expect(result.current.findingSeat).toBe(false);
+      expect(result.current.creating).toBe(false);
+      act(() => arrive());
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/table/12"));
+      holdArrival = false;
+    });
+
+    it("stays in the lobby and never calls the computer when the table can't be made", async () => {
+      takeSeat.mockRejectedValue(new Error("rejected"));
+      const { result } = render();
+      act(() => result.current.playComputer());
+      await waitFor(() => expect(result.current.working).toBe(false));
+      expect(callComputer).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalled();
+    });
   });
 });

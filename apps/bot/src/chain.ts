@@ -19,9 +19,10 @@ import { MoveRefused, TableMissing } from "./chain-errors";
 import type { WatchChain } from "./chain-watch";
 import type { BotConfig } from "./config";
 import type { PoolChain } from "./player-pool";
+import { gasLimit } from "./gas";
 import { revertName } from "./revert";
 import type { BluffCall, SeatChain } from "./seat-runner";
-import type { ServiceChain } from "./seat-service";
+import type { Seated, ServiceChain } from "./seat-service";
 
 const BLUFF = sepoliaDeployment.bluff;
 const FAUCET = sepoliaDeployment.faucet;
@@ -35,7 +36,7 @@ interface Signer {
 
 export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "maxPlayers">) {
   const transport = http(config.rpcUrl, { retryCount: 3, timeout: 20_000 });
-  const publicClient = createPublicClient({ chain: sepolia, transport });
+  const publicClient = createPublicClient({ chain: sepolia, transport, pollingInterval: 1_000 });
   const signers = new Map<number, Signer>();
   const queues = new Map<number, Promise<unknown>>();
 
@@ -91,6 +92,20 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
     }
   }
 
+  function encode(call: BluffCall): Hex {
+    return encodeFunctionData({ abi: bluffAbi, functionName: call.functionName, args: call.args });
+  }
+
+  async function checked(account: HDAccount, data: Hex, atBlock?: bigint): Promise<bigint> {
+    const [tried, estimated] = await Promise.allSettled([
+      publicClient.call({ account, to: BLUFF, data, blockNumber: atBlock }),
+      publicClient.estimateGas({ account, to: BLUFF, data, blockNumber: atBlock }),
+    ]);
+    if (tried.status === "rejected") refused(tried.reason);
+    if (estimated.status === "rejected") throw estimated.reason;
+    return gasLimit(estimated.value);
+  }
+
   function send(
     index: number,
     call: BluffCall,
@@ -98,22 +113,58 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
   ): Promise<{ blockNumber: bigint }> {
     return oneAtATime(index, async () => {
       const { account, wallet } = signer(index);
-      const data = encodeFunctionData({
-        abi: bluffAbi,
-        functionName: call.functionName,
-        args: call.args,
-      });
-      await publicClient.call({ account, to: BLUFF, data, blockNumber: atBlock }).catch(refused);
+      const data = encode(call);
+      const gas = await checked(account, data, atBlock);
       const hash = await wallet
-        .sendTransaction({ account, chain: sepolia, to: BLUFF, data })
+        .sendTransaction({ account, chain: sepolia, to: BLUFF, data, gas })
         .catch(refused);
       return confirmed(hash);
+    });
+  }
+
+  function joinAndReady(index: number, tableId: bigint, atBlock: bigint): Promise<Seated> {
+    return oneAtATime(index, async () => {
+      const { account, wallet } = signer(index);
+      const join = encode({ functionName: "joinFreeTable", args: [tableId] });
+      const ready = encode({ functionName: "setReady", args: [tableId, true] });
+      const gas = await checked(account, join, atBlock);
+      const nonce = await publicClient.getTransactionCount({
+        address: account.address,
+        blockTag: "pending",
+      });
+      const joinHash = await wallet
+        .sendTransaction({ account, chain: sepolia, to: BLUFF, data: join, gas, nonce })
+        .catch(refused);
+      const readying = wallet
+        .sendTransaction({
+          account,
+          chain: sepolia,
+          to: BLUFF,
+          data: ready,
+          gas: gasLimit(undefined),
+          nonce: nonce + 1,
+        })
+        .then((hash) => publicClient.waitForTransactionReceipt({ hash }));
+      const [joined, readied] = await Promise.all([
+        confirmed(joinHash),
+        readying.then(
+          (receipt) => ({ ok: true as const, receipt }),
+          (problem: unknown) => ({ ok: false as const, problem })
+        ),
+      ]);
+      if (!readied.ok)
+        return { joinedBlock: joined.blockNumber, readyBlock: null, readyProblem: readied.problem };
+      return {
+        joinedBlock: joined.blockNumber,
+        readyBlock: readied.receipt.status === "success" ? readied.receipt.blockNumber : null,
+      };
     });
   }
 
   const chain: SeatChain & ServiceChain & PoolChain & WatchChain = {
     readTable,
     send,
+    joinAndReady,
     async ownDice(index, id, timeoutMs) {
       const { account, zama } = signer(index);
       const handles = await publicClient.readContract({

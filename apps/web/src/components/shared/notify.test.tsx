@@ -100,6 +100,26 @@ describe("GameToaster", () => {
     expect(screen.getByText("Revealing dice…")).toBeInTheDocument();
   });
 
+  it("shows a working toast's new words when they arrive just after news pushed it out", async () => {
+    render(<GameToaster />);
+    act(() => {
+      notify.loading("The computer is joining…", { id: "arrival" });
+    });
+    await wait(50);
+    act(() => {
+      notify.info("Baba Dice joined the table", { id: "news" });
+    });
+    await wait(50);
+    act(() => {
+      notify.loading("The computer is getting ready…", { id: "arrival" });
+    });
+    await settle();
+    expect(screen.getByText("The computer is getting ready…")).toBeInTheDocument();
+    await wait(4_000);
+    await settle();
+    expect(screen.getByText("The computer is getting ready…")).toBeInTheDocument();
+  });
+
   it("never brings back a working toast that has finished", async () => {
     render(<GameToaster />);
     act(() => {

@@ -42,20 +42,36 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
               <div className="flex flex-col gap-8 pb-7">
                 {greeting}
                 <div className="flex flex-col gap-3">
-                  <ActionButton
-                    tone="red"
-                    size="large"
-                    icon="play"
-                    sound="drum"
-                    disabled={busy || lobby.buyInProblem !== null}
-                    working={sitDown.findingSeat}
-                    workingLabel={label(lobbyCopy.playNowWorking)}
-                    onClick={lobby.playNow}
-                  >
-                    {lobbyCopy.playNow}
-                  </ActionButton>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <ActionButton
+                      tone="red"
+                      size="large"
+                      icon="play"
+                      sound="drum"
+                      disabled={busy || lobby.buyInProblem !== null}
+                      working={sitDown.findingSeat}
+                      workingLabel={label(lobbyCopy.quickPlayWorking)}
+                      onClick={lobby.quickPlay}
+                    >
+                      {lobbyCopy.quickPlay}
+                    </ActionButton>
+                    <ActionButton
+                      tone="green"
+                      size="large"
+                      icon="rocket"
+                      sound="drum"
+                      disabled={busy}
+                      working={sitDown.callingComputer}
+                      workingLabel={label(lobbyCopy.createWorking)}
+                      onClick={sitDown.playComputer}
+                    >
+                      {lobbyCopy.playComputer}
+                    </ActionButton>
+                  </div>
                   <Appear show={lobby.buyInProblem !== null} swapKey={lobby.buyInProblem ?? ""}>
-                    <p className="text-sm text-muted-foreground">{lobby.buyInProblem}</p>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {lobby.buyInProblem}
+                    </p>
                   </Appear>
                 </div>
               </div>
@@ -98,7 +114,7 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         busy={busy}
         busyLabel={label(lobbyCopy.joinWorking)}
         onJoin={(table) => sitDown.join({ kind: "join", tableId: table.id, buyIn: table.buyIn })}
-        onPlayNow={lobby.playNow}
+        onQuickPlay={lobby.quickPlay}
         onCreate={lobby.createFromTables}
       />
       <CreateTableDialog

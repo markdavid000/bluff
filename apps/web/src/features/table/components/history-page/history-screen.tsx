@@ -54,7 +54,7 @@ export function HistoryScreen() {
                   className="inline-flex items-center gap-2 rounded-xl bg-seat-red px-5 py-3 font-game text-lg text-seat-foreground shadow-[0_5px_0_0_var(--color-seat-red-edge)] transition-[translate,box-shadow] hover:brightness-105 focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none active:translate-y-1 active:shadow-[0_1px_0_0_var(--color-seat-red-edge)]"
                 >
                   <GameIcon name="play" size={24} />
-                  {tableCopy.playNow}
+                  {tableCopy.quickPlay}
                 </Link>
               </div>
             ) : (

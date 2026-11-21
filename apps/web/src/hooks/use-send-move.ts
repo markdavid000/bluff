@@ -38,6 +38,8 @@ const GAME_ERRORS: Abi = [
 
 export type MoveStep = "preparing" | "confirming" | "sending" | "waiting";
 
+const RECEIPT_CHECK_MS = 1_000;
+
 export function useSendMove() {
   const { user } = usePrivy();
   const { wallets } = useWallets();
@@ -73,7 +75,10 @@ export function useSendMove() {
       report("sending");
     }
     report("waiting");
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash,
+      pollingInterval: RECEIPT_CHECK_MS,
+    });
     if (receipt.status !== "success") throw new Error(`The move ${hash} did not go through.`);
     seeBlock(receipt.blockNumber);
     return receipt;

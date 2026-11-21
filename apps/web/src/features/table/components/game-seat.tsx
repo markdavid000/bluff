@@ -11,6 +11,7 @@ import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { Bid, Face } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { OwnDice } from "../hooks/use-own-dice";
+import { ComputerTag } from "./computer-tag";
 import { HiddenDie } from "./hidden-die";
 import { TurnRing } from "./turn-ring";
 
@@ -22,6 +23,7 @@ export function GameSeat({
   name,
   avatarSrc,
   isMe,
+  isComputer,
   dice,
   isActive,
   isTurn,
@@ -34,6 +36,7 @@ export function GameSeat({
   name: string;
   avatarSrc: string | undefined;
   isMe: boolean;
+  isComputer: boolean;
   dice: number;
   isActive: boolean;
   isTurn: boolean;
@@ -53,7 +56,14 @@ export function GameSeat({
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
   return (
     <figure
-      aria-label={[shown, state, isTurn ? tableCopy.thinking : null].filter(Boolean).join(", ")}
+      aria-label={[
+        shown,
+        isComputer ? tableCopy.computer : null,
+        state,
+        isTurn ? tableCopy.thinking : null,
+      ]
+        .filter(Boolean)
+        .join(", ")}
       className={cn("flex flex-col items-center gap-1", !isActive && "opacity-50 grayscale")}
     >
       <span className="relative">
@@ -105,6 +115,7 @@ export function GameSeat({
           />
         )}
       </figcaption>
+      {isComputer ? <ComputerTag /> : null}
       <span className="relative">
         {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
         <AnimatePresence>

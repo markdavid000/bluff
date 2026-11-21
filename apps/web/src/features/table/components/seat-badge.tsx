@@ -2,6 +2,7 @@ import { cn } from "cn";
 import { Avatar } from "@/components/shared/avatar";
 import { GameIcon } from "@/components/shared/game-icon";
 import { tableCopy } from "../copy";
+import { ComputerTag } from "./computer-tag";
 
 export interface SeatBadgeProps {
   name: string;
@@ -9,14 +10,25 @@ export interface SeatBadgeProps {
   ready: boolean;
   isHost: boolean;
   isMe: boolean;
+  isComputer: boolean;
   updating: boolean;
 }
 
-export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: SeatBadgeProps) {
+export function SeatBadge({
+  name,
+  avatarSrc,
+  ready,
+  isHost,
+  isMe,
+  isComputer,
+  updating,
+}: SeatBadgeProps) {
   const state = isHost ? tableCopy.host : ready ? tableCopy.ready : tableCopy.notReady;
   return (
     <figure
-      aria-label={`${isMe ? tableCopy.you : name}, ${state}`}
+      aria-label={[isMe ? tableCopy.you : name, isComputer ? tableCopy.computer : null, state]
+        .filter(Boolean)
+        .join(", ")}
       className="flex flex-col items-center gap-1.5"
     >
       <span className="relative">
@@ -60,6 +72,7 @@ export function SeatBadge({ name, avatarSrc, ready, isHost, isMe, updating }: Se
                 />
               )}
         </span>
+        {isComputer ? <ComputerTag /> : null}
         <span className="text-xs text-muted-foreground">
           {updating ? tableCopy.gettingReady : state}
         </span>

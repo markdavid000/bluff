@@ -11,7 +11,7 @@ import { OpenTablesDialog } from "./open-tables-dialog";
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 
 const onJoin = vi.fn();
-const onPlayNow = vi.fn();
+const onQuickPlay = vi.fn();
 const onCreate = vi.fn();
 
 function table(id: bigint, players: number, seats: number, buyIn = 0n): LobbyTable {
@@ -44,7 +44,7 @@ function show(
       busy={busy}
       busyLabel={lobbyCopy.joinWorking}
       onJoin={onJoin}
-      onPlayNow={onPlayNow}
+      onQuickPlay={onQuickPlay}
       onCreate={onCreate}
     />
   );
@@ -65,8 +65,8 @@ describe("OpenTablesDialog", () => {
     const dialog = show({ status: "ready", tables: [] });
     expect(dialog.querySelector("svg[aria-hidden]")).not.toBeNull();
     expect(within(dialog).getByText(lobbyCopy.noOpenTables)).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole("button", { name: lobbyCopy.playNow }));
-    expect(onPlayNow).toHaveBeenCalledOnce();
+    fireEvent.click(within(dialog).getByRole("button", { name: lobbyCopy.quickPlay }));
+    expect(onQuickPlay).toHaveBeenCalledOnce();
     fireEvent.click(within(dialog).getByRole("button", { name: lobbyCopy.createTable }));
     expect(onCreate).toHaveBeenCalledOnce();
   });

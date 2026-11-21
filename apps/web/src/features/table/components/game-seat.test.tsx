@@ -11,6 +11,7 @@ function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
       name="Sly Fox #3C4D"
       avatarSrc="/a.svg"
       isMe={false}
+      isComputer={false}
       dice={3}
       isActive
       isTurn={false}
@@ -25,6 +26,17 @@ function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
 }
 
 describe("GameSeat", () => {
+  it("marks a computer player, on screen and for screen readers", () => {
+    show({ name: "Baba Dice", isComputer: true });
+    expect(screen.getByText(tableCopy.computer)).toBeInTheDocument();
+    expect(screen.getByRole("figure", { name: /Baba Dice, Computer/ })).toBeInTheDocument();
+  });
+
+  it("shows no computer mark for a person", () => {
+    show();
+    expect(screen.queryByText(tableCopy.computer)).not.toBeInTheDocument();
+  });
+
   it("names the player and their dice for screen readers", () => {
     show();
     expect(
@@ -50,6 +62,7 @@ describe("GameSeat", () => {
         name="Sly Fox #3C4D"
         avatarSrc="/a.svg"
         isMe={false}
+        isComputer={false}
         dice={3}
         isActive
         isTurn={false}
@@ -108,6 +121,7 @@ describe("GameSeat", () => {
         name="Sly Fox #3C4D"
         avatarSrc="/a.svg"
         isMe={false}
+        isComputer={false}
         dice={dice}
         isActive
         isTurn={false}
@@ -136,6 +150,7 @@ describe("GameSeat", () => {
         name="Me #1A2B"
         avatarSrc="/a.svg"
         isMe
+        isComputer={false}
         dice={dice}
         isActive
         isTurn={false}

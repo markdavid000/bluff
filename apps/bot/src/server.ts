@@ -107,13 +107,17 @@ export function startServer({
 }): Promise<Server> {
   const limited = createRateLimit(now);
 
-  async function handle(request: IncomingMessage, response: ServerResponse) {
-    const path = new URL(request.url ?? "/", "http://bot").pathname;
+  function corsFor(request: IncomingMessage): Record<string, string> {
     const origin = request.headers.origin;
-    const allowed = typeof origin === "string" && allowedOrigins.includes(origin);
-    const cors: Record<string, string> = allowed
+    return typeof origin === "string" && allowedOrigins.includes(origin)
       ? { "access-control-allow-origin": origin, vary: "origin" }
       : {};
+  }
+
+  async function handle(request: IncomingMessage, response: ServerResponse) {
+    const path = new URL(request.url ?? "/", "http://bot").pathname;
+    const cors = corsFor(request);
+    const allowed = "access-control-allow-origin" in cors;
 
     if (path === "/health" && request.method === "GET") {
       send(response, 200, await service.health(), cors);
@@ -171,7 +175,7 @@ export function startServer({
   const server = createServer((request, response) => {
     handle(request, response).catch((error: unknown) => {
       log.error("seat failed", { action: request.url ?? "", error });
-      if (!response.headersSent) send(response, 503, { reason: "unavailable" });
+      if (!response.headersSent) send(response, 503, { reason: "unavailable" }, corsFor(request));
     });
   });
   return new Promise((resolve) => server.listen(port, () => resolve(server)));

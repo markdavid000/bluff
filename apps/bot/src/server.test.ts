@@ -118,6 +118,7 @@ describe("server", () => {
     await start(service({ seat: async () => Promise.reject(new Error("rpc key-123 down")) }));
     const response = await seat({ tableId: "12" });
     expect(response.status).toBe(503);
+    expect(response.headers.get("access-control-allow-origin")).toBe(SITE);
     expect(await response.text()).not.toMatch(/key-123/);
     expect(logged.some((line) => line.includes("seat failed"))).toBe(true);
   });

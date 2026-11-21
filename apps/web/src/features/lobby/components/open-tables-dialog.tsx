@@ -18,7 +18,7 @@ export function OpenTablesDialog({
   busy,
   busyLabel,
   onJoin,
-  onPlayNow,
+  onQuickPlay,
   onCreate,
 }: {
   open: boolean;
@@ -28,7 +28,7 @@ export function OpenTablesDialog({
   busy: boolean;
   busyLabel: string;
   onJoin: (table: LobbyTable) => void;
-  onPlayNow: () => void;
+  onQuickPlay: () => void;
   onCreate: () => void;
 }) {
   return (
@@ -55,9 +55,9 @@ export function OpenTablesDialog({
                       icon="play"
                       sound="drum"
                       disabled={busy}
-                      onClick={onPlayNow}
+                      onClick={onQuickPlay}
                     >
-                      {lobbyCopy.playNow}
+                      {lobbyCopy.quickPlay}
                     </ActionButton>
                     <ActionButton tone="blue" icon="plus" disabled={busy} onClick={onCreate}>
                       {lobbyCopy.createTable}

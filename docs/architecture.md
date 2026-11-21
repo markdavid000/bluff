@@ -226,3 +226,4 @@ Game data does not use server caching: it is read in the browser and cached by T
     - `ALLOWED_ORIGINS`: the web app's sites, separated by commas;
     - optionally `BOT_MAX_PLAYERS` (1 to 24, default 20).
   - Railway sets `PORT`. Node 24 comes from `engines` and `.nvmrc`, and pnpm from `packageManager`.
+  - **The web app finds it** through `NEXT_PUBLIC_BOT_URL`, the service's public address (not a secret), set in Vercel and in `apps/web/.env.local`. The computers' public addresses are listed in `apps/web/src/config/computer-players.ts` for the Computer badge; a new secret phrase means a new list.

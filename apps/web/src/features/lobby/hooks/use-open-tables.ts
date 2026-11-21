@@ -1,10 +1,17 @@
 "use client";
 
 import { bluffAbi } from "@bluff/contracts";
+import { usePrivy } from "@privy-io/react-auth";
 import { usePublicClient, useReadContract } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
 import { MoveNotReadyError } from "@/lib/errors";
-import { type LobbyTable, openSeats, toLobbyTable } from "../lib/tables";
+import {
+  type LobbyTable,
+  openSeats,
+  othersTables,
+  peopleTables,
+  toLobbyTable,
+} from "../lib/tables";
 
 const LISTED = 24n;
 const REFRESH_MS = 6_000;
@@ -21,13 +28,21 @@ export type OpenTables =
   | { status: "ready"; tables: LobbyTable[] };
 
 function stillOpen(listed: Parameters<typeof toLobbyTable>[0][]): LobbyTable[] {
-  return listed.map(toLobbyTable).filter((table) => table.waiting && openSeats(table) > 0);
+  return peopleTables(
+    listed.map(toLobbyTable).filter((table) => table.waiting && openSeats(table) > 0)
+  );
 }
 
 export function useOpenTables(): OpenTables {
+  const { user } = usePrivy();
   const listed = useReadContract({ ...OPEN_TABLES, query: { refetchInterval: REFRESH_MS } });
 
-  if (listed.data) return { status: "ready", tables: stillOpen([...listed.data]) };
+  if (listed.data) {
+    return {
+      status: "ready",
+      tables: othersTables(stillOpen([...listed.data]), user?.wallet?.address),
+    };
+  }
   if (listed.isError) return { status: "failed", retry: () => void listed.refetch() };
   return { status: "loading" };
 }

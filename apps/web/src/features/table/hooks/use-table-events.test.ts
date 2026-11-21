@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { forgetBlocks, newestBlock } from "@/lib/block-clock";
 import { onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
@@ -11,13 +12,16 @@ vi.mock("@/config/env", () => ({
 
 const ME = "0x0000000000000000000000000000000000001a2b";
 const KOLA = "0x0000000000000000000000000000000000003c4d";
+const COMPUTER = COMPUTER_PLAYERS[0] ?? KOLA;
 
 type OnLogs = (logs: unknown[]) => void;
 let deliver: OnLogs = () => undefined;
+const readContract = vi.fn();
 vi.mock("wagmi", () => ({
   useWatchContractEvent: ({ onLogs }: { onLogs: OnLogs }) => {
     deliver = onLogs;
   },
+  usePublicClient: () => ({ readContract: (request: unknown) => readContract(request) }),
 }));
 
 let shown: string[] = [];
@@ -71,6 +75,49 @@ describe("useTableEvents", () => {
       log("TableReopened", { id: 12n }, 100n, 1),
     ]);
     expect(shown).toEqual([tableCopy.youAreHost, tableCopy.openAgainForHost]);
+  });
+
+  it("tells the host who leaves which person is host now", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: ME, nameOf: () => "Kola #3C4D" }));
+    deliver([
+      log("PlayerLeft", { id: 12n, player: ME }, 100n, 0),
+      log("HostChanged", { id: 12n, host: KOLA }, 100n, 1),
+    ]);
+    expect(shown).toEqual([tableCopy.isHost("Kola #3C4D")]);
+  });
+
+  it("says nothing about the computer becoming host when the host leaves it", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, host: ME, nameOf: () => "Baba Dice" }));
+    deliver([
+      log("PlayerLeft", { id: 12n, player: ME }, 100n, 0),
+      log("HostChanged", { id: 12n, host: COMPUTER }, 100n, 1),
+    ]);
+    expect(shown).toEqual([]);
+  });
+
+  it("reads the name of someone the table hasn't loaded yet, rather than calling them Player", async () => {
+    readContract.mockResolvedValue("Baba Dice");
+    renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => null }));
+    deliver([
+      log("PlayerJoined", { id: 12n, player: KOLA }, 100n, 0),
+      log("PlayerReady", { id: 12n, player: KOLA, ready: true }, 100n, 1),
+    ]);
+    await vi.waitFor(() =>
+      expect(shown).toEqual([tableCopy.joined("Baba Dice"), tableCopy.isReady("Baba Dice")])
+    );
+    expect(readContract).toHaveBeenCalledOnce();
+    const [request] = readContract.mock.calls[0] ?? [];
+    expect(request).toMatchObject({ functionName: "nicknameOf" });
+    expect(String(request?.args?.[0]).toLowerCase()).toBe(KOLA);
+  });
+
+  it("still tells the player when a name can't be read, and says why in the console", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    readContract.mockRejectedValue(new Error("rpc down"));
+    renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => null }));
+    deliver([log("PlayerReady", { id: 12n, player: KOLA, ready: true }, 100n)]);
+    await vi.waitFor(() => expect(shown).toEqual([tableCopy.isReady(tableCopy.unnamed)]));
+    expect(console.error).toHaveBeenCalled();
   });
 
   it("ignores moves at other tables", () => {
