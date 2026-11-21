@@ -19,6 +19,8 @@ PR 8-3 of the [computer player plan](../plans/2026-11-18-computer-player-plan.md
 - **Quick play** is the new name for Play now: the lobby, the empty open-tables list, the empty Your games page, the design page and how-to-play. Its behaviour is unchanged.
 - **Open tables leaves out the player's own table,** so making a table through Quick play or Play the computer no longer briefly shows "1" on the button.
 - **Open tables and Quick play leave out a table a computer was left holding.** Computers never create tables; they only become host when the person leaves. So a table hosted by a computer is never shown or joined while the computer is on its way out.
+- **Table toasts use the real name of someone who just arrived.** A computer joins and gets ready in one block, so its "is ready" event came before its name was loaded, and the toast said "Player is ready". The events hook now reads any name it doesn't know yet before showing the toast, so it says "Baba Dice is ready", and the same goes for any person.
+- **No "is now the host" toast** when a computer becomes host (only happens as its person leaves), or after the player's own leave.
 - **Computer badge:** on the computer's seat in the waiting room and in the game, and in a past game's details, from `config/computer-players.ts` (the 20 public addresses).
 - **Toast fix:** a working toast that got new words just after news pushed it out could vanish, because the toast library finished removing the old copy and took the new one with it. Each showing of a toast now has its own id, stale copies are dismissed until they're gone, and an unmounted toast host stops acting.
 - **`NEXT_PUBLIC_BOT_URL`:** the service's public address, in `.env.example`, CI and the architecture doc.

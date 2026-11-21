@@ -70,6 +70,8 @@ export function useGame(id: bigint) {
     return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
   };
   const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
+  const knownName = (address: string) =>
+    profiles.status === "ready" ? (profiles.profileOf(address)?.name ?? null) : null;
   const [shownResult, setShownResult] = useState<{ result: RoundResult; until: number } | null>(
     null
   );
@@ -81,7 +83,7 @@ export function useGame(id: bigint) {
     id,
     me,
     host: table?.host,
-    nameOf: noticeName,
+    nameOf: knownName,
     onBidPlaced: (placed: PlacedBid) => {
       const { face } = placed;
       if (!isValidFace(face)) return;

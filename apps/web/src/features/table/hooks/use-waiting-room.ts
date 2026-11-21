@@ -70,8 +70,9 @@ export function useWaitingRoom(id: bigint) {
     if (profiles.status === "loading") return "";
     return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
   };
-  const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
-  useTableEvents({ id, me, host: table?.host, nameOf: noticeName });
+  const knownName = (address: string) =>
+    profiles.status === "ready" ? (profiles.profileOf(address)?.name ?? null) : null;
+  useTableEvents({ id, me, host: table?.host, nameOf: knownName });
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
