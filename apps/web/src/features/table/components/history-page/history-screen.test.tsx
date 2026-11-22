@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../../copy";
 import type { GameHistoryList } from "../../hooks/use-game-history-list";
@@ -66,7 +67,10 @@ describe("HistoryScreen", () => {
     history = ready([]);
     render(<HistoryScreen />);
     expect(screen.getByText(tableCopy.pastNone)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: tableCopy.playNow })).toHaveAttribute("href", "/play");
+    expect(screen.getByRole("link", { name: tableCopy.quickPlay })).toHaveAttribute(
+      "href",
+      "/play"
+    );
   });
 
   it("says it couldn't load, and tries again when asked", async () => {
@@ -91,6 +95,35 @@ describe("HistoryScreen", () => {
     expect(cards[1]).toHaveTextContent(tableCopy.pastResult.lost);
     expect(cards[1]).toHaveTextContent(tableCopy.pastChipsDown("10"));
     expect(screen.getByText(tableCopy.pastAll)).toBeInTheDocument();
+  });
+
+  it("marks the computer in a game's details", async () => {
+    const computer = COMPUTER_PLAYERS[0] ?? ADA;
+    const played = game(8n);
+    history = ready([
+      {
+        ...played,
+        table: {
+          ...played.table,
+          seats: [
+            { player: ME, ready: true, isHost: true, isActive: true, ...NO_DICE, dice: 2 },
+            { player: computer, ready: true, isHost: false, isActive: false, ...NO_DICE },
+          ],
+        },
+      },
+    ]);
+    render(<HistoryScreen />);
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.pastOpen("Table 8") }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getAllByText(tableCopy.computer)).toHaveLength(1);
+  });
+
+  it("shows no computer mark when everyone was a person", async () => {
+    history = ready([game(7n)]);
+    render(<HistoryScreen />);
+    fireEvent.click(screen.getByRole("button", { name: tableCopy.pastOpen("Table 7") }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByText(tableCopy.computer)).not.toBeInTheDocument();
   });
 
   it("opens a game's details: players, how it ended, rounds and the pot", async () => {

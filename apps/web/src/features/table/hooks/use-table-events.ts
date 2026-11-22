@@ -1,10 +1,13 @@
 "use client";
 
-import { bluffAbi } from "@bluff/contracts";
-import { useWatchContractEvent } from "wagmi";
+import { bluffAbi, chipFaucetAbi } from "@bluff/contracts";
+import { getAddress } from "viem";
+import { usePublicClient, useWatchContractEvent } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
 import { seeBlock } from "@/lib/block-clock";
 import { notify } from "@/lib/notify";
+import { plainName } from "@/lib/player-tag";
+import { tableCopy } from "../copy";
 import { type GameEnding, toGameEnding } from "../lib/game-end";
 import { type TableEvent, noticeFor } from "../lib/notices";
 
@@ -104,13 +107,57 @@ export function useTableEvents({
   id: bigint;
   me: string | undefined;
   host?: string;
-  nameOf: (address: string) => string;
+  nameOf: (address: string) => string | null;
   onBidPlaced?: (bid: PlacedBid) => void;
   onRoundSettled?: (result: RoundResult) => void;
   onGameEnded?: (ending: GameEnding) => void;
 }) {
+  const client = usePublicClient({ chainId: gameChain.id });
+
+  async function lookUp(address: string): Promise<string> {
+    try {
+      if (!client) throw new Error("No connection to read a player's name.");
+      const nickname = await client.readContract({
+        address: contracts.faucet,
+        abi: chipFaucetAbi,
+        functionName: "nicknameOf",
+        args: [getAddress(address)],
+      });
+      return plainName(nickname, tableCopy.unnamed);
+    } catch (error) {
+      console.error("A player's name could not be read for a notice.", error);
+      return tableCopy.unnamed;
+    }
+  }
+
+  function show(pending: { event: TableEvent; key: string; tableHost?: string }[]) {
+    const unknown = new Set<string>();
+    for (const { event } of pending) {
+      const named = event.args.player ?? event.args.host;
+      if (named && named.toLowerCase() !== me?.toLowerCase() && nameOf(named) === null) {
+        unknown.add(named.toLowerCase());
+      }
+    }
+    const announce = (looked: Map<string, string>) => {
+      const name = (address: string) =>
+        nameOf(address) ?? looked.get(address.toLowerCase()) ?? tableCopy.unnamed;
+      for (const { event, key, tableHost } of pending) {
+        const words = noticeFor(event, me, name, tableHost);
+        if (words) notify.info(words, { id: key });
+      }
+    };
+    if (unknown.size === 0) {
+      announce(new Map());
+      return;
+    }
+    void Promise.all(
+      [...unknown].map(async (address) => [address, await lookUp(address)] as const)
+    ).then((found) => announce(new Map(found)));
+  }
+
   function handle(logs: readonly WatchedLog[]) {
     let tableHost = host;
+    const pending: { event: TableEvent; key: string; tableHost?: string }[] = [];
     for (const log of logs) {
       if (field(log.args, "id") !== id) continue;
       const newHost = field(log.args, "host");
@@ -128,9 +175,13 @@ export function useTableEvents({
         const ending = toGameEnding(log.args);
         if (ending) onGameEnded?.(ending);
       }
-      const words = noticeFor(toEvent(log), me, nameOf, tableHost);
-      if (words) notify.info(words, { id: `table-${log.transactionHash}-${log.logIndex}` });
+      pending.push({
+        event: toEvent(log),
+        key: `table-${log.transactionHash}-${log.logIndex}`,
+        tableHost,
+      });
     }
+    show(pending);
   }
 
   useWatchContractEvent({

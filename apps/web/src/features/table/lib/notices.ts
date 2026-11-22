@@ -1,3 +1,4 @@
+import { isComputerPlayer } from "@/lib/computer-players";
 import { tableCopy } from "../copy";
 
 export interface TableEvent {
@@ -30,7 +31,7 @@ export function noticeFor(
       if (mine || !player) return null;
       return ready ? tableCopy.isReady(nameOf(player)) : tableCopy.isNotReady(nameOf(player));
     case "HostChanged":
-      if (!host) return null;
+      if (!host || isComputerPlayer(host)) return null;
       return same(host, me) ? tableCopy.youAreHost : tableCopy.isHost(nameOf(host));
     case "SeatRemoved":
       if (!player) return null;

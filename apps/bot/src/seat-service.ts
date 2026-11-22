@@ -4,18 +4,23 @@ import { MoveRefused, TableMissing } from "./chain-errors";
 import type { Log } from "./log";
 import type { PlayerPool, PoolPlayer } from "./player-pool";
 import { seatRefusal } from "./seat-policy";
-import type { BluffCall } from "./seat-runner";
 import type { Health, SeatReason, SeatResult, SeatService } from "./server";
+
+export interface Seated {
+  joinedBlock: bigint;
+  readyBlock: bigint | null;
+  readyProblem?: unknown;
+}
 
 export interface ServiceChain {
   blockNumber(): Promise<bigint>;
   readTable(id: bigint, atBlock?: bigint): Promise<Table>;
-  send(index: number, call: BluffCall, atBlock?: bigint): Promise<{ blockNumber: bigint }>;
+  joinAndReady(index: number, tableId: bigint, atBlock: bigint): Promise<Seated>;
   balanceOf(address: Address): Promise<bigint>;
 }
 
 const NEW_TABLE_PATIENCE_MS = 15_000;
-const NEW_TABLE_RETRY_MS = 3_000;
+const NEW_TABLE_RETRY_MS = 1_000;
 
 const JOIN_REFUSALS: Record<string, SeatReason> = {
   TableFull: "full",
@@ -55,7 +60,7 @@ export function createSeatService({
   async function join(index: number, tableId: bigint, block: bigint) {
     for (let waited = 0; ; waited += NEW_TABLE_RETRY_MS) {
       try {
-        return await chain.send(index, { functionName: "joinFreeTable", args: [tableId] }, block);
+        return await chain.joinAndReady(index, tableId, block);
       } catch (error) {
         if (error instanceof MoveRefused || waited >= NEW_TABLE_PATIENCE_MS) throw error;
         log.warn("join retried", { table: tableId.toString(), ms: waited, error });
@@ -73,7 +78,7 @@ export function createSeatService({
       const acquired = await pool.acquire();
       if (acquired.kind !== "player") return { kind: "refused", reason: acquired.kind };
       const { player } = acquired;
-      let joined: { blockNumber: bigint };
+      let joined: Seated;
       try {
         joined = await join(player.index, tableId, found.block);
       } catch (error) {
@@ -87,18 +92,14 @@ export function createSeatService({
         });
         return { kind: "refused", reason };
       }
-      let seatedBlock = joined.blockNumber;
-      try {
-        const ready = await chain.send(
-          player.index,
-          { functionName: "setReady", args: [tableId, true] },
-          joined.blockNumber
-        );
-        seatedBlock = ready.blockNumber;
-      } catch (error) {
-        log.warn("ready failed", { table: tableId.toString(), player: player.address, error });
+      if (joined.readyBlock === null) {
+        log.warn("ready failed", {
+          table: tableId.toString(),
+          player: player.address,
+          error: joined.readyProblem,
+        });
       }
-      startRunner(player, tableId, now(), seatedBlock);
+      startRunner(player, tableId, now(), joined.readyBlock ?? joined.joinedBlock);
       return { kind: "seated", player: player.address };
     },
     async health(): Promise<Health> {

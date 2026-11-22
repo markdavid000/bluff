@@ -142,6 +142,7 @@ jobs:
     env:
       NEXT_PUBLIC_PRIVY_APP_ID: cmwbbcuel00aj0hk11kbgxv94
       NEXT_PUBLIC_SEPOLIA_RPC_URL: https://ethereum-sepolia-rpc.publicnode.com
+      NEXT_PUBLIC_BOT_URL: http://localhost:8787
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

@@ -88,6 +88,7 @@ function room(overrides: Room = {}): Room {
     joinStep: "seat",
     invite: "ready",
     unlockingInvite: false,
+    computerComing: false,
     ...actions,
     ...overrides,
   };
@@ -171,6 +172,12 @@ describe("WaitingScreen", () => {
     it("hides the invite when the table is full", () => {
       show(room({ freeSeats: 0, table: table({ seatCount: 2 }) }));
       expect(screen.queryByRole("button", { name: tableCopy.copyInvite })).not.toBeInTheDocument();
+    });
+
+    it("offers no invites while the computer is on its way, and keeps its seat for it", () => {
+      show(room({ computerComing: true }));
+      expect(screen.queryByRole("button", { name: tableCopy.copyInvite })).not.toBeInTheDocument();
+      expect(screen.getByRole("figure", { name: tableCopy.computerJoining })).toBeInTheDocument();
     });
 
     it("offers to close the table once time is up", () => {

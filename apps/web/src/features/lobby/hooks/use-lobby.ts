@@ -43,7 +43,7 @@ export function useLobby() {
       setCreateOpen(true);
     },
     sitDown,
-    playNow: () => sitDown.playNow(latestOpenTables, buyIn),
+    quickPlay: () => sitDown.quickPlay(latestOpenTables, buyIn),
     createTable: (seatCount: SeatCount, isPrivate: boolean) =>
       sitDown.create({ kind: "create", seatCount, buyIn, isPrivate }),
   };

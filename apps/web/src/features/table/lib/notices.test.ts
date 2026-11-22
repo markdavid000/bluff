@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { tableCopy } from "../copy";
 import { type TableEvent, noticeFor } from "./notices";
 
@@ -12,6 +13,11 @@ function notice(event: TableEvent) {
 }
 
 describe("noticeFor", () => {
+  it("keeps quiet when a computer becomes host, since that only happens as its person leaves", () => {
+    const computer = COMPUTER_PLAYERS[0] ?? KOLA;
+    expect(notice({ eventName: "HostChanged", args: { host: computer } })).toBeNull();
+  });
+
   it.each<[TableEvent, string]>([
     [{ eventName: "PlayerJoined", args: { player: KOLA } }, tableCopy.joined("Kola #3C4D")],
     [{ eventName: "PlayerLeft", args: { player: KOLA } }, tableCopy.left("Kola #3C4D")],

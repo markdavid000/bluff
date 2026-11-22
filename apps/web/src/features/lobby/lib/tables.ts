@@ -1,6 +1,7 @@
 import type { bluffAbi } from "@bluff/contracts";
 import type { Address, ContractFunctionReturnType } from "viem";
 import { type KnownBalance, ONE_CHIP, formatChips, whyUnaffordable } from "@/lib/chips";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { lobbyCopy } from "../copy";
 
 export type TableView = ContractFunctionReturnType<typeof bluffAbi, "view", "openTables">[number];
@@ -35,6 +36,16 @@ export function toLobbyTable(view: TableView): LobbyTable {
     createdAt: Number(view.createdAt) * 1000,
     closesAt: Number(view.deadline) * 1000,
   };
+}
+
+export function peopleTables(tables: LobbyTable[]): LobbyTable[] {
+  return tables.filter((table) => !isComputerPlayer(table.host));
+}
+
+export function othersTables(tables: LobbyTable[], me: string | undefined): LobbyTable[] {
+  if (me === undefined) return tables;
+  const mine = me.toLowerCase();
+  return tables.filter((table) => table.host.toLowerCase() !== mine);
 }
 
 export function openSeats(table: LobbyTable): number {

@@ -1,6 +1,7 @@
 export const lobbyCopy = {
-  playNow: "Play now",
-  playNowWorking: "Finding you a seat…",
+  quickPlay: "Quick play",
+  quickPlayWorking: "Finding you a seat…",
+  playComputer: "Play the computer",
   buyIn: "Chips to play",
   free: "Free",
   chips: (amount: string) => `${amount} chips`,

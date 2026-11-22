@@ -19,9 +19,11 @@ import { useProveInvite } from "@/hooks/use-prove-invite";
 import { useSendMove } from "@/hooks/use-send-move";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { notify } from "@/lib/notify";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
+import { useComputerArrival } from "./use-computer-arrival";
 import { type Role, nextStep } from "../lib/next-step";
 import { type Table, freeSeats, notReady } from "@bluff/game";
 import { useInviteCode } from "./use-invite-code";
@@ -52,7 +54,20 @@ export function useWaitingRoom(id: bigint) {
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
   const read = useTable(id);
-  const table = read.status === "ready" ? read.table : null;
+  const live = read.status === "ready" ? read.table : null;
+  const [departingFrom, setDepartingFrom] = useState<Table | null>(null);
+  const table = departingFrom ?? live;
+
+  async function departWith(run: () => Promise<unknown>) {
+    setDepartingFrom(live);
+    try {
+      return await run();
+    } catch (error) {
+      setDepartingFrom(null);
+      throw error;
+    }
+  }
+  const { computerComing } = useComputerArrival(table);
   const tableOver = table?.status === "cancelled" || table?.status === "finished";
   const forgetSeat = useEffectEvent(() => forgetMyTable(id));
   useEffect(() => {
@@ -67,8 +82,9 @@ export function useWaitingRoom(id: bigint) {
     if (profiles.status === "loading") return "";
     return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
   };
-  const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
-  useTableEvents({ id, me, host: table?.host, nameOf: noticeName });
+  const knownName = (address: string) =>
+    profiles.status === "ready" ? (profiles.profileOf(address)?.name ?? null) : null;
+  useTableEvents({ id, me, host: table?.host, nameOf: knownName });
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
@@ -122,9 +138,11 @@ export function useWaitingRoom(id: bigint) {
     working: tableCopy.leaving,
     done: tableCopy.leftTable,
     run: (report) =>
-      sendMove(
-        { address: contracts.bluff, abi: bluffAbi, functionName: "leaveTable", args: [id] },
-        report
+      departWith(() =>
+        sendMove(
+          { address: contracts.bluff, abi: bluffAbi, functionName: "leaveTable", args: [id] },
+          report
+        )
       ),
     onDone: () => {
       markLeftTable(id);
@@ -139,9 +157,11 @@ export function useWaitingRoom(id: bigint) {
     id: "close",
     working: tableCopy.closing,
     run: (report) =>
-      sendMove(
-        { address: contracts.bluff, abi: bluffAbi, functionName: "cancelTable", args: [id] },
-        report
+      departWith(() =>
+        sendMove(
+          { address: contracts.bluff, abi: bluffAbi, functionName: "cancelTable", args: [id] },
+          report
+        )
       ),
     onDone: () => {
       markLeftTable(id);
@@ -181,6 +201,7 @@ export function useWaitingRoom(id: bigint) {
     ...seat,
     ready: same(seat.player, me) && showPending && pendingReady ? pendingReady.value : seat.ready,
     isMe: same(seat.player, me),
+    isComputer: isComputerPlayer(seat.player),
     name: nameOf(seat.player),
     avatarSrc: profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,
   }));
@@ -242,6 +263,7 @@ export function useWaitingRoom(id: bigint) {
       joinStep,
       invite: invite.status,
       unlockingInvite: invite.status === "locked" && invite.unlocking,
+      computerComing,
       toggleReady: () => ready.start(!(mine?.ready ?? false)),
       start: start.start,
       leave: leave.start,

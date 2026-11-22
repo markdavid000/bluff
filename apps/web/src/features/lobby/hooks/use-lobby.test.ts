@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useLobby } from "./use-lobby";
 
-const playNow = vi.fn();
+const quickPlay = vi.fn();
 const latest = vi.fn();
 
 vi.mock("@/hooks/use-chip-balance", () => ({
@@ -14,7 +14,7 @@ vi.mock("./use-open-tables", () => ({
   useOpenTables: () => ({ status: "failed", retry: vi.fn() }),
   useLatestOpenTables: () => latest,
 }));
-vi.mock("./use-sit-down", () => ({ useSitDown: () => ({ playNow }) }));
+vi.mock("./use-sit-down", () => ({ useSitDown: () => ({ quickPlay }) }));
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -23,7 +23,7 @@ afterEach(() => {
 describe("useLobby", () => {
   it("plays now from the open tables as they are at the moment of the press", () => {
     const { result } = renderHook(() => useLobby());
-    act(() => result.current.playNow());
-    expect(playNow).toHaveBeenCalledWith(latest, 0n);
+    act(() => result.current.quickPlay());
+    expect(quickPlay).toHaveBeenCalledWith(latest, 0n);
   });
 });

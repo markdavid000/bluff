@@ -13,6 +13,7 @@ import { useNow } from "@/hooks/use-now";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { useForgetMyTable } from "@/hooks/use-my-table-id";
 import { useSendMove } from "@/hooks/use-send-move";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { bidChance, bidRisk, type Bid, isValidFace, quickPicks } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { GameEnding } from "../lib/game-end";
@@ -69,6 +70,8 @@ export function useGame(id: bigint) {
     return profiles.profileOf(address)?.name ?? (profiles.pending ? "" : tableCopy.unnamed);
   };
   const noticeName = (address: string) => nameOf(address) || tableCopy.unnamed;
+  const knownName = (address: string) =>
+    profiles.status === "ready" ? (profiles.profileOf(address)?.name ?? null) : null;
   const [shownResult, setShownResult] = useState<{ result: RoundResult; until: number } | null>(
     null
   );
@@ -80,7 +83,7 @@ export function useGame(id: bigint) {
     id,
     me,
     host: table?.host,
-    nameOf: noticeName,
+    nameOf: knownName,
     onBidPlaced: (placed: PlacedBid) => {
       const { face } = placed;
       if (!isValidFace(face)) return;
@@ -382,6 +385,7 @@ export function useGame(id: bigint) {
           index === mySeat && pendingShown && pendingBid
             ? pendingBid.bid
             : lastBidOf(seat.player, index),
+        isComputer: isComputerPlayer(seat.player),
         name: nameOf(seat.player),
         avatarSrc:
           profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,

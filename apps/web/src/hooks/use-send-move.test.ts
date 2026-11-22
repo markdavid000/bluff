@@ -39,11 +39,16 @@ const simulateContract = vi.fn(
   async (_request: { abi: readonly { type: string; name?: string }[] }) => order.push("simulate")
 );
 
+const receiptWaits: { hash: string; pollingInterval?: number }[] = [];
+
 vi.mock("wagmi", () => ({
   usePublicClient: () => ({
     simulateContract: (request: { abi: readonly { type: string; name?: string }[] }) =>
       simulateContract(request),
-    waitForTransactionReceipt: async () => ({ status: "success", blockNumber: 4242n }),
+    waitForTransactionReceipt: async (request: { hash: string; pollingInterval?: number }) => {
+      receiptWaits.push(request);
+      return { status: "success", blockNumber: 4242n };
+    },
   }),
   useSendTransaction: () => ({ sendTransactionAsync }),
   useConnection: () => ({ chainId: walletChainId }),
@@ -122,6 +127,13 @@ describe("useSendMove", () => {
     expect(known).toEqual(
       expect.arrayContaining(["AlreadyAtTable", "WrongStatus", "InvalidBuyIn", "ClaimTooSoon"])
     );
+  });
+
+  it("checks for the move landing every second, so the player isn't kept waiting", async () => {
+    receiptWaits.length = 0;
+    const { result } = renderHook(() => useSendMove());
+    await result.current(CLAIM, () => undefined);
+    expect(receiptWaits.at(-1)?.pollingInterval).toBe(1_000);
   });
 
   it("moves the block clock to the block its move landed in", async () => {

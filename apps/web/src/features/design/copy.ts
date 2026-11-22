@@ -9,7 +9,7 @@ export const designCopy = {
   typeBody:
     "Everyone rolls dice that only they can see. Guess what is on the table, or call a bluff.",
   buttonsTitle: "Buttons",
-  play: "Play now",
+  play: "Quick play",
   bid: "Bid",
   callBluff: "Call bluff on Sly Fox",
   invite: "Invite",
