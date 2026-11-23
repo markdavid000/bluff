@@ -77,7 +77,7 @@ export function Hero({ table }: { table: ReactNode }) {
           </li>
         ))}
       </ul>
-      <div className="flex flex-col items-center gap-4">
+      <div className="sticky bottom-3 z-20 mx-auto flex w-fit max-w-full flex-col items-center gap-3 rounded-2xl border-2 border-tile-edge/30 bg-background/85 px-5 py-3 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)] backdrop-blur-sm">
         <p className="flex items-center justify-center gap-2 text-center text-lg">
           <GameIcon name="lock" size={28} />
           {landingCopy.fair}
