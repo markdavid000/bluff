@@ -38,6 +38,24 @@ else
   FAILED=1
 fi
 
+for icon in /icon /apple-icon; do
+  ICON_TYPE="$(curl -s -o /dev/null -w '%{content_type}' --max-time 30 "$BASE$icon")"
+  echo "icon $icon: $ICON_TYPE"
+  [ "$ICON_TYPE" = "image/png" ] || FAILED=1
+done
+for page in /how-to-play /fairness; do
+  PAGE="$(curl -s --max-time 30 "$BASE$page")"
+  if echo "$PAGE" | grep -q "property=\"og:url\" content=\"[^\"]*$page\"" \
+    && echo "$PAGE" | grep -q "rel=\"canonical\" href=\"[^\"]*$page\"" \
+    && echo "$PAGE" | grep -q 'property="og:image"' \
+    && echo "$PAGE" | grep -q 'name="twitter:card" content="summary_large_image"'; then
+    echo "share tags ok: $page"
+  else
+    echo "share tags wrong: $page"
+    FAILED=1
+  fi
+done
+
 for route in "${GUARDED_ROUTES[@]}"; do
   expected="/sign-in?next=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$route")"
   for cookie in "" "bluff-session=forged.not.valid"; do

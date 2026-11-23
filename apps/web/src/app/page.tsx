@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { ScreenControls } from "@/components/shared/screen-controls";
 import { StreetBackdrop } from "@/components/shared/street-backdrop";
 import { Hero } from "@/features/landing";
 import { DemoGame } from "@/features/table";
+import { siteConfig } from "@/config/site";
+import { pageMetadata } from "@/lib/page-metadata";
+
+export const metadata: Metadata = pageMetadata({
+  title: null,
+  description: siteConfig.description,
+  path: "/",
+});
 
 export default function HomePage() {
   return (
