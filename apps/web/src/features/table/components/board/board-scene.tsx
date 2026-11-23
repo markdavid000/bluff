@@ -24,6 +24,7 @@ import { calabashTexture } from "../../lib/calabash-texture";
 import { cupMotion } from "../../lib/cup-motion";
 import type { RevealedSeat } from "../../lib/reveal";
 import { dieFaceTexture } from "../../lib/dice-textures";
+import { liftedCupPosition } from "../../lib/lifted-cup";
 import { revealedRowCentre } from "../../lib/revealed-row";
 import { type SeatColor, type SeatPlacement } from "../../lib/seat-layout";
 
@@ -108,6 +109,9 @@ function Seat({
   lifted: boolean;
 }) {
   const cup = useRef<Group>(null);
+  const place = useRef<Group>(null);
+  const [restX, , restZ] = seat.cup;
+  const [liftX, , liftZ] = liftedCupPosition(seat);
   const texture = calabashTexture({
     gourd: colors["--pattern-accent"],
     burnt: colors["--board-edge"],
@@ -115,16 +119,20 @@ function Seat({
   useEffect(() => () => texture.dispose(), [texture]);
   useFrame((state, delta) => {
     const group = cup.current;
-    if (!group) return;
+    const spot = place.current;
+    if (!group || !spot) return;
+    const ease = Math.min(1, delta * 10);
+    spot.position.x += ((lifted ? liftX : restX) - spot.position.x) * ease;
+    spot.position.z += ((lifted ? liftZ : restZ) - spot.position.z) * ease;
     const time = state.clock.elapsedTime;
     const wobble = shaking ? Math.sin(time * 38) * 0.18 : 0;
     group.rotation.z = wobble;
     group.rotation.x = shaking ? Math.cos(time * 31) * 0.12 : 0;
     const targetY = lifted ? 1.4 : shaking ? 0.08 + Math.abs(Math.sin(time * 19)) * 0.12 : 0;
-    group.position.y += (targetY - group.position.y) * Math.min(1, delta * 10);
+    group.position.y += (targetY - group.position.y) * ease;
   });
   return (
-    <group position={[seat.cup[0], 0, seat.cup[2]]} rotation-y={seat.facing}>
+    <group ref={place} position={[restX, 0, restZ]} rotation-y={seat.facing}>
       <group ref={cup}>
         <mesh castShadow>
           <latheGeometry args={[CALABASH_PROFILE, 48]} />

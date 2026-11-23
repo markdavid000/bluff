@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NEAR_ROW_TOWARD_CENTRE, ROW_TOWARD_CENTRE, revealedRowCentre } from "./revealed-row";
+import { liftedCupPosition } from "./lifted-cup";
+import { ROW_TOWARD_CENTRE, revealedRowCentre } from "./revealed-row";
 import { seatLayout } from "./seat-layout";
 
 function distanceFromMiddle([x, , z]: readonly number[]): number {
@@ -11,8 +12,7 @@ describe("revealedRowCentre", () => {
     "lays the %s seat's revealed dice inside the board, between its cup and the middle",
     (_, seat) => {
       const row = revealedRowCentre(seat);
-      const pull = seat.side === "bottom" ? NEAR_ROW_TOWARD_CENTRE : ROW_TOWARD_CENTRE;
-      expect(distanceFromMiddle(row)).toBeCloseTo(distanceFromMiddle(seat.cup) - pull);
+      expect(distanceFromMiddle(row)).toBeCloseTo(distanceFromMiddle(seat.cup) - ROW_TOWARD_CENTRE);
     }
   );
 
@@ -28,13 +28,14 @@ describe("revealedRowCentre", () => {
       [top, right],
       [right, bottom],
     ] as const) {
-      expect(gap(a, b)).toBeGreaterThanOrEqual(2);
+      expect(gap(a, b)).toBeGreaterThanOrEqual(2.3);
     }
   });
 
   it("keeps your own revealed dice clear of your lifted cup, which sits between them and you", () => {
     const [bottom] = seatLayout(4, 0);
     if (!bottom) throw new Error("Expected your seat.");
-    expect(bottom.cup[2] - (revealedRowCentre(bottom)[2] ?? 0)).toBeGreaterThanOrEqual(1.25);
+    const cup = liftedCupPosition(bottom);
+    expect((cup[2] ?? 0) - (revealedRowCentre(bottom)[2] ?? 0)).toBeGreaterThanOrEqual(1.6);
   });
 });
