@@ -50,6 +50,9 @@ const base: Lobby = {
   setCreateOpen: vi.fn(),
   tablesOpen: false,
   setTablesOpen: vi.fn(),
+  gamesInPlay: { status: "ready", games: [] },
+  watchOpen: false,
+  setWatchOpen: vi.fn(),
   createFromTables: vi.fn(),
   sitDown,
   quickPlay: vi.fn(),
@@ -69,6 +72,12 @@ beforeEach(() => {
 });
 
 describe("Lobby", () => {
+  it("offers to watch a game being played", () => {
+    show();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(lobbyCopy.watchGame) }));
+    expect(base.setWatchOpen).toHaveBeenCalledWith(true);
+  });
+
   it("offers the rules and why the game is fair", () => {
     show();
     expect(screen.getByRole("navigation", { name: sharedCopy.learnMore })).toBeInTheDocument();

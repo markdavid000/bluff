@@ -12,6 +12,8 @@ import { CreateTableDialog } from "./create-table-dialog";
 import { JoinLinkForm } from "./join-link-form";
 import { OpenTablesButton } from "./open-tables-button";
 import { OpenTablesDialog } from "./open-tables-dialog";
+import { WatchGamesButton } from "./watch-games-button";
+import { WatchGamesDialog } from "./watch-games-dialog";
 
 export function Lobby({ greeting }: { greeting: ReactNode }) {
   const lobby = useLobby();
@@ -92,6 +94,11 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
                     disabled={busy}
                     onOpen={() => lobby.setTablesOpen(true)}
                   />
+                  <WatchGamesButton
+                    games={lobby.gamesInPlay}
+                    disabled={busy}
+                    onOpen={() => lobby.setWatchOpen(true)}
+                  />
                 </div>
               </div>
               <div className="pt-6">
@@ -118,6 +125,11 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
         onJoin={(table) => sitDown.join({ kind: "join", tableId: table.id, buyIn: table.buyIn })}
         onQuickPlay={lobby.quickPlay}
         onCreate={lobby.createFromTables}
+      />
+      <WatchGamesDialog
+        open={lobby.watchOpen}
+        onOpenChange={lobby.setWatchOpen}
+        games={lobby.gamesInPlay}
       />
       <CreateTableDialog
         open={lobby.createOpen}

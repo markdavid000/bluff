@@ -15,6 +15,7 @@ vi.mock("./use-open-tables", () => ({
   useLatestOpenTables: () => latest,
 }));
 vi.mock("./use-sit-down", () => ({ useSitDown: () => ({ quickPlay }) }));
+vi.mock("./use-games-in-play", () => ({ useGamesInPlay: () => ({ status: "loading" }) }));
 
 afterEach(() => {
   vi.clearAllMocks();

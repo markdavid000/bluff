@@ -9,6 +9,8 @@ export const rulesCopy = {
     "The first time, you get a nickname (change it if you like) and 100 practice chips. They are not real money.",
     "Press Quick play to be seated at a table straight away, Play the computer to start a game against the computer at once, or Create a table and share the link with friends.",
   ],
+  watchFirst:
+    "Want to see a game first? Press Watch a game in the lobby to follow one being played. You see the bids and the reveals, never anyone's hidden dice.",
   moreChips: "Need more chips? You can get 100 more once a day.",
   diceTitle: "Your dice",
   dicePerPlayer: (players: number, dice: number) => `${players} players: ${dice} dice each`,

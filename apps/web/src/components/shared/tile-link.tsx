@@ -12,17 +12,20 @@ export function TileLink({
   tone,
   size,
   icon,
+  label,
   className,
   children,
 }: VariantProps<typeof tileVariants> & {
   href: string;
   icon?: GameIconName;
+  label?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
     <Link
       href={href}
+      aria-label={label}
       className={cn(
         tileVariants({ tone, size }),
         "inline-flex items-center justify-center gap-2 outline-none",

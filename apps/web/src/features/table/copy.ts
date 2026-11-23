@@ -36,6 +36,7 @@ export const tableCopy = {
   calledBluff: (caller: string, bidder: string) =>
     `${caller} called ${bidder}'s bluff. Revealing the dice…`,
   outWatching: "You're out of dice. Watch the rest of the game",
+  watching: "Watching",
   gameOver: "The game is over",
   placingBid: "Placing your bid…",
   callingBluff: "Calling the bluff…",

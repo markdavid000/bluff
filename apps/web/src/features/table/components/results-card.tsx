@@ -87,7 +87,7 @@ export function ResultsCard({ game }: { game: Game }) {
             ))}
           </ul>
         </section>
-        <Appear show={offer?.isPrivate === true}>
+        <Appear show={!game.watching && offer?.isPrivate === true}>
           {offer ? (
             <p className="text-base text-muted-foreground">
               {tableCopy.newPrivateTable(offer.hostName)}
@@ -95,7 +95,7 @@ export function ResultsCard({ game }: { game: Game }) {
           ) : null}
         </Appear>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Appear show={offer !== null && !offer.isPrivate}>
+          <Appear show={!game.watching && offer !== null && !offer.isPrivate}>
             {offer ? (
               <ActionButton
                 tone="green"
@@ -111,17 +111,19 @@ export function ResultsCard({ game }: { game: Game }) {
               </ActionButton>
             ) : null}
           </Appear>
-          <ActionButton
-            tone={offer && !offer.isPrivate ? "quiet" : "red"}
-            icon="play"
-            sound="drum"
-            disabled={again.busy && !again.playing}
-            working={again.playing}
-            workingLabel={label(tableCopy.playingAgain)}
-            onClick={again.playAgain}
-          >
-            {tableCopy.playAgain}
-          </ActionButton>
+          {game.watching ? null : (
+            <ActionButton
+              tone={offer && !offer.isPrivate ? "quiet" : "red"}
+              icon="play"
+              sound="drum"
+              disabled={again.busy && !again.playing}
+              working={again.playing}
+              workingLabel={label(tableCopy.playingAgain)}
+              onClick={again.playAgain}
+            >
+              {tableCopy.playAgain}
+            </ActionButton>
+          )}
           <BackToLobby />
         </div>
       </div>

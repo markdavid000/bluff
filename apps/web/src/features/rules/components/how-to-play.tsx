@@ -58,6 +58,7 @@ export function HowToPlay() {
         </Section>
         <Section title={rulesCopy.startTitle}>
           <Points items={rulesCopy.start} ordered />
+          <p>{rulesCopy.watchFirst}</p>
           <p className="text-muted-foreground">{rulesCopy.moreChips}</p>
         </Section>
         <Section title={rulesCopy.diceTitle}>

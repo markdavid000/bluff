@@ -87,10 +87,23 @@ describe("TableScreen", () => {
     }
   );
 
-  it("shows a visitor the waiting screen, which explains the game has started", () => {
-    me = "0x0000000000000000000000000000000000009f9f";
-    read = { status: "ready", table: table("playing"), readAt: 1n };
-    render(<TableScreen id={12n} />);
-    expect(screen.getByText("waiting screen")).toBeInTheDocument();
-  });
+  it.each<TableStatus>(["playing", "revealing", "finished"])(
+    "lets a visitor watch the game while it is %s",
+    (status) => {
+      me = "0x0000000000000000000000000000000000009f9f";
+      read = { status: "ready", table: table(status), readAt: 1n };
+      render(<TableScreen id={12n} />);
+      expect(screen.getByText("game screen")).toBeInTheDocument();
+    }
+  );
+
+  it.each<TableStatus>(["waiting", "verifying"])(
+    "shows a visitor the table to join while it is %s",
+    (status) => {
+      me = "0x0000000000000000000000000000000000009f9f";
+      read = { status: "ready", table: table(status), readAt: 1n };
+      render(<TableScreen id={12n} />);
+      expect(screen.getByText("waiting screen")).toBeInTheDocument();
+    }
+  );
 });

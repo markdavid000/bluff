@@ -1,6 +1,5 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import { notFound } from "next/navigation";
 import { ActionButton } from "@/components/shared/action-button";
 import { Appear } from "@/components/shared/appear";
@@ -15,8 +14,6 @@ const IN_GAME = new Set(["playing", "revealing", "finished"]);
 
 export function TableScreen({ id }: { id: bigint }) {
   const read = useTable(id);
-  const { user } = usePrivy();
-  const me = user?.wallet?.address?.toLowerCase();
 
   if (read.status === "not-found") notFound();
   if (read.status === "failed") {
@@ -31,8 +28,7 @@ export function TableScreen({ id }: { id: bigint }) {
   }
   if (read.status !== "ready") return <TableLoading />;
 
-  const seated = read.table.seats.some((seat) => seat.player.toLowerCase() === me);
-  const inGame = seated && IN_GAME.has(read.table.status);
+  const inGame = IN_GAME.has(read.table.status);
   return (
     <Appear show swapKey={inGame ? "game" : "waiting"} className={SCREEN_FRAME}>
       {inGame ? <GameScreen id={id} /> : <WaitingScreen id={id} />}
