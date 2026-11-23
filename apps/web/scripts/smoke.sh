@@ -27,6 +27,17 @@ for route in "${OPEN_ROUTES[@]}"; do
   [ "$status" = "200" ] || FAILED=1
 done
 
+IMAGE_TYPE="$(curl -s -o /dev/null -w '%{content_type}' --max-time 30 "$BASE/opengraph-image")"
+echo "share image: $IMAGE_TYPE"
+[ "$IMAGE_TYPE" = "image/png" ] || FAILED=1
+LANDING="$(curl -s --max-time 30 "$BASE/")"
+if echo "$LANDING" | grep -q 'property="og:image"' && echo "$LANDING" | grep -q 'name="twitter:card" content="summary_large_image"'; then
+  echo "share tags ok"
+else
+  echo "share tags missing"
+  FAILED=1
+fi
+
 for route in "${GUARDED_ROUTES[@]}"; do
   expected="/sign-in?next=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$route")"
   for cookie in "" "bluff-session=forged.not.valid"; do
