@@ -7,7 +7,6 @@ import { TileLink } from "@/components/shared/tile-link";
 import { TumblingDie } from "@/components/shared/tumbling-die";
 import { siteConfig } from "@/config/site";
 import { landingCopy } from "../copy";
-import { LiveTable } from "./live-table";
 
 function RollArt() {
   return (
@@ -42,11 +41,11 @@ const ART: readonly ReactNode[] = [
   <CallArt key="call" />,
 ];
 
-export function Hero() {
+export function Hero({ table }: { table: ReactNode }) {
   return (
     <section
       aria-labelledby="hero-title"
-      className="mx-auto my-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10"
+      className="mx-auto my-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6"
     >
       <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.15fr]">
         <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
@@ -64,11 +63,8 @@ export function Hero() {
           <TileLink href="/play" tone="red" size="large" icon="play">
             {landingCopy.play}
           </TileLink>
-          <LearnLinks className="lg:justify-start" />
         </div>
-        <div className="flex justify-center">
-          <LiveTable />
-        </div>
+        <div className="flex justify-center">{table}</div>
       </div>
       <ul aria-label={landingCopy.movesLabel} className="grid w-full gap-5 sm:grid-cols-3">
         {landingCopy.moves.map((move, index) => (
@@ -81,10 +77,13 @@ export function Hero() {
           </li>
         ))}
       </ul>
-      <p className="flex items-center justify-center gap-2 text-center text-lg">
-        <GameIcon name="lock" size={28} />
-        {landingCopy.fair}
-      </p>
+      <div className="flex flex-col items-center gap-4">
+        <p className="flex items-center justify-center gap-2 text-center text-lg">
+          <GameIcon name="lock" size={28} />
+          {landingCopy.fair}
+        </p>
+        <LearnLinks />
+      </div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { ScreenControls } from "@/components/shared/screen-controls";
 import { StreetBackdrop } from "@/components/shared/street-backdrop";
 import { Hero } from "@/features/landing";
+import { DemoGame } from "@/features/table";
 
 export default function HomePage() {
   return (
@@ -9,7 +10,7 @@ export default function HomePage() {
       <StreetBackdrop />
       <ScreenControls className="absolute top-4 right-4 z-10" />
       <main id="main" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <Hero />
+        <Hero table={<DemoGame />} />
       </main>
     </div>
   );

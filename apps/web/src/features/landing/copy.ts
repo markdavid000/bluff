@@ -15,12 +15,6 @@ export const landingCopy = {
     },
     { title: "Call the bluff", body: "Think they are lying? Call it, and every cup lifts." },
   ],
-  demoLabel:
-    "A round being played: three players bid on fives, you call the bluff, the dice show only three fives counting ones, so Femi loses a die.",
-  demoNames: { top: "Ada", left: "Kola", right: "Femi", bottom: "You" },
-  demoBid: (quantity: number) => `${quantity} × five`,
-  demoCall: "Bluff!",
-  demoResult: "There were 3. Femi loses a die.",
   bidExample: "Three fives",
   bidQuantity: "3 ×",
   fair: "Nobody, not even us, can see your dice until a bluff is called.",
