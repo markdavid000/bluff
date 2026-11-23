@@ -9,7 +9,7 @@ export default function HomePage() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 glow-backdrop" />
       <StreetBackdrop />
       <ScreenControls className="absolute top-4 right-4 z-10" />
-      <main id="main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <main id="main" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <Hero table={<DemoGame />} />
       </main>
     </div>
