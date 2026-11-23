@@ -14,6 +14,7 @@ const reveal: Reveal = {
   loserIsMe: false,
   rows: [
     {
+      seat: 0,
       name: "Ada",
       isMe: false,
       faces: [5, 2, 1],
@@ -22,6 +23,7 @@ const reveal: Reveal = {
       role: "bidder",
     },
     {
+      seat: 1,
       name: "Me",
       isMe: true,
       faces: [5, 5, 3],
@@ -33,6 +35,27 @@ const reveal: Reveal = {
 };
 
 describe("RevealCard", () => {
+  it("lists two players with the same name as two rows, without React mixing them up", () => {
+    const warned = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const [first, second] = reveal.rows;
+    if (!first || !second) throw new Error("Expected two rows.");
+    render(
+      <RevealCard
+        reveal={{
+          ...reveal,
+          rows: [
+            { ...first, name: "Player" },
+            { ...second, name: "Player", isMe: false },
+          ],
+        }}
+        onContinue={vi.fn()}
+      />
+    );
+    expect(screen.getAllByText("Player")).toHaveLength(2);
+    expect(warned.mock.calls.flat().join(" ")).not.toMatch(/same key/);
+    warned.mockRestore();
+  });
+
   it("stamps the outcome and says who loses a die", () => {
     render(<RevealCard reveal={reveal} onContinue={vi.fn()} />);
     expect(screen.getByRole("dialog", { name: tableCopy.bluffCaught })).toBeInTheDocument();

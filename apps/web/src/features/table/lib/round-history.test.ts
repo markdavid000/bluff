@@ -80,6 +80,23 @@ describe("roundHistory", () => {
     ).toEqual([{ round: 1, bids: [], end: null }]);
   });
 
+  it("shows only the game being played when the table is played again", () => {
+    const rounds = roundHistory([
+      { eventName: "GameStarted", args: {} },
+      started(1),
+      bid(1, ADA, 2, 4),
+      { eventName: "RoundSettled", args: { round: 1, face: 4, quantity: 2, count: 0, loser: ADA } },
+      started(2),
+      { eventName: "GameStarted", args: {} },
+      started(1),
+      bid(1, KOLA, 1, 3),
+    ]);
+    expect(rounds).toEqual([
+      { round: 1, bids: [{ player: KOLA, quantity: 1, face: 3 }], end: null },
+    ]);
+    expect(new Set(rounds.map((round) => round.round)).size).toBe(rounds.length);
+  });
+
   it("has nothing before the first round starts", () => {
     expect(roundHistory([])).toEqual([]);
   });

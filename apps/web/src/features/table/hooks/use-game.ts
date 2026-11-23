@@ -337,6 +337,7 @@ export function useGame(id: bigint) {
             row
               ? [
                   {
+                    seat: index,
                     name: nameOfSeat(index),
                     isMe: index === mySeat,
                     faces: row.faces,

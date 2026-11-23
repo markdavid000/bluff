@@ -54,6 +54,14 @@ describe("useRoundHistory", () => {
     expect(getLogs).toHaveBeenCalledWith(expect.objectContaining({ fromBlock: 600n }));
   });
 
+  it("asks for each game's start, so a table played again shows only its current game", async () => {
+    const result = render();
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    const [request] = getLogs.mock.calls[0] ?? [];
+    const names = (request?.events ?? []).map((event: { name: string }) => event.name);
+    expect(names).toContain("GameStarted");
+  });
+
   it("offers to try again when the rounds can't be read", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     getLogs.mockRejectedValue(new Error("busy"));
