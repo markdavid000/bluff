@@ -146,7 +146,6 @@ The planned features:
 | `chips`    | Chip balance, getting practice chips, cashing out                                                  |
 | `fairness` | The public `/fairness` page: why the game is fair, with the technical detail and links to check it |
 | `rules`    | The public `/how-to-play` page, mirroring `docs/how-to-play.md`                                    |
-| `design`   | The `/design` sample page from the design pass; removed once real screens use its pieces           |
 
 A feature folder is created by the change that first needs it.
 
