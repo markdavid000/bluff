@@ -27,6 +27,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-text: var(--destructive-text);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-border: var(--border);
@@ -46,6 +47,7 @@
   --color-seat-red: var(--seat-red);
   --color-seat-red-edge: var(--seat-red-edge);
   --color-seat-green: var(--seat-green);
+  --color-seat-green-text: var(--seat-green-text);
   --color-seat-green-edge: var(--seat-green-edge);
   --color-seat-yellow: var(--seat-yellow);
   --color-seat-yellow-edge: var(--seat-yellow-edge);
@@ -79,6 +81,7 @@
   --accent: oklch(0.8 0.13 75);
   --accent-foreground: oklch(0.26 0.04 45);
   --destructive: oklch(0.52 0.2 27);
+  --destructive-text: oklch(0.52 0.2 27);
   --success: oklch(0.52 0.13 150);
   --warning: oklch(0.72 0.15 75);
   --border: oklch(0.8 0.04 70);
@@ -110,6 +113,7 @@
   --seat-red: oklch(0.53 0.19 27);
   --seat-red-edge: oklch(0.38 0.14 27);
   --seat-green: oklch(0.5 0.13 150);
+  --seat-green-text: oklch(0.5 0.13 150);
   --seat-green-edge: oklch(0.36 0.1 150);
   --seat-yellow: oklch(0.8 0.15 88);
   --seat-yellow-edge: oklch(0.6 0.13 75);
@@ -134,7 +138,8 @@
   --muted-foreground: oklch(0.76 0.03 80);
   --accent: oklch(0.8 0.13 75);
   --accent-foreground: oklch(0.22 0.05 275);
-  --destructive: oklch(0.66 0.19 27);
+  --destructive: oklch(0.57 0.19 27);
+  --destructive-text: oklch(0.68 0.19 27);
   --success: oklch(0.7 0.14 150);
   --warning: oklch(0.8 0.14 75);
   --border: oklch(0.4 0.05 275);
@@ -163,13 +168,14 @@
   --toast-foreground: oklch(0.97 0.025 85);
   --pattern: oklch(0.72 0.14 70);
   --pattern-accent: oklch(0.82 0.12 85);
-  --seat-red: oklch(0.6 0.19 27);
+  --seat-red: oklch(0.57 0.19 27);
   --seat-red-edge: oklch(0.42 0.14 27);
-  --seat-green: oklch(0.58 0.13 150);
+  --seat-green: oklch(0.53 0.13 150);
+  --seat-green-text: oklch(0.64 0.13 150);
   --seat-green-edge: oklch(0.4 0.1 150);
   --seat-yellow: oklch(0.84 0.15 88);
   --seat-yellow-edge: oklch(0.62 0.13 75);
-  --seat-blue: oklch(0.56 0.15 258);
+  --seat-blue: oklch(0.55 0.15 258);
   --seat-blue-edge: oklch(0.38 0.12 258);
   --seat-foreground: oklch(0.98 0.01 85);
   --seat-yellow-foreground: oklch(0.25 0.05 60);

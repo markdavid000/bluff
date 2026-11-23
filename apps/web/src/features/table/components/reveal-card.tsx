@@ -52,8 +52,8 @@ export function RevealCard({
                 className={cn(
                   "-rotate-2 rounded-xl border-4 px-4 py-1 font-heading text-3xl uppercase",
                   shown.outcome === "caught"
-                    ? "border-destructive text-destructive"
-                    : "border-seat-green text-seat-green"
+                    ? "border-destructive text-destructive-text"
+                    : "border-seat-green text-seat-green-text"
                 )}
               >
                 {shown.outcome === "caught" ? tableCopy.bluffCaught : tableCopy.bidHolds}
@@ -83,7 +83,7 @@ export function RevealCard({
                             </span>
                           ) : null}
                         </span>
-                        <span className="font-game text-seat-green">
+                        <span className="font-game text-seat-green-text">
                           {tableCopy.matched(row.matches)}
                         </span>
                       </span>
