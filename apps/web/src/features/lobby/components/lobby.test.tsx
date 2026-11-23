@@ -68,6 +68,18 @@ beforeEach(() => {
 });
 
 describe("Lobby", () => {
+  it("links to the rules and to why the game is fair", () => {
+    show();
+    expect(screen.getByRole("link", { name: lobbyCopy.howToPlay })).toHaveAttribute(
+      "href",
+      "/how-to-play"
+    );
+    expect(screen.getByRole("link", { name: lobbyCopy.whyFair })).toHaveAttribute(
+      "href",
+      "/fairness"
+    );
+  });
+
   it("offers Play the computer beside Quick play", () => {
     show();
     fireEvent.click(screen.getByRole("button", { name: lobbyCopy.playComputer }));

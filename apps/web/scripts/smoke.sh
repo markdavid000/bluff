@@ -3,7 +3,7 @@ set -euo pipefail
 
 PORT="${SMOKE_PORT:-3099}"
 BASE="http://localhost:$PORT"
-OPEN_ROUTES=("/" "/robots.txt" "/sitemap.xml" "/sign-in" "/design")
+OPEN_ROUTES=("/" "/robots.txt" "/sitemap.xml" "/sign-in" "/how-to-play" "/fairness" "/design")
 GUARDED_ROUTES=("/play" "/profile" "/welcome" "/table/1" "/history")
 LOG="$(mktemp)"
 

@@ -137,15 +137,16 @@ src/features/<name>/
 
 The planned features:
 
-| Feature    | Player area                                                                              |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| `landing`  | The front page that explains the game                                                    |
-| `account`  | Signing in with Google or email, or with an own wallet                                   |
-| `lobby`    | Creating, finding and joining tables                                                     |
-| `table`    | `/table/[id]`: the waiting room, joining by link, then own dice, bids, calls, results    |
-| `chips`    | Chip balance, getting practice chips, cashing out                                        |
-| `fairness` | The "How is this fair?" panel                                                            |
-| `design`   | The `/design` sample page from the design pass; removed once real screens use its pieces |
+| Feature    | Player area                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| `landing`  | The front page that explains the game                                                              |
+| `account`  | Signing in with Google or email, or with an own wallet                                             |
+| `lobby`    | Creating, finding and joining tables                                                               |
+| `table`    | `/table/[id]`: the waiting room, joining by link, then own dice, bids, calls, results              |
+| `chips`    | Chip balance, getting practice chips, cashing out                                                  |
+| `fairness` | The public `/fairness` page: why the game is fair, with the technical detail and links to check it |
+| `rules`    | The public `/how-to-play` page, mirroring `docs/how-to-play.md`                                    |
+| `design`   | The `/design` sample page from the design pass; removed once real screens use its pieces           |
 
 A feature folder is created by the change that first needs it.
 
@@ -171,7 +172,7 @@ When two features keep needing each other, they are one feature. Merge them; do 
 ## Server and client
 
 - Components are Server Components by default. Add `"use client"` only to the smallest component that needs state, effects, event handlers or browser APIs.
-- The wallet, wagmi, TanStack Query and Zama SDK providers live in one `"use client"` file, `app/providers.tsx`, used by the layouts of the `(auth)` group (sign-in, refresh) and the `(game)` group (lobby, tables, profile), not by the root layout. Pages that do not play (landing, how to play) do not load them.
+- The wallet, wagmi, TanStack Query and Zama SDK providers live in one `"use client"` file, `app/providers.tsx`, used by the layouts of the `(auth)` group (sign-in, refresh) and the `(game)` group (lobby, tables, profile), not by the root layout. Pages that do not play do not load them: the landing page, and the `(learn)` group (`/how-to-play`, `/fairness`), which has its own light layout with the street backdrop, the name and the screen controls.
 - **Route protection** ([ADR-2026-11-12-route-protection](adr/ADR-2026-11-12-route-protection.md)): `src/proxy.ts` runs on the server before every `(game)` page. It checks the `bluff-session` cookie, and sends anyone without one to `/sign-in` (or `/refresh` when it has expired). `POST /api/session` sets that cookie only after verifying Privy's access token against Privy's published keys. `proxy.ts` is its own lint element: it may import only `lib` and `config`. A test fails if a `(game)` page is ever left outside the proxy's matcher.
 - The Zama SDK runs only in the browser (it uses WASM and IndexedDB). Nothing that imports it is evaluated on the server.
 - Secrets never reach the client. A value that would need a `NEXT_PUBLIC_` prefix to work is not a secret by definition; anything else goes behind a route handler.

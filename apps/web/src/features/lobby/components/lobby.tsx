@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { ActionButton } from "@/components/shared/action-button";
 import { Appear } from "@/components/shared/appear";
@@ -11,6 +12,9 @@ import { CreateTableDialog } from "./create-table-dialog";
 import { JoinLinkForm } from "./join-link-form";
 import { OpenTablesButton } from "./open-tables-button";
 import { OpenTablesDialog } from "./open-tables-dialog";
+
+const QUIET_LINK =
+  "rounded underline decoration-seat-blue decoration-2 underline-offset-4 focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none";
 
 export function Lobby({ greeting }: { greeting: ReactNode }) {
   const lobby = useLobby();
@@ -102,6 +106,17 @@ export function Lobby({ greeting }: { greeting: ReactNode }) {
                   onSubmit={lobby.joinLink.submit}
                 />
               </div>
+              <nav
+                aria-label={lobbyCopy.learnMore}
+                className="flex flex-wrap justify-center gap-x-6 gap-y-2 pt-5 font-game"
+              >
+                <Link href="/how-to-play" className={QUIET_LINK}>
+                  {lobbyCopy.howToPlay}
+                </Link>
+                <Link href="/fairness" className={QUIET_LINK}>
+                  {lobbyCopy.whyFair}
+                </Link>
+              </nav>
             </div>
           </PatternFrame>
         )}

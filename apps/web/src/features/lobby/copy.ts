@@ -38,6 +38,9 @@ export const lobbyCopy = {
   yourTableProblem: "We could not check your table.",
   tryAgain: "Try again",
   confirmInWallet: "Confirm in your wallet",
+  learnMore: "Learn more",
+  howToPlay: "How to play",
+  whyFair: "Why it's fair",
   emptySeat: "Empty seat",
   takenSeat: "Taken seat",
 } as const;

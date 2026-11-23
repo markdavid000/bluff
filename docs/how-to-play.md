@@ -70,4 +70,4 @@ The player who lost a die starts the next round, and everyone gets fresh dice.
 - **Nobody can peek.** Only you can see your dice until a bluff is called.
 - **Everyone sees the proof.** When the dice are shown, they come with proof that they are the dice that were rolled.
 
-Open **How is this fair?** at any table for the details.
+The details are on the **Why it's fair** page (`/fairness`). This document is mirrored on the **How to play** page (`/how-to-play`); change both together.
