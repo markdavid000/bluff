@@ -9,6 +9,7 @@ export function gameLine(
 ): string {
   if (table.status === "finished") return tableCopy.gameOver;
   if (table.status === "revealing") return tableCopy.revealing;
+  if (mySeat === null || mySeat < 0) return tableCopy.theirTurn(nameOfSeat(table.turn));
   if (!stillIn) return tableCopy.outWatching;
   if (table.turn !== mySeat) return tableCopy.theirTurn(nameOfSeat(table.turn));
   if (table.bid === null) return tableCopy.youStart;

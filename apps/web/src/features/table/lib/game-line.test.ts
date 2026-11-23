@@ -10,6 +10,11 @@ function game(overrides: Partial<Table>): Pick<Table, "status" | "turn" | "bid" 
 }
 
 describe("gameLine", () => {
+  it("tells someone watching whose turn it is, not that they are out", () => {
+    expect(gameLine(game({ turn: 2 }), -1, false, name)).toBe(tableCopy.theirTurn("Ada"));
+    expect(gameLine(game({ turn: 1 }), null, false, name)).toBe(tableCopy.theirTurn("Sly Fox"));
+  });
+
   it("tells the starter to make the first bid", () => {
     expect(gameLine(game({}), 0, true, name)).toBe(tableCopy.youStart);
   });

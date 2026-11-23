@@ -6,6 +6,7 @@ import { useMyTableId } from "@/hooks/use-my-table-id";
 import type { KnownBalance } from "@/lib/chips";
 import { lobbyCopy } from "../copy";
 import { BUY_INS, type SeatCount, affordProblem } from "../lib/tables";
+import { useGamesInPlay } from "./use-games-in-play";
 import { useJoinLink } from "./use-join-link";
 import { useLatestOpenTables, useOpenTables } from "./use-open-tables";
 import { useSitDown } from "./use-sit-down";
@@ -14,6 +15,8 @@ export function useLobby() {
   const [buyIn, setBuyIn] = useState<bigint>(BUY_INS[0]);
   const [createOpen, setCreateOpen] = useState(false);
   const [tablesOpen, setTablesOpen] = useState(false);
+  const [watchOpen, setWatchOpen] = useState(false);
+  const gamesInPlay = useGamesInPlay();
 
   const joinLink = useJoinLink();
   const balance = useChipBalance({ working: lobbyCopy.openingChips });
@@ -38,6 +41,9 @@ export function useLobby() {
     setCreateOpen,
     tablesOpen,
     setTablesOpen,
+    gamesInPlay,
+    watchOpen,
+    setWatchOpen,
     createFromTables: () => {
       setTablesOpen(false);
       setCreateOpen(true);

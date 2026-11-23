@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Appear } from "@/components/shared/appear";
 import { Cowrie } from "@/components/shared/cowrie";
+import { GameIcon } from "@/components/shared/game-icon";
+import { TileLink } from "@/components/shared/tile-link";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { formatChips } from "@/lib/chips";
@@ -71,13 +73,25 @@ export function GameView({ game }: { game: Game }) {
               {tableCopy.pot(formatChips(game.pot))}
             </span>
           ) : null}
-          <LeaveGameButton
-            paid={table.buyIn > 0n}
-            leaving={game.leaving}
-            leavingLabel={game.confirm ? tableCopy.confirmInWallet : tableCopy.leaving}
-            disabled={game.busy && !game.leaving}
-            onLeave={game.leave}
-          />
+          {game.watching ? (
+            <>
+              <span className="flex items-center gap-1.5 rounded-full border-2 border-seat-blue-edge bg-seat-blue px-3 py-1 font-game text-sm whitespace-nowrap text-seat-foreground">
+                <GameIcon name="zoom" size={18} />
+                {tableCopy.watching}
+              </span>
+              <TileLink href="/play" tone="quiet" size="small" icon="back">
+                {tableCopy.backToLobby}
+              </TileLink>
+            </>
+          ) : (
+            <LeaveGameButton
+              paid={table.buyIn > 0n}
+              leaving={game.leaving}
+              leavingLabel={game.confirm ? tableCopy.confirmInWallet : tableCopy.leaving}
+              disabled={game.busy && !game.leaving}
+              onLeave={game.leave}
+            />
+          )}
         </span>
       </div>
 

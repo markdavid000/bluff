@@ -392,6 +392,7 @@ export function useGame(id: bigint) {
           profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,
       })),
       mySeat,
+      watching: mySeat < 0,
       stillIn,
       myTurn,
       line: pendingShown

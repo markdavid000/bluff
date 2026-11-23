@@ -60,6 +60,7 @@ export function gameView(overrides: Partial<GameView> = {}): GameView {
       },
     ],
     mySeat: 0,
+    watching: false,
     stillIn: true,
     myTurn: true,
     line: "Your turn",

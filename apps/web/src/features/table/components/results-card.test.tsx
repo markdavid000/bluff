@@ -22,6 +22,24 @@ beforeEach(() => {
 const finished = (buyIn = 0n) => aTable({ status: "finished", buyIn });
 
 describe("ResultsCard", () => {
+  it("offers a watcher only the way back, not the players' next game", () => {
+    again = { ...again, offer: { id: 13n, hostName: "Ada", buyIn: 0n, isPrivate: false } };
+    render(
+      <ResultsCard
+        game={gameView({
+          table: finished(),
+          watching: true,
+          mySeat: -1,
+          end: { status: "ready", reason: "last-standing", winners: [ME] },
+          winnerNames: ["Me #1A2B"],
+        })}
+      />
+    );
+    expect(screen.getByRole("link", { name: tableCopy.backToLobby })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: tableCopy.playAgain })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
+  });
+
   it("tells the player they won, not their own name, and lists everyone's dice", () => {
     render(
       <ResultsCard
