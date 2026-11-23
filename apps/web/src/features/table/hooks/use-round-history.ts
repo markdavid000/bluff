@@ -10,6 +10,7 @@ import type { Bid, Table } from "@bluff/game";
 const LOOK_BACK_BLOCKS = 400n;
 const CHECK_EVERY_MS = 10_000;
 const EVENTS = [
+  getAbiItem({ abi: bluffAbi, name: "GameStarted" }),
   getAbiItem({ abi: bluffAbi, name: "RoundStarted" }),
   getAbiItem({ abi: bluffAbi, name: "BidPlaced" }),
   getAbiItem({ abi: bluffAbi, name: "RoundSettled" }),

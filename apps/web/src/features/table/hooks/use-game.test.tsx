@@ -469,6 +469,7 @@ describe("useGame", () => {
     ]);
     expect(viewOf(result).reveal?.rows).toEqual([
       {
+        seat: 0,
         name: "Me #1A2B",
         isMe: true,
         faces: [4, 1, 2, 6],
@@ -477,6 +478,7 @@ describe("useGame", () => {
         role: null,
       },
       {
+        seat: 1,
         name: "Sly Fox #3C4D",
         isMe: false,
         faces: [4, 3, 3, 5],

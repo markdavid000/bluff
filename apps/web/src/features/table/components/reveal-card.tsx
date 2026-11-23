@@ -10,6 +10,7 @@ import type { Face } from "@bluff/game";
 import { tableCopy } from "../copy";
 
 interface RevealRow {
+  seat: number;
   name: string;
   isMe: boolean;
   faces: readonly Face[];
@@ -70,7 +71,7 @@ export function RevealCard({
                 <ul className="flex w-full flex-col gap-2">
                   {shown.rows.map((row) => (
                     <li
-                      key={row.name}
+                      key={row.seat}
                       className="flex flex-col gap-2 rounded-xl bg-muted/60 px-3 py-2"
                     >
                       <span className="flex items-center justify-between gap-2 text-sm">

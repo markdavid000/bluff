@@ -35,8 +35,12 @@ function text(args: unknown, name: string): string | undefined {
 }
 
 export function roundHistory(events: readonly HistoryEvent[]): HistoryRound[] {
-  const rounds: HistoryRound[] = [];
+  let rounds: HistoryRound[] = [];
   for (const { eventName, args } of events) {
+    if (eventName === "GameStarted") {
+      rounds = [];
+      continue;
+    }
     const current = rounds.at(-1);
     if (eventName === "RoundStarted") {
       const round = count(args, "round");
