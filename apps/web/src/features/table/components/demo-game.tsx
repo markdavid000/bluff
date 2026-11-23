@@ -77,7 +77,7 @@ export function DemoGame() {
     <div
       role="img"
       aria-label={tableCopy.demoLabel}
-      className="flex w-full max-w-[38rem] flex-col items-center gap-1"
+      className="flex w-full flex-col items-center gap-1"
     >
       <div aria-hidden className="flex min-h-12 items-center">
         <CurrentBid

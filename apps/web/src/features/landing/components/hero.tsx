@@ -45,41 +45,46 @@ export function Hero({ table }: { table: ReactNode }) {
   return (
     <section
       aria-labelledby="hero-title"
-      className="mx-auto my-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6"
+      className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-3 px-4 pt-4 pb-3"
     >
-      <div className="grid items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
-          <div className="flex items-center gap-5 sm:gap-7">
-            <TumblingDie className="size-20 shrink-0 sm:size-24" />
+      <div className="grid min-h-0 flex-1 items-center gap-4 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
+        <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:gap-4 lg:text-left">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <TumblingDie className="size-14 shrink-0 sm:size-20" />
             <h1
               id="hero-title"
-              className="text-6xl drop-shadow-[0_4px_0_var(--color-tile-edge)] sm:text-8xl"
+              className="text-5xl drop-shadow-[0_4px_0_var(--color-tile-edge)] sm:text-7xl"
             >
               {siteConfig.name}
             </h1>
           </div>
-          <p className="font-game text-2xl sm:text-3xl">{landingCopy.tagline}</p>
-          <p className="max-w-xl text-lg text-muted-foreground">{landingCopy.explainer}</p>
+          <p className="font-game text-xl sm:text-2xl">{landingCopy.tagline}</p>
+          <p className="hidden max-w-xl text-muted-foreground sm:block">{landingCopy.explainer}</p>
           <TileLink href="/play" tone="red" size="large" icon="play">
             {landingCopy.play}
           </TileLink>
+          <ul
+            aria-label={landingCopy.movesLabel}
+            className="hidden w-full gap-3 pt-1 sm:grid sm:grid-cols-3"
+          >
+            {landingCopy.moves.map((move, index) => (
+              <li key={move.title}>
+                <RaisedCard className="flex h-full flex-col items-start gap-1.5 p-3 text-left">
+                  <span className="flex h-8 items-center">{ART[index]}</span>
+                  <h2 className="font-game text-lg leading-tight">{move.title}</h2>
+                  <p className="text-sm leading-snug text-muted-foreground">{move.body}</p>
+                </RaisedCard>
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="flex justify-center">{table}</div>
+        <div className="flex h-full min-h-0 items-center justify-center">
+          <div className="w-full max-w-[min(38rem,calc((100dvh-9rem)*0.8))]">{table}</div>
+        </div>
       </div>
-      <ul aria-label={landingCopy.movesLabel} className="grid w-full gap-5 sm:grid-cols-3">
-        {landingCopy.moves.map((move, index) => (
-          <li key={move.title}>
-            <RaisedCard className="flex h-full flex-col items-start gap-3 p-5 text-left">
-              <span className="flex h-10 items-center">{ART[index]}</span>
-              <h2 className="font-game text-2xl">{move.title}</h2>
-              <p className="text-muted-foreground">{move.body}</p>
-            </RaisedCard>
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-col items-center gap-4">
-        <p className="flex items-center justify-center gap-2 text-center text-lg">
-          <GameIcon name="lock" size={28} />
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <p className="flex items-center gap-2 text-center">
+          <GameIcon name="lock" size={24} />
           {landingCopy.fair}
         </p>
         <LearnLinks />

@@ -24,6 +24,7 @@ import { calabashTexture } from "../../lib/calabash-texture";
 import { cupMotion } from "../../lib/cup-motion";
 import type { RevealedSeat } from "../../lib/reveal";
 import { dieFaceTexture } from "../../lib/dice-textures";
+import { revealedRowCentre } from "../../lib/revealed-row";
 import { type SeatColor, type SeatPlacement } from "../../lib/seat-layout";
 
 const SEAT_TOKEN: Record<SeatColor, keyof ThemeColors> = {
@@ -263,7 +264,6 @@ function ThrownDice({
   );
 }
 
-const ROW_TOWARD_CENTRE = 1.25;
 const ROW_SPACING = DIE_SIZE * 1.25;
 const GLOW_INTENSITY = 0.55;
 
@@ -296,13 +296,13 @@ function RevealedRow({
 }) {
   const first = -((revealed.faces.length - 1) * ROW_SPACING) / 2;
   return (
-    <group position={[seat.cup[0], 0, seat.cup[2]]} rotation-y={seat.facing}>
+    <group position={revealedRowCentre(seat)} rotation-y={seat.facing}>
       {revealed.faces.map((face, index) => (
         <mesh
           key={index}
           castShadow
           material={revealed.counting[index] ? glowing : plain}
-          position={[first + index * ROW_SPACING, DIE_SIZE / 2, -ROW_TOWARD_CENTRE]}
+          position={[first + index * ROW_SPACING, DIE_SIZE / 2, 0]}
           quaternion={faceUpRotation(face)}
         >
           <boxGeometry args={[DIE_SIZE, DIE_SIZE, DIE_SIZE]} />
