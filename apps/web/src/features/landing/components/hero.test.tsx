@@ -1,18 +1,41 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { sharedCopy } from "@/components/shared/copy";
 import { siteConfig } from "@/config/site";
 import { landingCopy } from "../copy";
 import { Hero } from "./hero";
 
 describe("Hero", () => {
-  it("names the game as the page heading", () => {
-    render(<Hero />);
+  it("names the game and explains it in plain words", () => {
+    render(<Hero table={<div data-testid="table" />} />);
     expect(screen.getByRole("heading", { level: 1, name: siteConfig.name })).toBeInTheDocument();
-  });
-
-  it("explains the game in plain words", () => {
-    render(<Hero />);
     expect(screen.getByText(landingCopy.tagline)).toBeInTheDocument();
     expect(screen.getByText(landingCopy.explainer)).toBeInTheDocument();
+  });
+
+  it("shows the table it is given beside the title", () => {
+    render(<Hero table={<div data-testid="table" />} />);
+    expect(screen.getByTestId("table")).toBeInTheDocument();
+  });
+
+  it("has one clear way into the game", () => {
+    render(<Hero table={<div data-testid="table" />} />);
+    expect(screen.getByRole("link", { name: landingCopy.play })).toHaveAttribute("href", "/play");
+  });
+
+  it("shows the three moves of the game as cards", () => {
+    render(<Hero table={<div data-testid="table" />} />);
+    const moves = screen.getByRole("list", { name: landingCopy.movesLabel });
+    expect(
+      within(moves)
+        .getAllByRole("heading", { level: 2 })
+        .map((h) => h.textContent)
+    ).toEqual(landingCopy.moves.map((move) => move.title));
+  });
+
+  it("points to the rules and to why the game is fair", () => {
+    render(<Hero table={<div data-testid="table" />} />);
+    expect(screen.getByText(landingCopy.fair)).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: sharedCopy.learnMore })).toBeInTheDocument();
   });
 });

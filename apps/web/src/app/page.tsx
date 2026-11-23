@@ -1,11 +1,17 @@
 import { ScreenControls } from "@/components/shared/screen-controls";
+import { StreetBackdrop } from "@/components/shared/street-backdrop";
 import { Hero } from "@/features/landing";
+import { DemoGame } from "@/features/table";
 
 export default function HomePage() {
   return (
-    <main id="main" className="relative flex flex-1 flex-col">
-      <ScreenControls className="absolute top-4 right-4" />
-      <Hero />
-    </main>
+    <div className="relative isolate flex h-dvh flex-col overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 glow-backdrop" />
+      <StreetBackdrop />
+      <ScreenControls className="absolute top-4 right-4 z-10" />
+      <main id="main" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <Hero table={<DemoGame />} />
+      </main>
+    </div>
   );
 }

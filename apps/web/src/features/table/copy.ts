@@ -101,6 +101,11 @@ export const tableCopy = {
   unlockingDice: "Unlocking your dice…",
   unnamed: "Player",
   computer: "Computer",
+  demoLabel:
+    "A round being played: three players bid on fives, you call the bluff, the dice show only three fives counting ones, so Femi loses a die.",
+  demoNames: { bottom: "You", left: "Kola", top: "Ada", right: "Femi" },
+  demoCall: "Bluff!",
+  demoResult: "There were 3. Femi loses a die.",
   computerJoining: "The computer is joining…",
   computerSeatJoining: "Joining…",
   computerWaking: "Waking the computer…",

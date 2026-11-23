@@ -121,7 +121,7 @@ export function HowToPlay() {
           <TileLink href="/play" tone="red" icon="play">
             {rulesCopy.play}
           </TileLink>
-          <TileLink href="/fairness" tone="quiet" icon="lock">
+          <TileLink href="/fairness" tone="blue" icon="lock">
             {rulesCopy.whyFair}
           </TileLink>
         </div>

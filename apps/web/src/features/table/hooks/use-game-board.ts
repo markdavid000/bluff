@@ -13,10 +13,12 @@ export function useGameBoard({
   round,
   faces,
   placement,
+  quiet = false,
 }: {
   round: number;
   faces: readonly Face[] | null;
   placement: SeatPlacement | null;
+  quiet?: boolean;
 }) {
   const dice = useDiceThrow();
   const [roundSeen, setRoundSeen] = useState(0);
@@ -35,7 +37,7 @@ export function useGameBoard({
 
   const shake = useEffectEvent(() => {
     dice.shake();
-    play("shake");
+    if (!quiet) play("shake");
   });
 
   const throwNow = useEffectEvent((forRound: number) => {
@@ -43,7 +45,7 @@ export function useGameBoard({
     thrownFor.current = forRound;
     setThrownRound(forRound);
     dice.throwDice(faces, placement.throwFrom);
-    play("roll");
+    if (!quiet) play("roll");
   });
 
   useEffect(() => {

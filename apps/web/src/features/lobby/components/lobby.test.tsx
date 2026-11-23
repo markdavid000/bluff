@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
+import { sharedCopy } from "@/components/shared/copy";
 import { lobbyCopy } from "../copy";
 import type { LobbyTable } from "../lib/tables";
 import { Lobby } from "./lobby";
@@ -68,16 +69,9 @@ beforeEach(() => {
 });
 
 describe("Lobby", () => {
-  it("links to the rules and to why the game is fair", () => {
+  it("offers the rules and why the game is fair", () => {
     show();
-    expect(screen.getByRole("link", { name: lobbyCopy.howToPlay })).toHaveAttribute(
-      "href",
-      "/how-to-play"
-    );
-    expect(screen.getByRole("link", { name: lobbyCopy.whyFair })).toHaveAttribute(
-      "href",
-      "/fairness"
-    );
+    expect(screen.getByRole("navigation", { name: sharedCopy.learnMore })).toBeInTheDocument();
   });
 
   it("offers Play the computer beside Quick play", () => {
