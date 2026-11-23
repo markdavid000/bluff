@@ -1,15 +1,13 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { DieFace } from "@/components/shared/die";
 import { GameIcon } from "@/components/shared/game-icon";
+import { LearnLinks } from "@/components/shared/learn-links";
 import { RaisedCard } from "@/components/shared/raised-card";
 import { TileLink } from "@/components/shared/tile-link";
 import { TumblingDie } from "@/components/shared/tumbling-die";
 import { siteConfig } from "@/config/site";
 import { landingCopy } from "../copy";
-
-const QUIET_LINK =
-  "rounded font-game underline decoration-seat-blue decoration-2 underline-offset-4 focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none";
+import { LiveTable } from "./live-table";
 
 function RollArt() {
   return (
@@ -48,24 +46,30 @@ export function Hero() {
   return (
     <section
       aria-labelledby="hero-title"
-      className="mx-auto my-auto flex w-full max-w-5xl flex-col items-center gap-8 px-4 py-10 text-center"
+      className="mx-auto my-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10"
     >
-      <div className="flex items-center gap-5 sm:gap-7">
-        <TumblingDie className="size-20 shrink-0 sm:size-28" />
-        <div className="flex flex-col items-start gap-2 text-left">
-          <h1
-            id="hero-title"
-            className="text-6xl drop-shadow-[0_4px_0_var(--color-tile-edge)] sm:text-8xl"
-          >
-            {siteConfig.name}
-          </h1>
-          <p className="font-game text-lg sm:text-2xl">{landingCopy.tagline}</p>
+      <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.15fr]">
+        <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
+          <div className="flex items-center gap-5 sm:gap-7">
+            <TumblingDie className="size-20 shrink-0 sm:size-24" />
+            <h1
+              id="hero-title"
+              className="text-6xl drop-shadow-[0_4px_0_var(--color-tile-edge)] sm:text-8xl"
+            >
+              {siteConfig.name}
+            </h1>
+          </div>
+          <p className="font-game text-2xl sm:text-3xl">{landingCopy.tagline}</p>
+          <p className="max-w-xl text-lg text-muted-foreground">{landingCopy.explainer}</p>
+          <TileLink href="/play" tone="red" size="large" icon="play">
+            {landingCopy.play}
+          </TileLink>
+          <LearnLinks className="lg:justify-start" />
+        </div>
+        <div className="flex justify-center">
+          <LiveTable />
         </div>
       </div>
-      <p className="max-w-2xl text-lg text-muted-foreground">{landingCopy.explainer}</p>
-      <TileLink href="/play" tone="red" size="large" icon="play">
-        {landingCopy.play}
-      </TileLink>
       <ul aria-label={landingCopy.movesLabel} className="grid w-full gap-5 sm:grid-cols-3">
         {landingCopy.moves.map((move, index) => (
           <li key={move.title}>
@@ -77,23 +81,10 @@ export function Hero() {
           </li>
         ))}
       </ul>
-      <div className="flex flex-col items-center gap-3">
-        <p className="flex items-center gap-2 text-lg">
-          <GameIcon name="lock" size={28} />
-          {landingCopy.fair}
-        </p>
-        <nav
-          aria-label={landingCopy.whyFair}
-          className="flex flex-wrap justify-center gap-x-6 gap-y-2"
-        >
-          <Link href="/how-to-play" className={QUIET_LINK}>
-            {landingCopy.howToPlay}
-          </Link>
-          <Link href="/fairness" className={QUIET_LINK}>
-            {landingCopy.whyFair}
-          </Link>
-        </nav>
-      </div>
+      <p className="flex items-center justify-center gap-2 text-center text-lg">
+        <GameIcon name="lock" size={28} />
+        {landingCopy.fair}
+      </p>
     </section>
   );
 }

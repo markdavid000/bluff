@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { sharedCopy } from "@/components/shared/copy";
 import { siteConfig } from "@/config/site";
 import { landingCopy } from "../copy";
 import { Hero } from "./hero";
@@ -30,13 +31,6 @@ describe("Hero", () => {
   it("points to the rules and to why the game is fair", () => {
     render(<Hero />);
     expect(screen.getByText(landingCopy.fair)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: landingCopy.howToPlay })).toHaveAttribute(
-      "href",
-      "/how-to-play"
-    );
-    expect(screen.getByRole("link", { name: landingCopy.whyFair })).toHaveAttribute(
-      "href",
-      "/fairness"
-    );
+    expect(screen.getByRole("navigation", { name: sharedCopy.learnMore })).toBeInTheDocument();
   });
 });

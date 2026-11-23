@@ -68,7 +68,7 @@ export function FairnessPage() {
           <TileLink href="/play" tone="red" icon="play">
             {fairnessCopy.play}
           </TileLink>
-          <TileLink href="/how-to-play" tone="quiet" icon="chat-bubble">
+          <TileLink href="/how-to-play" tone="yellow" icon="chat-bubble">
             {fairnessCopy.howToPlay}
           </TileLink>
         </div>

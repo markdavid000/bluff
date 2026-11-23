@@ -19,4 +19,7 @@ export const sharedCopy = {
   },
   musicPlaying: "Music on",
   screenControls: "Day, night, sounds, music and settings",
+  learnMore: "Learn the game",
+  howToPlay: "How to play",
+  whyFair: "Why it's fair",
 } as const;
