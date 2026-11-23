@@ -47,7 +47,7 @@ export function Hero({ table }: { table: ReactNode }) {
       aria-labelledby="hero-title"
       className="mx-auto my-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6"
     >
-      <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.15fr]">
+      <div className="grid items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
           <div className="flex items-center gap-5 sm:gap-7">
             <TumblingDie className="size-20 shrink-0 sm:size-24" />

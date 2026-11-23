@@ -7,6 +7,7 @@ import { useCalmMotion } from "@/hooks/use-calm-motion";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { tableCopy } from "../copy";
 import { type DemoStep, useDemoRound } from "../hooks/use-demo-round";
+import { useGameBoard } from "../hooks/use-game-board";
 import { seatLayout } from "../lib/seat-layout";
 import { GameBoard } from "./board/game-board";
 import { CurrentBid } from "./current-bid";
@@ -23,8 +24,10 @@ const FIVES = 5;
 const LAYOUT = seatLayout(4, 0);
 const LOSER = 3;
 
+const YOUR_DICE: readonly Face[] = [5, 3];
+
 const PLAYERS: readonly { avatar: number; dice: readonly Face[] }[] = [
-  { avatar: 1, dice: [5, 3] },
+  { avatar: 1, dice: YOUR_DICE },
   { avatar: 7, dice: [1, 6] },
   { avatar: 3, dice: [5, 2] },
   { avatar: 10, dice: [3, 4] },
@@ -48,7 +51,13 @@ function counts(face: Face): boolean {
 }
 
 export function DemoGame() {
-  const step = useDemoRound();
+  const { step, round } = useDemoRound();
+  const { throwState, othersShaking } = useGameBoard({
+    round,
+    faces: YOUR_DICE,
+    placement: LAYOUT[0] ?? null,
+    quiet: true,
+  });
   const colors = useThemeColors();
   const calm = useCalmMotion();
   const open = step === "reveal" || step === "result";
@@ -68,7 +77,7 @@ export function DemoGame() {
     <div
       role="img"
       aria-label={tableCopy.demoLabel}
-      className="flex w-full max-w-[31rem] flex-col items-center gap-1"
+      className="flex w-full max-w-[38rem] flex-col items-center gap-1"
     >
       <div aria-hidden className="flex min-h-12 items-center">
         <CurrentBid
@@ -95,9 +104,9 @@ export function DemoGame() {
                 isTurn={TURN[step] === seat}
                 turnFraction={1}
                 lastBid={bid ? { quantity: bid.quantity, face: FIVES } : null}
-                ownDice={null}
+                ownDice={seat === 0 ? { status: "ready", faces: [...YOUR_DICE] } : null}
                 matching={null}
-                holdDice={step !== "result"}
+                holdDice={step !== "result" && step !== "deal"}
               />
               <AnimatePresence>
                 {calling ? (
@@ -119,12 +128,12 @@ export function DemoGame() {
           <GameBoard
             colors={colors}
             seats={LAYOUT}
-            throwState={{ kind: "idle" }}
+            throwState={throwState}
             chipsEach={0}
             revealed={open}
             revealedDice={revealedDice}
-            ownSeat={null}
-            othersShaking={step === "deal"}
+            ownSeat={0}
+            othersShaking={othersShaking}
             label={tableCopy.boardLabel}
           />
           <AnimatePresence>

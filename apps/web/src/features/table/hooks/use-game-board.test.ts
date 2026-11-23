@@ -85,6 +85,16 @@ describe("useGameBoard", () => {
     expect(play).not.toHaveBeenCalled();
   });
 
+  it("shakes and throws without a sound when asked to be quiet", () => {
+    const { result } = renderHook(() =>
+      useGameBoard({ round: 1, faces: [5, 3], placement: MINE ?? null, quiet: true })
+    );
+    expect(result.current.throwState.kind).toBe("shaking");
+    act(() => vi.advanceTimersByTime(SHAKE_MS));
+    expect(result.current.throwState.kind).toBe("rolling");
+    expect(play).not.toHaveBeenCalled();
+  });
+
   it("throws on time even while the screen keeps redrawing", () => {
     const { result, rerender } = renderHook(() =>
       useGameBoard({ round: 1, faces: [5, 1], placement: MINE })
