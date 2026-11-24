@@ -1,6 +1,7 @@
 import { ActionButton } from "@/components/shared/action-button";
 import { Appear } from "@/components/shared/appear";
 import { PatternFrame } from "@/components/shared/pattern-band";
+import { useSoundOn } from "@/hooks/use-sound-on";
 import { formatChips } from "@/lib/chips";
 import { tableCopy } from "../copy";
 import type { useGame } from "../hooks/use-game";
@@ -25,6 +26,7 @@ export function ResultsCard({ game }: { game: Game }) {
   const label = (working: string) => (again.confirm ? tableCopy.confirmInWallet : working);
   const offer = again.offer;
   const goesOn = game.left && table.status !== "finished";
+  useSoundOn("celebration", !goesOn && end.status === "ready" && iWon ? 1 : null);
   const heading = goesOn
     ? tableCopy.youLeft
     : end.status !== "ready"

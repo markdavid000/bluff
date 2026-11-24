@@ -8,6 +8,7 @@ import { Appear } from "@/components/shared/appear";
 import { Avatar } from "@/components/shared/avatar";
 import { DieFace } from "@/components/shared/die";
 import { useCalmMotion } from "@/hooks/use-calm-motion";
+import { useSoundOn } from "@/hooks/use-sound-on";
 import type { Bid, Face } from "@bluff/game";
 import { tableCopy } from "../copy";
 import type { OwnDice } from "../hooks/use-own-dice";
@@ -128,6 +129,7 @@ export function GameSeat({
 
 function LostDie({ onDone }: { onDone: () => void }) {
   const calm = useCalmMotion();
+  useSoundOn("thud", 1);
   return (
     <motion.span
       aria-hidden

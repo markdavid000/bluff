@@ -54,6 +54,16 @@ export function useGameBoard({
     shake();
   }, [playing, round]);
 
+  const settle = useEffectEvent(() => {
+    if (!quiet) play("settle");
+  });
+
+  useEffect(() => {
+    if (dice.state.kind !== "rolling") return;
+    const timer = window.setTimeout(settle, dice.state.result.settledAfterSeconds * 1000);
+    return () => window.clearTimeout(timer);
+  }, [dice.state]);
+
   useEffect(() => {
     if (shakingRound === null) return;
     const timer = window.setTimeout(() => setShakingRound(null), OTHERS_SHAKE_MS);
