@@ -20,8 +20,8 @@ export function CountingAmount({
         aria-hidden
         className={cn(
           "inline-block tabular-nums transition-[color,scale] duration-200",
-          direction === "up" && "scale-110 text-seat-green",
-          direction === "down" && "scale-110 text-destructive",
+          direction === "up" && "scale-110 text-seat-green-text",
+          direction === "down" && "scale-110 text-destructive-text",
           className
         )}
       >
