@@ -109,7 +109,7 @@ export function CreateTableDialog({
               </span>
             </div>
             <Appear show={Boolean(problem)} swapKey={problem ?? ""}>
-              <p className="text-sm text-destructive">{problem}</p>
+              <p className="text-sm text-destructive-text">{problem}</p>
             </Appear>
             <div className="flex flex-wrap gap-3">
               <ActionButton
