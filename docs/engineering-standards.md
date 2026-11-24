@@ -247,6 +247,7 @@ There is no Lighthouse gate in CI, but the page must still feel instant on a mid
 - Heavy client code (animation-heavy sections, the dice roll) loads with `next/dynamic` or after interaction.
 - The system font stack is the default. A web font goes through `next/font` with `display: "swap"`.
 - Images through `next/image` with explicit `width`/`height` or `fill` plus `sizes`.
+- App modules never rely on being imported for side effects; only CSS is listed in `apps/web/package.json`'s `sideEffects`. That lets the bundler drop unused exports, so the landing page doesn't pay for the game code it never runs ([ADR](adr/ADR-2026-11-24-landing-weight.md)). The smoke test fails if the landing page's first-load JavaScript passes 400 KB gzipped.
 
 ## Accessibility
 
