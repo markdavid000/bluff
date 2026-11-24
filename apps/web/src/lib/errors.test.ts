@@ -89,6 +89,8 @@ describe("explainProblem", () => {
       "NotInvited",
       "TooManyTries",
       "NoCode",
+      "AlreadyInvited",
+      "NoAttempt",
     ];
     for (const name of players) expect(errorCopy.reasons).toHaveProperty(name);
   });

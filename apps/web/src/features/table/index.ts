@@ -1,4 +1,3 @@
-export { BoardPreview } from "./components/board/board-preview";
 export { DemoGame } from "./components/demo-game";
 export { FirstGameTips } from "./components/first-game-tips";
 export { HistoryScreen } from "./components/history-page/history-screen";
