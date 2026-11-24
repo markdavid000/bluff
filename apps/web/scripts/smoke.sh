@@ -56,6 +56,14 @@ for page in /how-to-play /fairness; do
   fi
 done
 
+LANDING_LIMIT_KB=400
+LANDING_KB=0
+for script in $(curl -s --max-time 30 "$BASE/" | grep -o 'src="/_next/static/[^"]*\.js"' | sed 's/src="//;s/"$//' | sort -u); do
+  LANDING_KB=$((LANDING_KB + $(curl -s --max-time 30 "$BASE$script" | gzip -9 | wc -c) / 1024))
+done
+echo "landing first-load JavaScript: ${LANDING_KB} KB gzipped (limit ${LANDING_LIMIT_KB} KB)"
+[ "$LANDING_KB" -le "$LANDING_LIMIT_KB" ] || FAILED=1
+
 for route in "${GUARDED_ROUTES[@]}"; do
   expected="/sign-in?next=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$route")"
   for cookie in "" "bluff-session=forged.not.valid"; do
