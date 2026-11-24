@@ -24,6 +24,8 @@ export const errorCopy = {
     NotInvited: "This table is private. Ask the host for the invite link.",
     TooManyTries: "That's too many tries for this table. Ask the host for a new link.",
     NoCode: "This table can't take an invite. Try another table.",
+    AlreadyInvited: "You're already let in to this table. Try joining again.",
+    NoAttempt: "That invite check has already finished. Try joining again.",
     NotHost: "Only the host can do that.",
     NotYourTurn: "It is not your turn yet.",
     TableNotFound: "That table does not exist.",

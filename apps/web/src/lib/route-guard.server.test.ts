@@ -28,7 +28,7 @@ describe("decideRoute", () => {
     });
   });
 
-  it.each(["/", "/how-to-play", "/fairness", "/sign-in", "/refresh", "/design", "/players"])(
+  it.each(["/", "/how-to-play", "/fairness", "/sign-in", "/refresh", "/players"])(
     "leaves the public page %s open",
     (page) => {
       expect(decideRoute(page, none, invalid)).toEqual({ action: "allow" });

@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 
 const SOURCE = resolve(process.cwd(), "src");
 const PICTURE_IS_THE_ICON = new Set(["features/account/components/player-badge.tsx"]);
-const SHOWCASE = "features/design/";
 
 function componentFiles(folder: string): string[] {
   return readdirSync(folder).flatMap((name) => {
@@ -44,7 +43,7 @@ describe("ActionButton icons", () => {
   it("gives every button in the game an icon", () => {
     const missing = componentFiles(SOURCE)
       .map((path) => relative(SOURCE, path))
-      .filter((path) => !PICTURE_IS_THE_ICON.has(path) && !path.startsWith(SHOWCASE))
+      .filter((path) => !PICTURE_IS_THE_ICON.has(path))
       .flatMap((path) => buttonsWithoutIcon(join(SOURCE, path)).map((line) => `${path}:${line}`));
     expect(missing).toEqual([]);
   });
