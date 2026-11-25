@@ -4,7 +4,7 @@ import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import type { ComputerCall } from "@/hooks/use-computer-call";
 import { onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
-import type { ArrivalTable } from "../lib/computer-arrival";
+import { type ArrivalTable, COMPUTER_SEAT_WAIT_MS } from "../lib/computer-arrival";
 import { COMPUTER_ARRIVAL, useComputerArrival } from "./use-computer-arrival";
 
 const ME = "0x0000000000000000000000000000000000001a2b";
@@ -45,7 +45,7 @@ function table(seats: { player: string; ready: boolean }[]): ArrivalTable {
 
 describe("useComputerArrival", () => {
   it("changes one toast as the computer joins, gets ready and arrives", () => {
-    call = { tableId: 12n, phase: "asking", outcome: null };
+    call = { tableId: 12n, phase: "asking", outcome: null, answeredAt: null };
     const { rerender } = renderHook((current: ArrivalTable) => useComputerArrival(current), {
       initialProps: table([{ player: ME, ready: false }]),
     });
@@ -75,7 +75,7 @@ describe("useComputerArrival", () => {
   });
 
   it("says the computer is coming only while it's on its way", () => {
-    call = { tableId: 12n, phase: "asking", outcome: null };
+    call = { tableId: 12n, phase: "asking", outcome: null, answeredAt: null };
     const { result, rerender } = renderHook(
       (current: ArrivalTable) => useComputerArrival(current),
       { initialProps: table([{ player: ME, ready: false }]) }
@@ -91,7 +91,7 @@ describe("useComputerArrival", () => {
   });
 
   it("says the computer isn't coming once it has said why", () => {
-    call = { tableId: 12n, phase: "answered", outcome: { kind: "busy" } };
+    call = { tableId: 12n, phase: "answered", outcome: { kind: "busy" }, answeredAt: 1 };
     const { result } = renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
     expect(result.current.computerComing).toBe(false);
   });
@@ -102,7 +102,7 @@ describe("useComputerArrival", () => {
   });
 
   it("says why the computer isn't coming, in place of the joining message", () => {
-    call = { tableId: 12n, phase: "answered", outcome: { kind: "busy" } };
+    call = { tableId: 12n, phase: "answered", outcome: { kind: "busy" }, answeredAt: 1 };
     renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
     expect(events.at(-1)).toEqual({
       type: "show",
@@ -114,7 +114,7 @@ describe("useComputerArrival", () => {
   });
 
   it("keeps the reason on screen when the computer isn't coming, rather than clearing it", () => {
-    call = { tableId: 12n, phase: "asking", outcome: null };
+    call = { tableId: 12n, phase: "asking", outcome: null, answeredAt: null };
     const { rerender } = renderHook(
       (current: ComputerCall | null) => {
         call = current;
@@ -122,7 +122,7 @@ describe("useComputerArrival", () => {
       },
       { initialProps: call }
     );
-    rerender({ tableId: 12n, phase: "answered", outcome: { kind: "busy" } });
+    rerender({ tableId: 12n, phase: "answered", outcome: { kind: "busy" }, answeredAt: 1 });
     expect(events.at(-1)).toEqual({
       type: "show",
       kind: "info",
@@ -131,8 +131,27 @@ describe("useComputerArrival", () => {
     });
   });
 
+  it("stops saying the computer is joining when it said yes but never sat down", () => {
+    vi.useFakeTimers();
+    call = { tableId: 12n, phase: "answered", outcome: { kind: "seated" }, answeredAt: Date.now() };
+    const { result } = renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
+    expect(result.current.computerComing).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(COMPUTER_SEAT_WAIT_MS + 1_000);
+    });
+    expect(result.current.computerComing).toBe(false);
+    expect(events.at(-1)).toEqual({
+      type: "show",
+      kind: "info",
+      title: tableCopy.computerOutcome.unavailable,
+      id: COMPUTER_ARRIVAL,
+    });
+    expect(finishComputerCall).toHaveBeenCalledWith(12n);
+    vi.useRealTimers();
+  });
+
   it("takes the toast away if the player leaves before the computer arrives", () => {
-    call = { tableId: 12n, phase: "asking", outcome: null };
+    call = { tableId: 12n, phase: "asking", outcome: null, answeredAt: null };
     const { unmount } = renderHook(() => useComputerArrival(table([{ player: ME, ready: false }])));
     act(() => unmount());
     expect(events.at(-1)).toEqual({ type: "dismiss", id: COMPUTER_ARRIVAL });

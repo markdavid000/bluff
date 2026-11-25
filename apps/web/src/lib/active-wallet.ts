@@ -13,3 +13,7 @@ export function activeWalletFor<Wallet extends WalletLike>({
   if (!signedIn) return undefined;
   return wallets.find((wallet) => wallet.address.toLowerCase() === signedIn);
 }
+
+export function isSponsoredWallet(wallet: { walletClientType: string } | undefined): boolean {
+  return wallet?.walletClientType === "privy";
+}

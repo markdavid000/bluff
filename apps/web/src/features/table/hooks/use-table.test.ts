@@ -135,6 +135,17 @@ describe("useTable", () => {
     expect(requests.at(-1)?.blockNumber).toBeUndefined();
   });
 
+  it("starts from the block-pinned read when the table is already on screen, so switching screens never loads", () => {
+    seeBlock(900n);
+    readAtBlock = (blockNumber) =>
+      blockNumber === undefined
+        ? { isError: false, isPending: true, data: undefined }
+        : { isError: false, data: [{ ...TABLE, status: 2 }, []] };
+    const { result } = renderHook(() => useTable(12n, { onScreen: true }));
+    expect(requests[0]?.blockNumber).toBe(900n);
+    expect(result.current).toMatchObject({ status: "ready", readAt: 900n });
+  });
+
   it("never shows another table's answer while this one loads", () => {
     read = { isError: false, isPlaceholderData: true, data: [{ ...TABLE, id: 11n }, []] };
     expect(renderHook(() => useTable(12n)).result.current.status).toBe("loading");

@@ -7,19 +7,14 @@ import {
   chipFaucetAbi,
   chipTokenAbi,
 } from "@bluff/contracts";
-import { usePrivy, useSendTransaction as usePrivySend, useWallets } from "@privy-io/react-auth";
-import {
-  type Abi,
-  type Address,
-  type TransactionReceipt,
-  encodeFunctionData,
-  isAddressEqual,
-} from "viem";
+import { usePrivy, useSendTransaction as usePrivySend } from "@privy-io/react-auth";
+import { type Abi, type Address, type TransactionReceipt, encodeFunctionData } from "viem";
 import { usePublicClient, useSendTransaction } from "wagmi";
 import { gameChain } from "@/config/chain";
 import { seeBlock } from "@/lib/block-clock";
 import { MoveNotReadyError } from "@/lib/errors";
 import { useEnsureGameChain } from "./use-game-chain";
+import { useMovesSponsored } from "./use-moves-sponsored";
 
 export interface ContractCall {
   address: Address;
@@ -42,7 +37,7 @@ const RECEIPT_CHECK_MS = 1_000;
 
 export function useSendMove() {
   const { user } = usePrivy();
-  const { wallets } = useWallets();
+  const sponsored = useMovesSponsored();
   const { sendTransaction: sendSponsored } = usePrivySend();
   const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient({ chainId: gameChain.id });
@@ -57,12 +52,8 @@ export function useSendMove() {
     report("preparing");
     await publicClient.simulateContract({ ...call, abi: [...call.abi, ...GAME_ERRORS], account });
     const data = encodeFunctionData(call);
-    const embedded = wallets.find(
-      (wallet) =>
-        wallet.walletClientType === "privy" && isAddressEqual(wallet.address as Address, account)
-    );
     let hash: `0x${string}`;
-    if (embedded) {
+    if (sponsored) {
       report("sending");
       ({ hash } = await sendSponsored(
         { to: call.address, data, chainId: gameChain.id },

@@ -8,6 +8,7 @@ export interface ComputerCall {
   tableId: bigint;
   phase: "asking" | "waking" | "answered";
   outcome: ComputerOutcome | null;
+  answeredAt: number | null;
 }
 
 let current: ComputerCall | null = null;
@@ -28,7 +29,7 @@ function subscribe(listener: () => void) {
 }
 
 export function callComputer(tableId: bigint) {
-  set({ tableId, phase: "asking", outcome: null });
+  set({ tableId, phase: "asking", outcome: null, answeredAt: null });
   void requestComputer({
     botUrl: publicEnv.botUrl,
     tableId,
@@ -38,7 +39,7 @@ export function callComputer(tableId: bigint) {
       console.error("The computer gave an answer we could not read.", error);
       return { kind: "unavailable" };
     })
-    .then((outcome) => update(tableId, { phase: "answered", outcome }));
+    .then((outcome) => update(tableId, { phase: "answered", outcome, answeredAt: Date.now() }));
 }
 
 export function finishComputerCall(tableId: bigint) {

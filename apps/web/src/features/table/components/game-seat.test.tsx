@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
+import type { OwnDice } from "../hooks/use-own-dice";
 import { GameSeat } from "./game-seat";
 
 const play = vi.fn();
@@ -147,6 +148,36 @@ describe("GameSeat", () => {
     await waitFor(() => expect(container.querySelector("[data-lost-die]")).toBeNull(), {
       timeout: 3_000,
     });
+  });
+
+  it("keeps the player's own dice from this round on show while the reveal is open", () => {
+    const mine = (ownDice: OwnDice, holdDice: boolean) => (
+      <GameSeat
+        name="Me #1A2B"
+        avatarSrc="/a.svg"
+        isMe
+        isComputer={false}
+        dice={3}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={ownDice}
+        matching={null}
+        holdDice={holdDice}
+      />
+    );
+    const { rerender } = render(mine({ status: "ready", faces: [5, 1, 3] }, false));
+    rerender(mine({ status: "ready", faces: [5, 1, 3] }, true));
+    rerender(mine({ status: "loading" }, true));
+    expect(screen.getByRole("img", { name: "five" })).toBeInTheDocument();
+    expect(screen.queryByText(tableCopy.rolling)).toBeNull();
+    rerender(mine({ status: "ready", faces: [2, 2, 6] }, true));
+    expect(screen.getByRole("img", { name: "five" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "six" })).toBeNull();
+    rerender(mine({ status: "ready", faces: [2, 2, 6] }, false));
+    expect(screen.getByRole("img", { name: "six" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "five" })).toBeNull();
   });
 
   it("sends the player's own lost die tumbling away too", () => {
