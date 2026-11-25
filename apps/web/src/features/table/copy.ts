@@ -111,6 +111,11 @@ export const tableCopy = {
   computerSeatJoining: "Joining…",
   computerWaking: "Waking the computer…",
   computerGettingReady: "The computer is getting ready…",
+  theComputer: "The computer",
+  computerWaits: (name: string, minutes: number) =>
+    `${name} waits about ${minutes} minutes for the game to start.`,
+  computerLeftUnstarted: (name: string) => `${name} left because the game didn't start`,
+  callComputerBack: "Call the computer back",
   computerOutcome: {
     taken: "Someone sat down before the computer could. Your game is with them.",
     busy: "The computer is busy with other games. Your table is open for people to join.",

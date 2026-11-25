@@ -101,6 +101,7 @@ export function useTableEvents({
   host,
   nameOf,
   departing = false,
+  waiting = false,
   onBidPlaced,
   onRoundSettled,
   onGameEnded,
@@ -110,6 +111,7 @@ export function useTableEvents({
   host?: string;
   nameOf: (address: string) => string | null;
   departing?: boolean;
+  waiting?: boolean;
   onBidPlaced?: (bid: PlacedBid) => void;
   onRoundSettled?: (result: RoundResult) => void;
   onGameEnded?: (ending: GameEnding) => void;
@@ -145,7 +147,7 @@ export function useTableEvents({
         nameOf(address) ?? looked.get(address.toLowerCase()) ?? tableCopy.unnamed;
       for (const { event, key, tableHost } of pending) {
         if (departing && event.eventName === "TableCancelled") continue;
-        const words = noticeFor(event, me, name, tableHost);
+        const words = noticeFor(event, me, name, tableHost, waiting);
         if (words) notify.info(words, { id: key });
       }
     };

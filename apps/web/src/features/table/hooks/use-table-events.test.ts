@@ -133,6 +133,12 @@ describe("useTableEvents", () => {
     expect(shown).toEqual([tableCopy.tableClosed]);
   });
 
+  it("says why the computer left a table that hasn't started", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => "Baba Dice", waiting: true }));
+    deliver([log("PlayerLeft", { id: 12n, player: COMPUTER }, 100n)]);
+    expect(shown).toEqual([tableCopy.computerLeftUnstarted("Baba Dice")]);
+  });
+
   it("ignores moves at other tables", () => {
     renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D" }));
     deliver([log("PlayerJoined", { id: 13n, player: KOLA }, 100n)]);

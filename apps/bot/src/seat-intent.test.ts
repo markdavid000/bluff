@@ -1,7 +1,7 @@
-import { CHAIN_LAG_MS, type Table } from "@bluff/game";
+import { CHAIN_LAG_MS, COMPUTER_WAIT_MS, type Table } from "@bluff/game";
 import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 import { describe, expect, it } from "vitest";
-import { PARKING_LIMIT_MS, seatIntent } from "./seat-intent";
+import { seatIntent } from "./seat-intent";
 
 const NOW = 1_800_000_000_000;
 const HOST = "0x0000000000000000000000000000000000001a2b";
@@ -71,8 +71,9 @@ describe("seatIntent", () => {
 
   it("leaves a table that hasn't started 5 minutes after it sat down, so it can't be parked", () => {
     const ready = table({ seats: [seat(HOST), seat(ME, { ready: true })] });
-    expect(seatIntent(ready, ME, NOW, NOW - PARKING_LIMIT_MS + 1)).toEqual({ kind: "wait" });
-    expect(seatIntent(ready, ME, NOW, NOW - PARKING_LIMIT_MS)).toEqual({
+    expect(COMPUTER_WAIT_MS).toBe(5 * 60_000);
+    expect(seatIntent(ready, ME, NOW, NOW - COMPUTER_WAIT_MS + 1)).toEqual({ kind: "wait" });
+    expect(seatIntent(ready, ME, NOW, NOW - COMPUTER_WAIT_MS)).toEqual({
       kind: "leave",
       reason: "not-started",
     });

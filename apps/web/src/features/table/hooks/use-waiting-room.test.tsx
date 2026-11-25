@@ -8,6 +8,7 @@ import { tableCopy } from "../copy";
 import type { Table } from "@bluff/game";
 import { useWaitingRoom } from "./use-waiting-room";
 import { NO_DICE, NO_GAME } from "@bluff/game/testing";
+import { COMPUTER_PLAYERS } from "@/config/computer-players";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -69,6 +70,12 @@ vi.mock("./use-table", () => ({
   isNotTableRead: () => true,
 }));
 vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
+const callComputer = vi.fn();
+vi.mock("@/hooks/use-computer-call", () => ({
+  callComputer: (id: bigint) => callComputer(id),
+  finishComputerCall: vi.fn(),
+  useComputerCall: () => null,
+}));
 vi.mock("./use-table-keeper", () => ({ useTableKeeper: vi.fn() }));
 
 function table(seats: [string, boolean][], overrides: Partial<Table> = {}): Table {
@@ -130,6 +137,67 @@ afterEach(() => {
 });
 
 describe("useWaitingRoom", () => {
+  describe("with the computer", () => {
+    const COMPUTER = COMPUTER_PLAYERS[0] ?? STRANGER;
+    const withComputer = () =>
+      table(
+        [
+          [HOST, false],
+          [COMPUTER, true],
+        ],
+        { seatCount: 2 }
+      );
+    const alone = () => table([[HOST, false]], { seatCount: 2 });
+
+    beforeEach(() => {
+      me = HOST;
+    });
+
+    it("says how long the computer waits while it sits at a table that hasn't started", () => {
+      tableRead = { status: "ready", table: withComputer(), readAt: 100n };
+      expect(viewOf(render().result).computerWait).toBe(tableCopy.computerWaits("Dave #1A2B", 5));
+    });
+
+    it("says nothing about waiting when no computer is at the table", () => {
+      expect(viewOf(render().result).computerWait).toBeNull();
+    });
+
+    it("notices the computer leaving, and calls it back to this table on request", () => {
+      tableRead = { status: "ready", table: withComputer(), readAt: 100n };
+      const { result, rerender } = render();
+      expect(viewOf(result).computerLeft).toBe(false);
+      tableRead = { status: "ready", table: alone(), readAt: 101n };
+      rerender();
+      expect(viewOf(result).computerLeft).toBe(true);
+      expect(viewOf(result).computerWait).toBeNull();
+      act(() => viewOf(result).callComputer());
+      expect(callComputer).toHaveBeenCalledWith(12n);
+    });
+
+    it("never offers the computer back at a table one never sat at", () => {
+      tableRead = { status: "ready", table: alone(), readAt: 100n };
+      expect(viewOf(render().result).computerLeft).toBe(false);
+    });
+
+    it("stops offering the computer back once someone takes the seat", () => {
+      tableRead = { status: "ready", table: withComputer(), readAt: 100n };
+      const { result, rerender } = render();
+      tableRead = {
+        status: "ready",
+        table: table(
+          [
+            [HOST, false],
+            [KOLA, false],
+          ],
+          { seatCount: 2 }
+        ),
+        readAt: 101n,
+      };
+      rerender();
+      expect(viewOf(result).computerLeft).toBe(false);
+    });
+  });
+
   it("has no room to show until the table is read", () => {
     tableRead = { status: "loading" };
     expect(render().result.current.view).toBeNull();

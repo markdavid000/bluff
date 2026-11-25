@@ -1,6 +1,4 @@
-import { type KeeperAction, type Table, keeperDuty } from "@bluff/game";
-
-export const PARKING_LIMIT_MS = 5 * 60_000;
+import { COMPUTER_WAIT_MS, type KeeperAction, type Table, keeperDuty } from "@bluff/game";
 
 export type SeatIntent =
   | { kind: "done" }
@@ -24,7 +22,7 @@ export function seatIntent(
   if (!mine || table.status === "finished" || table.status === "cancelled") return { kind: "done" };
   if (table.status === "waiting") {
     if (table.seats.length < 2) return { kind: "leave", reason: "alone" };
-    if (nowMs - seatedAtMs >= PARKING_LIMIT_MS) return { kind: "leave", reason: "not-started" };
+    if (nowMs - seatedAtMs >= COMPUTER_WAIT_MS) return { kind: "leave", reason: "not-started" };
     if (!mine.ready) return { kind: "ready" };
     return { kind: "wait" };
   }

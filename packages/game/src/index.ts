@@ -11,6 +11,7 @@ export {
   legalBids,
   quickPicks,
 } from "./bid-rules";
+export { COMPUTER_WAIT_MS } from "./computer";
 export type { Face } from "./face";
 export type { KeeperAction, KeeperDuty } from "./keeper-duty";
 export { CHAIN_LAG_MS, KEEPER_STAGGER_MS, keeperDuty } from "./keeper-duty";

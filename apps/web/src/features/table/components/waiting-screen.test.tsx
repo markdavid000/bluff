@@ -45,6 +45,7 @@ const actions = {
   close: vi.fn(),
   join: vi.fn(),
   copyInvite: vi.fn(),
+  callComputer: vi.fn(),
 };
 
 function room(overrides: Room = {}): Room {
@@ -89,6 +90,8 @@ function room(overrides: Room = {}): Room {
     invite: "ready",
     unlockingInvite: false,
     computerComing: false,
+    computerWait: null,
+    computerLeft: false,
     ...actions,
     ...overrides,
   };
@@ -178,6 +181,27 @@ describe("WaitingScreen", () => {
       show(room({ computerComing: true }));
       expect(screen.queryByRole("button", { name: tableCopy.copyInvite })).not.toBeInTheDocument();
       expect(screen.getByRole("figure", { name: tableCopy.computerJoining })).toBeInTheDocument();
+    });
+
+    it("says how long the computer waits while the table hasn't started", () => {
+      show(room({ computerWait: tableCopy.computerWaits("Baba Dice", 5) }));
+      expect(screen.getByText(tableCopy.computerWaits("Baba Dice", 5))).toBeInTheDocument();
+    });
+
+    it("offers to call the computer back from its empty seat and the dock, after it left", () => {
+      show(room({ computerLeft: true }));
+      const calls = screen.getAllByRole("button", { name: tableCopy.callComputerBack });
+      expect(calls).toHaveLength(2);
+      calls.forEach((call) => fireEvent.click(call));
+      expect(actions.callComputer).toHaveBeenCalledTimes(2);
+      expect(screen.getAllByRole("button", { name: tableCopy.copyInvite })).toHaveLength(1);
+    });
+
+    it("doesn't offer the computer back while it's already on its way", () => {
+      show(room({ computerLeft: true, computerComing: true }));
+      expect(
+        screen.queryByRole("button", { name: tableCopy.callComputerBack })
+      ).not.toBeInTheDocument();
     });
 
     it("offers to close the table once time is up", () => {
