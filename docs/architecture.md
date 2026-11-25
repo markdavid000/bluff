@@ -220,7 +220,7 @@ Game data does not use server caching: it is read in the browser and cached by T
   - **Start command:** `pnpm --filter @bluff/bot start`.
   - **Health check:** `/health`.
   - **App sleeping:** on.
-  - **Variables:**
+  - **Variables** (also listed by name in `apps/bot/.env.example`):
     - `BOT_MNEMONIC`: secret;
     - `SEPOLIA_RPC_URL`: secret, an https RPC key not limited to a domain;
     - `ALLOWED_ORIGINS`: the web app's sites, separated by commas;
