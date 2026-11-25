@@ -78,6 +78,7 @@ export function createSeatService({
       const acquired = await pool.acquire();
       if (acquired.kind !== "player") return { kind: "refused", reason: acquired.kind };
       const { player } = acquired;
+      void pool.ensureSpare();
       let joined: Seated;
       try {
         joined = await join(player.index, tableId, found.block);
