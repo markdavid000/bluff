@@ -6,6 +6,7 @@ import { type PoolPlayer, createPlayerPool } from "./player-pool";
 import { type SeatRunner, createSeatRunner } from "./seat-runner";
 import { createSeatService } from "./seat-service";
 import { startServer } from "./server";
+import { untilStarted } from "./startup";
 
 const log = createLog();
 
@@ -40,8 +41,9 @@ async function main() {
     void runner.update();
   }
 
-  const resumedAt = await chain.blockNumber();
-  for (const { player, tableId } of await pool.resume()) {
+  const resumedAt = await untilStarted("blockNumber", () => chain.blockNumber(), { sleep, log });
+  const resumed = await untilStarted("resume", () => pool.resume(), { sleep, log });
+  for (const { player, tableId } of resumed) {
     log.info("resumed", { table: tableId.toString(), player: player.address });
     startRunner(player, tableId, Date.now(), resumedAt);
   }
@@ -75,11 +77,16 @@ async function main() {
   });
   log.info("started", { player: bank, count: players.length });
 
-  process.once("SIGTERM", () => {
+  let stopping = false;
+  const stop = () => {
+    if (stopping) return;
+    stopping = true;
     log.info("stopping", { count: runners.size });
     stopWatching();
     server.close();
-  });
+  };
+  process.once("SIGTERM", stop);
+  process.once("SIGINT", stop);
 }
 
 main().catch((error: unknown) => {
