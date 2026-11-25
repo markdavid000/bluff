@@ -48,7 +48,10 @@ export function WaitingRoom({ room }: { room: Room }) {
             <div key={placement.side} className={SLOT[placement.side]}>
               <Appear
                 show={seat !== undefined || waiting}
-                swapKey={seat?.player ?? (room.computerComing ? "computer" : "open")}
+                swapKey={
+                  seat?.player ??
+                  (room.computerComing ? "computer" : room.computerLeft ? "call" : "open")
+                }
               >
                 {seat ? (
                   <SeatBadge
@@ -62,6 +65,16 @@ export function WaitingRoom({ room }: { room: Room }) {
                   />
                 ) : waiting && room.computerComing ? (
                   <ComputerSeat />
+                ) : waiting && room.computerLeft ? (
+                  <ActionButton
+                    tone="quiet"
+                    size="small"
+                    icon="rocket"
+                    aria-label={tableCopy.callComputerBack}
+                    onClick={room.callComputer}
+                  >
+                    {tableCopy.computer}
+                  </ActionButton>
                 ) : waiting ? (
                   <InviteSeat onInvite={room.copyInvite} waiting={room.invite === "loading"} />
                 ) : null}
@@ -95,6 +108,9 @@ export function WaitingRoom({ room }: { room: Room }) {
           <CountdownBadge label={tableCopy.closesIn} remainingMs={room.timeLeft} />
         </Appear>
       </div>
+      <Appear show={room.computerWait !== null} swapKey={room.computerWait ?? ""}>
+        <p className="text-center text-sm text-muted-foreground">{room.computerWait}</p>
+      </Appear>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Appear show={waiting && room.role === "guest"}>
           <ActionButton
@@ -119,6 +135,11 @@ export function WaitingRoom({ room }: { room: Room }) {
             onClick={room.start}
           >
             {tableCopy.start}
+          </ActionButton>
+        </Appear>
+        <Appear show={waiting && room.computerLeft && !room.computerComing}>
+          <ActionButton tone="green" icon="rocket" sound="drum" onClick={room.callComputer}>
+            {tableCopy.callComputerBack}
           </ActionButton>
         </Appear>
         <Appear show={waiting && room.freeSeats > 0 && !room.computerComing}>

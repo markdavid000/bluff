@@ -18,7 +18,8 @@ export function noticeFor(
   event: TableEvent,
   me: string | undefined,
   nameOf: (address: string) => string,
-  tableHost?: string
+  tableHost?: string,
+  tableWaiting = false
 ): string | null {
   const { player, host, ready } = event.args;
   const mine = same(player, me);
@@ -26,7 +27,10 @@ export function noticeFor(
     case "PlayerJoined":
       return mine || !player ? null : tableCopy.joined(nameOf(player));
     case "PlayerLeft":
-      return mine || !player ? null : tableCopy.left(nameOf(player));
+      if (mine || !player) return null;
+      return tableWaiting && isComputerPlayer(player)
+        ? tableCopy.computerLeftUnstarted(nameOf(player))
+        : tableCopy.left(nameOf(player));
     case "PlayerReady":
       if (mine || !player) return null;
       return ready ? tableCopy.isReady(nameOf(player)) : tableCopy.isNotReady(nameOf(player));

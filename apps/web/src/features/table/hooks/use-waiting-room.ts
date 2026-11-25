@@ -11,6 +11,7 @@ import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useFollowChain } from "@/hooks/use-block-clock";
 import { useChipBalance } from "@/hooks/use-chip-balance";
+import { callComputer } from "@/hooks/use-computer-call";
 import { markLeftTable } from "@/hooks/use-left-tables";
 import { useForgetMyTable, useMyTableId } from "@/hooks/use-my-table-id";
 import { useNow } from "@/hooks/use-now";
@@ -25,7 +26,7 @@ import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { useComputerArrival } from "./use-computer-arrival";
 import { type Role, nextStep } from "../lib/next-step";
-import { type Table, freeSeats, notReady } from "@bluff/game";
+import { COMPUTER_WAIT_MS, type Table, freeSeats, notReady } from "@bluff/game";
 import { useInviteCode } from "./use-invite-code";
 import { useLinkInvite } from "./use-link-invite";
 import { isNotTableRead, useTable } from "./use-table";
@@ -90,7 +91,9 @@ export function useWaitingRoom(id: bigint) {
     host: table?.host,
     nameOf: knownName,
     departing: departingFrom !== null,
+    waiting: table?.status === "waiting",
   });
+  const [hadComputer, setHadComputer] = useState(false);
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
@@ -212,6 +215,9 @@ export function useWaitingRoom(id: bigint) {
     avatarSrc: profiles.status === "ready" ? profiles.profileOf(seat.player)?.avatarSrc : undefined,
   }));
   const shown: Table = { ...table, seats };
+  const computerSeat = seats.find((seat) => seat.isComputer);
+  if (computerSeat && !hadComputer) setHadComputer(true);
+  const stillWaiting = table.status === "waiting";
   const known: KnownBalance =
     balance.status === "ready"
       ? { status: "ready", amount: balance.amount }
@@ -270,6 +276,16 @@ export function useWaitingRoom(id: bigint) {
       invite: invite.status,
       unlockingInvite: invite.status === "locked" && invite.unlocking,
       computerComing,
+      computerWait:
+        stillWaiting && computerSeat
+          ? tableCopy.computerWaits(
+              computerSeat.name || tableCopy.theComputer,
+              COMPUTER_WAIT_MS / 60_000
+            )
+          : null,
+      computerLeft:
+        hadComputer && !computerSeat && stillWaiting && role !== "visitor" && freeSeats(table) > 0,
+      callComputer: () => callComputer(table.id),
       toggleReady: () => ready.start(!(mine?.ready ?? false)),
       start: start.start,
       leave: leave.start,

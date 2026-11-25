@@ -49,6 +49,17 @@ describe("noticeFor", () => {
     expect(notice(event)).toBeNull();
   });
 
+  it("says why a computer left a table that never started, and only then", () => {
+    const computer = COMPUTER_PLAYERS[0] ?? KOLA;
+    const left = (player: string) => ({ eventName: "PlayerLeft", args: { player } });
+    const name = () => "Baba Dice";
+    expect(noticeFor(left(computer), ME, name, undefined, true)).toBe(
+      tableCopy.computerLeftUnstarted("Baba Dice")
+    );
+    expect(noticeFor(left(computer), ME, name, undefined, false)).toBe(tableCopy.left("Baba Dice"));
+    expect(noticeFor(left(KOLA), ME, nameOf, undefined, true)).toBe(tableCopy.left("Kola #3C4D"));
+  });
+
   it("tells a player when they become the host or were removed", () => {
     expect(notice({ eventName: "HostChanged", args: { host: ME } })).toBe(tableCopy.youAreHost);
     expect(notice({ eventName: "SeatRemoved", args: { player: ME } })).toBe(
