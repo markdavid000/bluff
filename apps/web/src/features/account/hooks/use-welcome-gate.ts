@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { arriveAtTable, useHeadingTo } from "@/hooks/use-go-to-table";
+import { arriveAtTable, useHeadingTo, useTakingSeat } from "@/hooks/use-go-to-table";
 import { forgetGoneSeats, useIsSeatGone } from "@/hooks/use-left-tables";
 import { useMyTableId } from "@/hooks/use-my-table-id";
 import { safeNextPath } from "@/lib/safe-redirect";
@@ -26,7 +26,9 @@ export function useWelcomeGate() {
   const seatId = seat.status === "ready" ? seat.id : null;
   const seatGone = useIsSeatGone(seatId);
   const headingTo = useHeadingTo();
-  const myTable = seatId !== null && !seatGone && seatId !== headingTo ? tablePath(seatId) : null;
+  const takingSeat = useTakingSeat();
+  const myTable =
+    seatId !== null && !seatGone && !takingSeat && seatId !== headingTo ? tablePath(seatId) : null;
   const named = player.status === "ready" && player.nickname !== null;
   const goTo =
     player.status !== "ready"
