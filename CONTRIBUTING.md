@@ -258,7 +258,10 @@ Bluff is for everyone, not only people who know crypto. Every word a player read
 ## Environment and secrets
 
 - Never commit secrets. `.env*` files are ignored; CI scans every PR with gitleaks.
-- Local variables for the web app go in `apps/web/.env.local`.
+- Local variables go in `.env.local`, copied from the `.env.example` beside it, which lists every setting by name:
+  - the web app: `apps/web/.env.local`;
+  - the computer player: `apps/bot/.env.local`, read with `node --env-file=.env.local dist/main.js` from `apps/bot`. Its `BOT_MAX_PLAYERS` and `PORT` may stay empty for their defaults (20 and 8080). Use `PORT=8787` to match the web app's local `NEXT_PUBLIC_BOT_URL`.
+- When a change adds a setting, it adds the name to that `.env.example` in the same change, and the pull request says so, so everyone knows to add it to their own `.env.local`. A test checks that the computer player's example lists exactly what its code reads.
 - Deployed values are Vercel environment variables, set per environment (Production, Preview).
 - The contract deployer's mnemonic and RPC keys go in Hardhat's variable store, never in a file.
 - A secret never gets a `NEXT_PUBLIC_` prefix.
