@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSignIn } from "./use-sign-in";
 
@@ -14,6 +14,8 @@ const loadPage = vi.fn();
 const createWallet = vi.fn();
 const readContract = vi.fn();
 const openSession = vi.fn();
+const login = vi.fn();
+const initOAuth = vi.fn();
 let privy: {
   ready: boolean;
   authenticated: boolean;
@@ -26,8 +28,8 @@ vi.mock("wagmi", () => ({ usePublicClient: () => ({ readContract }) }));
 vi.mock("../lib/session-client", () => ({ openSession: (token: string) => openSession(token) }));
 vi.mock("@privy-io/react-auth", () => ({
   usePrivy: () => ({ ...privy, getAccessToken: async () => "privy-token" }),
-  useLogin: () => ({ login: vi.fn() }),
-  useLoginWithOAuth: () => ({ initOAuth: vi.fn() }),
+  useLogin: () => ({ login }),
+  useLoginWithOAuth: () => ({ initOAuth }),
   useCreateWallet: () => ({ createWallet }),
 }));
 
@@ -43,6 +45,7 @@ beforeEach(() => {
   createWallet.mockResolvedValue({ address: NEW_WALLET });
   openSession.mockResolvedValue(true);
   readContract.mockResolvedValue("");
+  initOAuth.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -121,4 +124,25 @@ describe("useSignIn", () => {
     await waitFor(() => expect(result.current.state).toEqual({ kind: "choosing" }));
     expect(loadPage).not.toHaveBeenCalled();
   });
+
+  it.each(["google", "email", "wallet"] as const)(
+    "lets a returning player try again with %s after getting in failed once",
+    async (method) => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      privy = {
+        ready: true,
+        authenticated: true,
+        user: { id: "did:privy:own", wallet: { address: OWN_WALLET } },
+      };
+      openSession.mockRejectedValueOnce(new Error("Opening a session failed with 500"));
+      readContract.mockResolvedValue("Brave Otter");
+      const { result } = renderHook(() => useSignIn("/play"));
+      await waitFor(() => expect(result.current.state).toEqual({ kind: "choosing" }));
+      act(() => result.current.signIn(method));
+      await waitFor(() => expect(loadPage).toHaveBeenCalledWith("/play"));
+      expect(openSession).toHaveBeenCalledTimes(2);
+      expect(login).not.toHaveBeenCalled();
+      expect(initOAuth).not.toHaveBeenCalled();
+    }
+  );
 });

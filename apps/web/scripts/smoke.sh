@@ -4,7 +4,7 @@ set -euo pipefail
 PORT="${SMOKE_PORT:-3099}"
 BASE="http://localhost:$PORT"
 OPEN_ROUTES=("/" "/robots.txt" "/sitemap.xml" "/sign-in" "/how-to-play" "/fairness")
-GUARDED_ROUTES=("/play" "/profile" "/welcome" "/table/1" "/history")
+GUARDED_ROUTES=("/play" "/welcome" "/table/1" "/history")
 LOG="$(mktemp)"
 
 pnpm exec next start --port "$PORT" >"$LOG" 2>&1 &

@@ -7,7 +7,7 @@ const invalid = { status: "invalid" } as const;
 const none = new URLSearchParams();
 
 describe("decideRoute", () => {
-  it.each(["/play", "/welcome", "/profile", "/table/12"])(
+  it.each(["/play", "/welcome", "/table/12", "/history"])(
     "lets a signed-in player open %s",
     (page) => {
       expect(decideRoute(page, none, valid)).toEqual({ action: "allow" });
@@ -36,10 +36,22 @@ describe("decideRoute", () => {
   );
 
   it.each(["privy_oauth_code", "privy_oauth_state", "privy_oauth_provider"])(
-    "never interrupts Google sign-in coming back with %s",
+    "never interrupts Google sign-in coming back to the sign-in page with %s",
+    (param) => {
+      for (const session of [valid, expired, invalid]) {
+        expect(decideRoute("/sign-in", new URLSearchParams(`${param}=x`), session)).toEqual({
+          action: "allow",
+        });
+      }
+    }
+  );
+
+  it.each(["privy_oauth_code", "privy_oauth_state", "privy_oauth_provider"])(
+    "does not let %s open a game page without a session",
     (param) => {
       expect(decideRoute("/play", new URLSearchParams(`${param}=x`), invalid)).toEqual({
-        action: "allow",
+        action: "redirect",
+        to: `/sign-in?next=${encodeURIComponent(`/play?${param}=x`)}`,
       });
     }
   );

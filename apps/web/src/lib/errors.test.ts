@@ -2,7 +2,11 @@ import { bluffAbi, bluffInvitesAbi, chipFaucetAbi } from "@bluff/contracts";
 import {
   ContractFunctionExecutionError,
   ContractFunctionRevertedError,
+  EstimateGasExecutionError,
   HttpRequestError,
+  InsufficientFundsError,
+  TransactionExecutionError,
+  UnauthorizedProviderError,
   UserRejectedRequestError,
   encodeErrorResult,
 } from "viem";
@@ -142,6 +146,41 @@ describe("explainProblem", () => {
       { abi: bluffAbi, functionName: "placeBid", args: [] }
     );
     expect(explainProblem(failure)).toEqual({ kind: "failed", reason: errorCopy.networkBusy });
+  });
+
+  it("tells a player whose own wallet has nothing to pay for moves with how to fix it", () => {
+    const noFunds = new TransactionExecutionError(
+      new EstimateGasExecutionError(new InsufficientFundsError(), {}),
+      { account: null }
+    );
+    expect(explainProblem(noFunds)).toEqual({
+      kind: "failed",
+      reason: errorCopy.walletNeedsCoins,
+    });
+  });
+
+  it.each([
+    "ConnectorNotConnectedError",
+    "ConnectorNotFoundError",
+    "ConnectorAccountNotFoundError",
+    "ConnectorUnavailableReconnectingError",
+  ])("asks the player to unlock or reconnect their own wallet when it is %s", (name) => {
+    const disconnected = Object.assign(new Error("Connector not connected."), { name });
+    expect(explainProblem(disconnected)).toEqual({
+      kind: "failed",
+      reason: errorCopy.walletNotConnected,
+    });
+  });
+
+  it("asks the player to unlock their own wallet when it refuses to answer", () => {
+    const locked = new TransactionExecutionError(
+      new UnauthorizedProviderError(new Error("The requested account has not been authorized.")),
+      { account: null }
+    );
+    expect(explainProblem(locked)).toEqual({
+      kind: "failed",
+      reason: errorCopy.walletNotConnected,
+    });
   });
 
   it("asks the player to wait a moment when their wallet is not ready yet", () => {

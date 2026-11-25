@@ -26,6 +26,7 @@ export function useSignIn(next: string | undefined) {
   const publicClient = usePublicClient({ chainId: gameChain.id });
   const [chosen, setChosen] = useState<SignInState>({ kind: "choosing" });
   const [returnFailed, setReturnFailed] = useState(false);
+  const [returnAttempt, setReturnAttempt] = useState(0);
   const destination = safeNextPath(next);
 
   const failed = (error: unknown) => {
@@ -69,7 +70,7 @@ export function useSignIn(next: string | undefined) {
   useEffect(() => {
     if (!ready || !authenticated) return;
     enter().catch(failFromEffect);
-  }, [ready, authenticated]);
+  }, [ready, authenticated, returnAttempt]);
 
   const state: SignInState =
     ready && authenticated && !returnFailed ? { kind: "working", method: "returning" } : chosen;
@@ -79,6 +80,10 @@ export function useSignIn(next: string | undefined) {
     state,
     signIn(method: SignInMethod) {
       setReturnFailed(false);
+      if (authenticated) {
+        setReturnAttempt((attempt) => attempt + 1);
+        return;
+      }
       setChosen({ kind: "working", method });
       if (method === "google") {
         initOAuth({ provider: "google" }).catch(failed);

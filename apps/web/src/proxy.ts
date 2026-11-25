@@ -17,7 +17,6 @@ export const config = {
   matcher: [
     "/play/:path*",
     "/welcome/:path*",
-    "/profile/:path*",
     "/table/:path*",
     "/history/:path*",
     "/sign-in",
