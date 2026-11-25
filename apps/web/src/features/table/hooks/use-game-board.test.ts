@@ -37,6 +37,33 @@ describe("useGameBoard", () => {
     expect(play).toHaveBeenCalledWith("roll");
   });
 
+  it("lets the dice land with a settle once they stop rolling", () => {
+    const { result } = renderHook(() =>
+      useGameBoard({ round: 1, faces: [5, 1, 3], placement: MINE })
+    );
+    act(() => {
+      vi.advanceTimersByTime(SHAKE_MS);
+    });
+    if (result.current.throwState.kind !== "rolling") throw new Error("Expected a throw.");
+    const settleMs = result.current.throwState.result.settledAfterSeconds * 1000;
+    act(() => {
+      vi.advanceTimersByTime(settleMs - 50);
+    });
+    expect(play).not.toHaveBeenCalledWith("settle");
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(play).toHaveBeenCalledWith("settle");
+  });
+
+  it("makes no sound at all when it's told to keep quiet", () => {
+    renderHook(() => useGameBoard({ round: 1, faces: [5, 1], placement: MINE, quiet: true }));
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
+    expect(play).not.toHaveBeenCalled();
+  });
+
   it("throws each round once, and again at the next round", () => {
     let round = 1;
     const faces: Face[] = [5, 1];

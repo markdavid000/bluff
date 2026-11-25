@@ -5,7 +5,8 @@ import { tableCopy } from "../copy";
 import { aTable, gameView } from "../lib/game-view.testing";
 import { GameView } from "./game-view";
 
-vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
+const play = vi.fn();
+vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) }));
 vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
 
 let wide = false;
@@ -26,6 +27,7 @@ beforeEach(() => {
   wide = false;
   waitingForDice = false;
   historyWanted.length = 0;
+  play.mockClear();
 });
 
 const playing = (buyIn = 0n) => aTable({ status: "playing", buyIn, round: 3 });
@@ -240,6 +242,27 @@ describe("GameView", () => {
   it("warns screen readers when the player's time is nearly up", () => {
     render(<GameView game={gameView({ table: playing(), turnLow: true })} />);
     expect(screen.getByRole("alert")).toHaveTextContent(tableCopy.timeLow);
+  });
+
+  it("ticks once a second through the player's last ten seconds", () => {
+    const view = (turnLeft: number) => (
+      <GameView game={gameView({ table: playing(), turnLeft, turnLow: turnLeft <= 10_000 })} />
+    );
+    const { rerender } = render(view(12_000));
+    expect(play).not.toHaveBeenCalledWith("tick");
+    rerender(view(9_800));
+    rerender(view(9_400));
+    rerender(view(8_900));
+    expect(play.mock.calls.filter(([name]) => name === "tick")).toHaveLength(2);
+  });
+
+  it("never ticks on someone else's turn", () => {
+    render(
+      <GameView
+        game={gameView({ table: playing(), myTurn: false, turnLeft: 5_000, turnLow: true })}
+      />
+    );
+    expect(play).not.toHaveBeenCalledWith("tick");
   });
 
   it("asks before leaving a game, and only leaves when the player confirms", async () => {

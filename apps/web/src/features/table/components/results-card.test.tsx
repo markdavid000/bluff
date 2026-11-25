@@ -5,7 +5,8 @@ import { tableCopy } from "../copy";
 import { aTable, gameView, ME } from "../lib/game-view.testing";
 import { ResultsCard } from "./results-card";
 
-vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
+const play = vi.fn();
+vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) }));
 
 const playAgain = vi.fn();
 const joinOffer = vi.fn();
@@ -35,6 +36,7 @@ describe("ResultsCard", () => {
         })}
       />
     );
+    expect(play).not.toHaveBeenCalledWith("celebration");
     expect(screen.getByRole("link", { name: tableCopy.backToLobby })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: tableCopy.playAgain })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
@@ -52,6 +54,7 @@ describe("ResultsCard", () => {
       />
     );
     expect(screen.getByRole("heading", { name: tableCopy.youWin })).toBeInTheDocument();
+    expect(play).toHaveBeenCalledWith("celebration");
     expect(screen.getByText(tableCopy.finalDice)).toBeInTheDocument();
     expect(screen.getByText("Sly Fox #3C4D")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: tableCopy.backToLobby })).toHaveAttribute(
@@ -76,6 +79,24 @@ describe("ResultsCard", () => {
       />
     );
     expect(screen.getByText(tableCopy.out)).toBeInTheDocument();
+  });
+
+  it("saves the celebration for the winner", () => {
+    render(
+      <ResultsCard
+        game={gameView({
+          table: finished(),
+          end: {
+            status: "ready",
+            reason: "last-standing",
+            winners: ["0x00000000000000000000000000000000000000b0"],
+          },
+          winnerNames: ["Sly Fox #3C4D"],
+          iWon: false,
+        })}
+      />
+    );
+    expect(play).not.toHaveBeenCalledWith("celebration");
   });
 
   it("names the winner when it's someone else", () => {

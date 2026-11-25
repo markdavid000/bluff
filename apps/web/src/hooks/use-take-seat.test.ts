@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contracts } from "@/config/chain";
 import { ONE_CHIP } from "@/lib/chips";
 import type { ContractCall } from "./use-send-move";
-import { useTakeSeat } from "./use-take-seat";
+import { SEAT_RECHECK_LIMIT_MS, SEAT_RECHECK_MS, useTakeSeat } from "./use-take-seat";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -30,6 +30,19 @@ vi.mock("@privy-io/react-auth", () => ({
 }));
 vi.mock("@zama-fhe/react-sdk", () => ({ useEncrypt: () => ({ mutateAsync: encrypt }) }));
 vi.mock("./use-send-move", () => ({ useSendMove: () => sendMove }));
+const seatOnChain = vi.fn();
+vi.mock("wagmi", () => ({
+  usePublicClient: () => ({
+    readContract: (request: { functionName: string; args: unknown[] }) =>
+      seatOnChain(request.functionName, request.args),
+  }),
+}));
+
+function gaveUp(): Error {
+  const error = new Error("The wallet stopped waiting.");
+  error.name = "AbortError";
+  return error;
+}
 
 function joined(id: bigint, player: string, address: string = contracts.bluff) {
   return {
@@ -61,6 +74,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
 });
 
@@ -121,5 +135,62 @@ describe("useTakeSeat", () => {
     await expect(
       result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn())
     ).rejects.toThrow("was not recorded");
+  });
+
+  describe("when the wallet stops waiting before the seat lands", () => {
+    it("finds the new table on the chain and carries on as if nothing went wrong", async () => {
+      vi.useFakeTimers();
+      sendMove.mockRejectedValue(gaveUp());
+      seatOnChain.mockResolvedValueOnce(0n).mockResolvedValue(13n);
+      const { result } = renderHook(() => useTakeSeat());
+      const seated = result.current(
+        { kind: "create", seatCount: 2, buyIn: 0n, isPrivate: false },
+        vi.fn()
+      );
+      await vi.advanceTimersByTimeAsync(SEAT_RECHECK_MS * 2);
+      await expect(seated).resolves.toBe(13n);
+      expect(seatOnChain).toHaveBeenCalledWith("tableOf", [ME]);
+    });
+
+    it("finds the joined table, and only that one", async () => {
+      vi.useFakeTimers();
+      sendMove.mockRejectedValue(gaveUp());
+      seatOnChain.mockResolvedValue(12n);
+      const { result } = renderHook(() => useTakeSeat());
+      const seated = result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn());
+      await vi.advanceTimersByTimeAsync(SEAT_RECHECK_MS);
+      await expect(seated).resolves.toBe(12n);
+    });
+
+    it("still says it may go through when the seat never shows up", async () => {
+      vi.useFakeTimers();
+      sendMove.mockRejectedValue(gaveUp());
+      seatOnChain.mockResolvedValue(0n);
+      const { result } = renderHook(() => useTakeSeat());
+      const seated = result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn());
+      const outcome = expect(seated).rejects.toThrow("The wallet stopped waiting.");
+      await vi.advanceTimersByTimeAsync(SEAT_RECHECK_LIMIT_MS + SEAT_RECHECK_MS);
+      await outcome;
+    });
+
+    it("never mistakes a seat at another table for this one", async () => {
+      vi.useFakeTimers();
+      sendMove.mockRejectedValue(gaveUp());
+      seatOnChain.mockResolvedValue(99n);
+      const { result } = renderHook(() => useTakeSeat());
+      const seated = result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn());
+      const outcome = expect(seated).rejects.toThrow("The wallet stopped waiting.");
+      await vi.advanceTimersByTimeAsync(SEAT_RECHECK_LIMIT_MS + SEAT_RECHECK_MS);
+      await outcome;
+    });
+
+    it("passes any other failure straight on, without waiting", async () => {
+      sendMove.mockRejectedValue(new Error("rpc down"));
+      const { result } = renderHook(() => useTakeSeat());
+      await expect(
+        result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn())
+      ).rejects.toThrow("rpc down");
+      expect(seatOnChain).not.toHaveBeenCalled();
+    });
   });
 });

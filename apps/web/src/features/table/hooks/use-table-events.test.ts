@@ -120,6 +120,19 @@ describe("useTableEvents", () => {
     expect(console.error).toHaveBeenCalled();
   });
 
+  it("tells a player the table was closed, but not the player whose own leaving closed it", () => {
+    let departing = true;
+    const { rerender } = renderHook(() =>
+      useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D", departing })
+    );
+    deliver([log("TableCancelled", { id: 12n }, 100n)]);
+    expect(shown).toEqual([]);
+    departing = false;
+    rerender();
+    deliver([log("TableCancelled", { id: 12n }, 101n)]);
+    expect(shown).toEqual([tableCopy.tableClosed]);
+  });
+
   it("ignores moves at other tables", () => {
     renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D" }));
     deliver([log("PlayerJoined", { id: 13n, player: KOLA }, 100n)]);
