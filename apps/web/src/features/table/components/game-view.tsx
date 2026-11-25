@@ -6,6 +6,7 @@ import { Cowrie } from "@/components/shared/cowrie";
 import { GameIcon } from "@/components/shared/game-icon";
 import { TileLink } from "@/components/shared/tile-link";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useSoundOn } from "@/hooks/use-sound-on";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { formatChips } from "@/lib/chips";
 import { tableCopy } from "../copy";
@@ -43,6 +44,7 @@ export function GameView({ game }: { game: Game }) {
   const [cardUp, setCardUp] = useState(false);
   if (game.reveal !== null && !cardUp) setCardUp(true);
   const history = useGameHistory(table, wide, { bid: game.bid, bidder: game.bidder });
+  useSoundOn("tick", game.myTurn && game.turnLow ? Math.ceil(game.turnLeft / 1000) : null);
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
     return seat?.isMe ? tableCopy.you : seat?.name || tableCopy.unnamed;

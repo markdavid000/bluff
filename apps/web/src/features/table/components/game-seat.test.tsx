@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
 import { GameSeat } from "./game-seat";
 
-vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
+const play = vi.fn();
+vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) }));
 
 function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
   return render(
@@ -24,6 +25,10 @@ function show(props: Partial<Parameters<typeof GameSeat>[0]> = {}) {
     />
   );
 }
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("GameSeat", () => {
   it("marks a computer player, on screen and for screen readers", () => {
@@ -164,6 +169,31 @@ describe("GameSeat", () => {
     const { container, rerender } = render(mine(4, false));
     rerender(mine(3, false));
     expect(container.querySelector("[data-lost-die]")).not.toBeNull();
+  });
+
+  it("lands a lost die with a thud, once, and only when it leaves", () => {
+    const { rerender } = show({ dice: 3, holdDice: true });
+    const seat = (dice: number, holdDice: boolean) => (
+      <GameSeat
+        name="Sly Fox #3C4D"
+        avatarSrc="/a.svg"
+        isMe={false}
+        isComputer={false}
+        dice={dice}
+        isActive
+        isTurn={false}
+        turnFraction={1}
+        lastBid={null}
+        ownDice={null}
+        matching={null}
+        holdDice={holdDice}
+      />
+    );
+    rerender(seat(2, true));
+    expect(play).not.toHaveBeenCalledWith("thud");
+    rerender(seat(2, false));
+    rerender(seat(2, false));
+    expect(play.mock.calls.filter(([name]) => name === "thud")).toHaveLength(1);
   });
 
   it("marks a player who is out, with no dice", () => {
