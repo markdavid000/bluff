@@ -33,7 +33,7 @@ async function main() {
       sleep,
       onDone: () => {
         runners.delete(tableId);
-        pool.release(player.index);
+        void pool.finishGame(player.index);
       },
     });
     runners.set(tableId, runner);
@@ -45,6 +45,7 @@ async function main() {
     log.info("resumed", { table: tableId.toString(), player: player.address });
     startRunner(player, tableId, Date.now(), resumedAt);
   }
+  void pool.ensureSpare();
 
   const watch = createChainWatch({
     chain,

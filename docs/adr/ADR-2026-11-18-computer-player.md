@@ -132,7 +132,7 @@ A computer player is just a wallet, and one secret phrase (`BOT_MNEMONIC`) deriv
 - **The bank, account 0,** holds the test ETH and never sits down. It's the only wallet the maintainer tops up.
 - **Computer players, accounts 1 to 20** (`BOT_MAX_PLAYERS`, default 20):
   - A free, named, funded player sits down at once.
-  - If every existing player is busy, the service **brings in the next account**: the bank funds it, it sets its name and face once, then it sits down. That's a few seconds, once, for each new player.
+  - If every existing player is busy, the service **brings in the next account**: the bank funds it, it sets its name and face once, then it sits down. On Sepolia that setup takes about a minute, once for each new player, so the service now keeps one player set up ahead of time ([ADR-2026-11-25-keep-a-computer-ready](ADR-2026-11-25-keep-a-computer-ready.md)).
   - Each player has its own seat, nonce and name, so transactions on different tables never share a nonce, and each player sends its moves one at a time.
 - **Names,** set onchain the first time each player is used:
   - The list, in order: Baba Dice, Mama Dice, Oga Dice, Iya Dice, Chief Dice, Aunty Dice, Uncle Dice, Bros Dice, Sisi Dice, Mazi Dice, Alhaji Dice, Madam Dice, Prof Dice, Mallam Dice, Captain Dice, Boss Dice, Ada Dice, Emeka Dice, Tunde Dice and Kemi Dice.
@@ -141,7 +141,7 @@ A computer player is just a wallet, and one secret phrase (`BOT_MNEMONIC`) deriv
   - If a player has taken a name by then, the next unused spare is chosen. `/health` lists the names actually used.
 - **Faces:** each player gets a fixed preset face, chosen by its account number.
 - **Funding:**
-  - The bank tops a player up to 0.02 ETH whenever it drops below 0.01 ETH, before it sits down.
+  - The bank tops a player up to 0.02 ETH whenever it drops below 0.01 ETH: after each game, with a check before it sits down as a fallback ([ADR-2026-11-25-keep-a-computer-ready](ADR-2026-11-25-keep-a-computer-ready.md)).
   - If the bank itself is below 0.05 ETH, the service stops seating new games (`409 resting`) and logs that it needs a top-up. Games in progress carry on.
   - The service never handles the deployer's keys.
 - **The cap of 20 games at once** is a safety limit, not a design limit. It bounds how much the bank can be spent, and is one setting to raise.

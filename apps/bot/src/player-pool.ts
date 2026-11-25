@@ -63,6 +63,7 @@ export function createPlayerPool({
 }) {
   const known = new Map<number, PoolPlayer>();
   const busy = new Set<number>();
+  let readying: { index: number; done: Promise<void> } | null = null;
 
   function addressOf(index: number): Address {
     const address = players[index - 1];
@@ -70,20 +71,28 @@ export function createPlayerPool({
     return address;
   }
 
-  function reserve(): number | null {
+  function freeKnown(): number | null {
     for (const index of [...known.keys()].sort((a, b) => a - b)) {
-      if (!busy.has(index)) {
-        busy.add(index);
-        return index;
-      }
-    }
-    for (let index = 1; index <= players.length; index++) {
-      if (!known.has(index) && !busy.has(index)) {
-        busy.add(index);
-        return index;
-      }
+      if (!busy.has(index)) return index;
     }
     return null;
+  }
+
+  function unused(): number | null {
+    for (let index = 1; index <= players.length; index++) {
+      if (!known.has(index) && !busy.has(index) && readying?.index !== index) return index;
+    }
+    return null;
+  }
+
+  function reserve(): number | null {
+    const index = freeKnown() ?? unused();
+    if (index !== null) busy.add(index);
+    return index;
+  }
+
+  async function bankIsLow(): Promise<boolean> {
+    return (await chain.balanceOf(bank)) < BANK_FLOOR;
   }
 
   async function topUp(address: Address) {
@@ -122,12 +131,34 @@ export function createPlayerPool({
     return player;
   }
 
+  async function readySpare(): Promise<void> {
+    if (readying) return readying.done;
+    if (freeKnown() !== null) return;
+    const index = unused();
+    if (index === null) return;
+    const done = (async () => {
+      try {
+        if (await bankIsLow()) return;
+        const player = await prepare(index);
+        log.info("spare ready", { player: player.address });
+      } catch (error) {
+        log.warn("spare failed", { player: addressOf(index), error });
+      }
+    })().finally(() => {
+      readying = null;
+    });
+    readying = { index, done };
+    return done;
+  }
+
   return {
+    ensureSpare: readySpare,
     async acquire(): Promise<Acquired> {
-      if ((await chain.balanceOf(bank)) < BANK_FLOOR) {
+      if (await bankIsLow()) {
         log.warn("bank low", { player: bank });
         return { kind: "resting" };
       }
+      while (freeKnown() === null && readying !== null) await readying.done;
       const index = reserve();
       if (index === null) return { kind: "all-busy" };
       try {
@@ -139,6 +170,16 @@ export function createPlayerPool({
     },
     release(index: number) {
       busy.delete(index);
+    },
+    async finishGame(index: number): Promise<void> {
+      const player = known.get(index);
+      try {
+        if (player) await topUp(player.address);
+      } catch (error) {
+        log.warn("top up failed", { player: player?.address, error });
+      } finally {
+        busy.delete(index);
+      }
     },
     async resume(): Promise<{ player: PoolPlayer; tableId: bigint }[]> {
       const seated: { player: PoolPlayer; tableId: bigint }[] = [];
