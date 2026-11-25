@@ -34,13 +34,21 @@ function fakeChain({ bank = parseEther("1"), taken = [] as string[] } = {}) {
   return { chain, balances, names, tables, calls };
 }
 
-function pool(chain: PoolChain, maxPlayers = 3) {
+function pool(chain: PoolChain, maxPlayers = 3, lines: string[] = []) {
   return createPlayerPool({
     bank: BANK,
     players: Array.from({ length: maxPlayers }, (_, i) => player(i + 1)),
     chain,
-    log: createLog(() => undefined),
+    log: createLog((line) => void lines.push(line)),
   });
+}
+
+function held() {
+  let release = () => undefined as void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return { gate, release: () => release() };
 }
 
 describe("player pool", () => {
@@ -145,6 +153,122 @@ describe("player pool", () => {
     expect(await players.acquire()).toMatchObject({
       kind: "player",
       player: { index: 3, name: "Oga Dice" },
+    });
+  });
+
+  describe("keeping a computer ready", () => {
+    it("sets up the next computer ahead of time when none is free", async () => {
+      const fake = fakeChain();
+      const lines: string[] = [];
+      const players = pool(fake.chain, 3, lines);
+      await players.ensureSpare();
+      expect(fake.calls).toEqual([
+        `fund ${player(1)} ${parseEther("0.02")}`,
+        "profile 1 Baba Dice 1",
+      ]);
+      expect(players.known()).toEqual([
+        { index: 1, address: player(1), name: "Baba Dice", busy: false },
+      ]);
+      expect(lines.some((line) => line.includes('"spare ready"'))).toBe(true);
+    });
+
+    it("lets the next request take the ready computer with nothing left to set up", async () => {
+      const fake = fakeChain();
+      const players = pool(fake.chain);
+      await players.ensureSpare();
+      fake.calls.length = 0;
+      expect(await players.acquire()).toMatchObject({ kind: "player", player: { index: 1 } });
+      expect(fake.calls).toEqual([]);
+    });
+
+    it("leaves things alone while a computer is already free", async () => {
+      const fake = fakeChain();
+      const players = pool(fake.chain);
+      await players.ensureSpare();
+      fake.calls.length = 0;
+      await players.ensureSpare();
+      expect(fake.calls).toEqual([]);
+    });
+
+    it("sets up one computer at a time, however often it's asked", async () => {
+      const fake = fakeChain();
+      const players = pool(fake.chain);
+      await Promise.all([players.ensureSpare(), players.ensureSpare(), players.ensureSpare()]);
+      expect(fake.calls.filter((call) => call.startsWith("profile"))).toEqual([
+        "profile 1 Baba Dice 1",
+      ]);
+    });
+
+    it("makes a request wait for the computer being set up, rather than set up another", async () => {
+      const fake = fakeChain();
+      const { gate, release } = held();
+      const setProfile = fake.chain.setProfile;
+      fake.chain.setProfile = async (index, name, avatar) => {
+        await gate;
+        await setProfile(index, name, avatar);
+      };
+      const players = pool(fake.chain);
+      const spare = players.ensureSpare();
+      const request = players.acquire();
+      release();
+      await spare;
+      expect(await request).toMatchObject({ kind: "player", player: { index: 1 } });
+      expect(fake.calls.filter((call) => call.startsWith("profile"))).toEqual([
+        "profile 1 Baba Dice 1",
+      ]);
+    });
+
+    it("says when setting up fails, and still seats the next request", async () => {
+      const fake = fakeChain();
+      const lines: string[] = [];
+      const setProfile = fake.chain.setProfile;
+      let failures = 1;
+      fake.chain.setProfile = async (index, name, avatar) => {
+        if (failures-- > 0) throw new Error("The network is slow.");
+        await setProfile(index, name, avatar);
+      };
+      const players = pool(fake.chain, 3, lines);
+      await players.ensureSpare();
+      expect(lines.some((line) => line.includes('"spare failed"'))).toBe(true);
+      expect(await players.acquire()).toMatchObject({ kind: "player" });
+    });
+
+    it("says when it can't read the bank, without failing", async () => {
+      const fake = fakeChain();
+      const lines: string[] = [];
+      fake.chain.balanceOf = async () => Promise.reject(new Error("rpc down"));
+      await expect(pool(fake.chain, 3, lines).ensureSpare()).resolves.toBeUndefined();
+      expect(lines.some((line) => line.includes('"spare failed"'))).toBe(true);
+    });
+
+    it("sets nothing up while the bank is low", async () => {
+      const fake = fakeChain({ bank: parseEther("0.049") });
+      await pool(fake.chain).ensureSpare();
+      expect(fake.calls).toEqual([]);
+    });
+
+    it("sets nothing up once every computer is playing", async () => {
+      const fake = fakeChain();
+      const players = pool(fake.chain, 1);
+      await players.acquire();
+      fake.calls.length = 0;
+      await players.ensureSpare();
+      expect(fake.calls).toEqual([]);
+    });
+
+    it("refills a computer's gas after its game, so the next request doesn't wait for it", async () => {
+      const fake = fakeChain();
+      const players = pool(fake.chain);
+      const first = await players.acquire();
+      if (first.kind !== "player") throw new Error("expected a player");
+      fake.balances.set(player(1), parseEther("0.004"));
+      fake.calls.length = 0;
+      await players.finishGame(first.player.index);
+      expect(fake.calls).toEqual([`fund ${player(1)} ${parseEther("0.016")}`]);
+      expect(players.known()).toMatchObject([{ index: 1, busy: false }]);
+      fake.calls.length = 0;
+      await players.acquire();
+      expect(fake.calls).toEqual([]);
     });
   });
 

@@ -57,8 +57,10 @@ function harness({
     },
     balanceOf: async () => 10n ** 17n,
   };
+  const spares: number[] = [];
   const pool = {
     acquire: async () => acquired,
+    ensureSpare: async () => void spares.push(1),
     release: (index: number) => void released.push(index),
     known: () => [{ ...BABA, busy: true }],
   } as unknown as PlayerPool;
@@ -75,7 +77,7 @@ function harness({
     },
     log: createLog(() => undefined),
   });
-  return { service, sent, released, started, readAt, waits, waited: () => waited };
+  return { service, sent, released, started, readAt, waits, spares, waited: () => waited };
 }
 
 describe("seat service", () => {
@@ -84,6 +86,25 @@ describe("seat service", () => {
     expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
     expect(h.sent).toEqual([{ index: 1, tableId: 12n, atBlock: 150n }]);
     expect(h.started).toEqual([{ index: 1, tableId: 12n, seatedAt: NOW, seatedBlock: 200n }]);
+  });
+
+  it("starts readying the next computer as soon as it hands one out, while this one joins", async () => {
+    let sparesAtJoin = -1;
+    const h = harness({
+      join: async () => {
+        sparesAtJoin = h.spares.length;
+        return { joinedBlock: 200n, readyBlock: 200n };
+      },
+    });
+    await h.service.seat(12n);
+    expect(sparesAtJoin).toBe(1);
+    expect(h.spares).toHaveLength(1);
+  });
+
+  it("readies no spare when no computer was handed out", async () => {
+    const h = harness({ acquired: { kind: "all-busy" } });
+    await h.service.seat(12n);
+    expect(h.spares).toEqual([]);
   });
 
   it("still reports the seat when getting ready fails, leaving the seat to get ready itself", async () => {
