@@ -51,15 +51,14 @@ function ruleInMessage(message: string): KnownReason | null {
   return null;
 }
 
+export function mayStillLand(error: unknown): boolean {
+  return (
+    typeof error === "object" && error !== null && "name" in error && error.name === "AbortError"
+  );
+}
+
 export function explainProblem(error: unknown): ActionProblem {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    error.name === "AbortError"
-  ) {
-    return { kind: "unsure", reason: errorCopy.mayStillLand };
-  }
+  if (mayStillLand(error)) return { kind: "unsure", reason: errorCopy.mayStillLand };
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
   if (error instanceof InviteNotWorkingError) {
     return { kind: "failed", reason: errorCopy.inviteNotWorking };

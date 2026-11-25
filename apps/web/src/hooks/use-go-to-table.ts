@@ -10,7 +10,12 @@ import { contracts } from "@/config/chain";
 import { tablePath } from "@/lib/table-links";
 
 let heading: bigint | null = null;
+let takingSeat = 0;
 const listeners = new Set<() => void>();
+
+function changed() {
+  listeners.forEach((listener) => listener());
+}
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -20,7 +25,28 @@ function subscribe(listener: () => void) {
 function setHeading(id: bigint | null) {
   if (heading === id) return;
   heading = id;
-  listeners.forEach((listener) => listener());
+  changed();
+}
+
+export async function takeSeatWhileHere(take: () => Promise<bigint>): Promise<bigint> {
+  takingSeat += 1;
+  changed();
+  try {
+    const id = await take();
+    setHeading(id);
+    return id;
+  } finally {
+    takingSeat -= 1;
+    changed();
+  }
+}
+
+export function useTakingSeat(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => takingSeat > 0,
+    () => false
+  );
 }
 
 export function headToTable(id: bigint) {

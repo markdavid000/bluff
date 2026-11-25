@@ -5,7 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import type * as WagmiQuery from "wagmi/query";
 import { hashFn } from "wagmi/query";
 import { createQueryClient } from "@/lib/query-client";
-import { arriveAtTable, useGoToTable, useHeadingTo } from "./use-go-to-table";
+import {
+  arriveAtTable,
+  takeSeatWhileHere,
+  useGoToTable,
+  useHeadingTo,
+  useTakingSeat,
+} from "./use-go-to-table";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -29,6 +35,36 @@ vi.mock("wagmi/query", async (importOriginal) => ({
     };
   },
 }));
+
+describe("takeSeatWhileHere", () => {
+  it("holds the player where they are while their seat lands, then heads for its table", async () => {
+    let land: (id: bigint) => void = () => undefined;
+    const taking = renderHook(() => useTakingSeat());
+    const heading = renderHook(() => useHeadingTo());
+    let seated: Promise<bigint> = Promise.resolve(0n);
+    act(() => {
+      seated = takeSeatWhileHere(() => new Promise<bigint>((resolve) => (land = resolve)));
+    });
+    expect(taking.result.current).toBe(true);
+    await act(async () => {
+      land(44n);
+      await seated;
+    });
+    expect(taking.result.current).toBe(false);
+    expect(heading.result.current).toBe(44n);
+    act(() => arriveAtTable());
+  });
+
+  it("lets go of the player when the seat fails, heading nowhere", async () => {
+    const taking = renderHook(() => useTakingSeat());
+    const heading = renderHook(() => useHeadingTo());
+    await act(async () => {
+      await expect(takeSeatWhileHere(() => Promise.reject(new Error("no")))).rejects.toThrow("no");
+    });
+    expect(taking.result.current).toBe(false);
+    expect(heading.result.current).toBeNull();
+  });
+});
 
 describe("useGoToTable", () => {
   it("reads the new table into the cache before opening it, so its page has nothing to load", async () => {
