@@ -10,7 +10,7 @@ import { usePublicClient, useReadContract } from "wagmi";
 import { contracts, gameChain, publicRecordOfDollars } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { type MoveStep, useSendMove } from "@/hooks/use-send-move";
-import { MoveNotReadyError } from "@/lib/errors";
+import { CashOutWaitingError, MoveNotReadyError } from "@/lib/errors";
 import { ACCOUNT_READ } from "@/lib/query-client";
 import { chipsCopy } from "../copy";
 import { forgetCashOut, rememberCashOut, rememberedCashOuts } from "../lib/pending-cash-outs";
@@ -135,8 +135,18 @@ export function useCashOut({ onFinished }: { onFinished?: () => void } = {}) {
     run: async (report, amount: CashOutAmount) => {
       const { account, publicClient } = ready();
       report("preparing");
-      const unfinished = await firstOpenCashOut(publicClient, account, rememberedCashOuts(account));
-      await finish(unfinished ?? (await burn(amount, report)), report);
+      try {
+        const unfinished = await firstOpenCashOut(
+          publicClient,
+          account,
+          rememberedCashOuts(account)
+        );
+        if (unfinished) throw new CashOutWaitingError();
+        await finish(await burn(amount, report), report);
+      } catch (error) {
+        void queryClient.invalidateQueries({ queryKey: pendingCashOutKey(account) });
+        throw error;
+      }
     },
     onDone: refresh,
   });

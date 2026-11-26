@@ -97,15 +97,18 @@ export function ChipsPanel({ panel }: { panel: ReturnType<typeof useChipsPanel> 
         </Appear>
         <Appear show={panel.resume !== null}>
           {panel.resume ? (
-            <ActionButton
-              tone="yellow"
-              icon="wallet"
-              working={cashOut.working}
-              workingLabel={chipsCopy.cashOutFinishing}
-              onClick={panel.resume}
-            >
-              {chipsCopy.cashOutResume}
-            </ActionButton>
+            <div className="flex flex-col items-start gap-2">
+              <ActionButton
+                tone="yellow"
+                icon="wallet"
+                working={cashOut.working}
+                workingLabel={chipsCopy.cashOutFinishing}
+                onClick={panel.resume}
+              >
+                {chipsCopy.cashOutResume}
+              </ActionButton>
+              <p className="text-sm text-muted-foreground">{chipsCopy.finishFirst}</p>
+            </div>
           ) : null}
         </Appear>
         <div className="flex flex-wrap items-center gap-3">

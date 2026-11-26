@@ -15,6 +15,7 @@ export function useChipsPanel() {
   const cashOut = useCashOut({ onFinished: () => setCashOutOpen(false) });
   const checked = pending.data !== undefined;
   const unfinished = pending.data ?? null;
+  if (unfinished !== null && cashOutOpen) setCashOutOpen(false);
 
   return {
     balance,

@@ -20,6 +20,12 @@ export class MoveNotReadyError extends Error {
   }
 }
 
+export class CashOutWaitingError extends Error {
+  constructor() {
+    super("An earlier cash out is still open, so a new one was not started.");
+  }
+}
+
 export class InviteNotWorkingError extends Error {
   constructor() {
     super("The invite code did not match the table's code.");
@@ -88,6 +94,9 @@ export function explainProblem(error: unknown): ActionProblem {
   if (refusedWithoutReason(error)) return { kind: "failed", reason: errorCopy.networkBusy };
   if (walletNotConnected(error)) return { kind: "failed", reason: errorCopy.walletNotConnected };
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
+  if (error instanceof CashOutWaitingError) {
+    return { kind: "failed", reason: errorCopy.finishCashOutFirst };
+  }
   if (error instanceof InviteNotWorkingError) {
     return { kind: "failed", reason: errorCopy.inviteNotWorking };
   }
