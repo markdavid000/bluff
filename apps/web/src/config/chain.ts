@@ -12,10 +12,10 @@ export const contracts = sepoliaDeployment;
 
 export const gameTransport = fallback(
   [
-    http(publicEnv.sepoliaRpcUrl, { retryCount: 2, timeout: 10_000 }),
-    http(PUBLIC_SEPOLIA_RPC, { retryCount: 2, timeout: 10_000 }),
+    http(publicEnv.sepoliaRpcUrl, { retryCount: 0, timeout: 10_000 }),
+    http(PUBLIC_SEPOLIA_RPC, { retryCount: 0, timeout: 10_000 }),
   ],
-  { rank: false }
+  { rank: false, retryCount: 1 }
 );
 
 export const gameClient = createPublicClient({ chain: gameChain, transport: gameTransport });
