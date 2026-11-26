@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { tableCopy } from "../copy";
-import { useLeaveConfirm } from "../hooks/use-leave-confirm";
+import { useConfirm } from "../hooks/use-confirm";
 
 export function LeaveGameButton({
   paid,
@@ -25,7 +25,7 @@ export function LeaveGameButton({
   disabled: boolean;
   onLeave: () => void;
 }) {
-  const leave = useLeaveConfirm(onLeave);
+  const leave = useConfirm(onLeave);
   return (
     <>
       <ActionButton

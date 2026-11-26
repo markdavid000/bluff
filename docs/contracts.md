@@ -25,16 +25,17 @@ On Sepolia the chip token is Zama's `cUSDTMock` (`0x4E7B06D78965594eB5EF5414c357
 
 ### Player actions
 
-| Function                                | Caller                | Allowed when                                    | Does                                                                                                                                                                       |
-| --------------------------------------- | --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                      | Creates a free table; the creator takes seat 0 and hosts. A private table gets an invite code. Returns the id.                                                             |
-| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused  | Takes the next seat; a private table needs the player invited. A full table waits for its host.                                                                            |
-| `setReady(id, isReady)`                 | seated player         | `Waiting`                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark, and every mark clears when a paid table reopens (`TableReopened`).         |
-| `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready | Starts a free game, or the payment check of a paid one. Dice are dealt by the players who start: 6 minus the player count each. Otherwise reverts with `NotEveryoneReady`. |
-| `leaveTable(id)`                        | seated player         | any open status                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left.                                                          |
-| `cancelTable(id)`                       | seated player         | `Waiting`, lobby limit passed                   | Cancels and refunds everyone.                                                                                                                                              |
-| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                                       | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                                                                            |
-| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists                         | Makes every die of the round publicly decryptable; status `Revealing`.                                                                                                     |
+| Function                                | Caller                | Allowed when                                                    | Does                                                                                                                                                                       |
+| --------------------------------------- | --------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createFreeTable(seatCount, isPrivate)` | anyone not at a table | not paused                                                      | Creates a free table; the creator takes seat 0 and hosts. A private table gets an invite code. Returns the id.                                                             |
+| `joinFreeTable(id)`                     | anyone not at a table | `Waiting`, a seat free, free table, not paused                  | Takes the next seat; a private table needs the player invited. A full table waits for its host.                                                                            |
+| `setReady(id, isReady)`                 | seated player         | `Waiting`                                                       | Marks the player ready or not ready; emits `PlayerReady`. A player who leaves loses their mark, and every mark clears when a paid table reopens (`TableReopened`).         |
+| `startTable(id)`                        | host                  | `Waiting`, 2+ players, every other player ready                 | Starts a free game, or the payment check of a paid one. Dice are dealt by the players who start: 6 minus the player count each. Otherwise reverts with `NotEveryoneReady`. |
+| `removeUnready(id, player)`             | host                  | `Waiting`; the player is seated, isn't the host and isn't ready | Frees the seat and refunds what they paid, as leaving does; emits `PlayerRemoved`. The player can't rejoin this table (`RemovedFromTable`).                                |
+| `leaveTable(id)`                        | seated player         | any open status                                                 | Before the game: refund and free the seat. During it: forfeit, pass the turn, end the game if one player is left.                                                          |
+| `cancelTable(id)`                       | anyone                | `Waiting`, lobby limit passed                                   | Cancels and refunds everyone. Anyone may call it, so a table everyone walked away from doesn't stay listed.                                                                |
+| `placeBid(id, quantity, face)`          | player on turn        | `Playing`                                                       | Raises: faces 2 to 6, quantity 1 to the dice in play, higher than the last bid.                                                                                            |
+| `callBluff(id)`                         | player on turn        | `Playing`, a bid exists                                         | Makes every die of the round publicly decryptable; status `Revealing`.                                                                                                     |
 
 ### Anyone-can-call actions
 
@@ -64,11 +65,11 @@ These keep a table moving; the web app sends them automatically.
 
 ### Events
 
-`TableCreated`, `PlayerJoined`, `PlayerLeft`, `PlayerReady`, `HostChanged`, `TableCancelled`, `TableListed`, `TableUnlisted`, `SeatVerificationStarted`, `SeatRemoved`, `TableReopened`, `GameStarted`, `RoundStarted`, `BidPlaced`, `BluffCalled`, `RoundSettled` (with every revealed face), `PlayerEliminated`, `TurnTimedOut`, `TurnPassed`, `GameEnded` (with reason and winners), `CashierSet`, `InvitesSet`. Every event indexes the table id, and the player where there is one.
+`TableCreated`, `PlayerJoined`, `PlayerLeft`, `PlayerReady`, `HostChanged`, `TableCancelled`, `TableListed`, `TableUnlisted`, `SeatVerificationStarted`, `SeatRemoved`, `PlayerRemoved`, `TableReopened`, `GameStarted`, `RoundStarted`, `BidPlaced`, `BluffCalled`, `RoundSettled` (with every revealed face), `PlayerEliminated`, `TurnTimedOut`, `TurnPassed`, `GameEnded` (with reason and winners), `CashierSet`, `InvitesSet`. Every event indexes the table id, and the player where there is one.
 
 ### Errors
 
-`TableNotFound`, `WrongStatus`, `AlreadyAtTable`, `NotAtTable`, `NotHost`, `NotEnoughPlayers`, `NotEveryoneReady`, `TableFull`, `InvalidSeatCount`, `InvalidBuyIn`, `DeadlineNotPassed`, `NotYourTurn`, `InvalidFace`, `InvalidQuantity`, `NoBidToCall`, `BidNotHigher`, `NotCashier`, `CashierAlreadySet`, `NotInvited`, `InvitesAlreadySet`, `ZeroAddress`. Each carries the values the app needs to explain it.
+`TableNotFound`, `WrongStatus`, `AlreadyAtTable`, `NotAtTable`, `NotHost`, `NotEnoughPlayers`, `NotEveryoneReady`, `TableFull`, `InvalidSeatCount`, `InvalidBuyIn`, `DeadlineNotPassed`, `NotYourTurn`, `InvalidFace`, `InvalidQuantity`, `NoBidToCall`, `BidNotHigher`, `NotCashier`, `CashierAlreadySet`, `CannotRemoveHost`, `PlayerIsReady`, `RemovedFromTable`, `NotInvited`, `InvitesAlreadySet`, `ZeroAddress`. Each carries the values the app needs to explain it.
 
 ## BluffCashier
 
@@ -133,7 +134,7 @@ The owner cannot read any of these. `confidentiality.test.ts` proves the game's 
 
 | Contract                    | Bytecode | Under the 24,576-byte limit |
 | --------------------------- | -------- | --------------------------- |
-| `Bluff` (50 optimizer runs) | 23,632   | 944                         |
+| `Bluff` (50 optimizer runs) | 24,266   | 310                         |
 | `BluffCashier`              | 9,524    | 15,052                      |
 | `BluffInvites`              | 8,799    | 15,777                      |
 | `ChipFaucet`                | 10,011   | 14,565                      |
@@ -150,7 +151,7 @@ So every action stays within budget.
 
 The owner can upgrade, pause, link the cashier and the invites contract once each, reserve the nicknames players already had when names became unique, and hand ownership over in two steps. Nothing else:
 
-- **No chips.** The owner cannot move chips, end or change a game, invite anyone, or read any encrypted value.
+- **No chips, through today's code.** The owner cannot move chips, end or change a game, invite anyone, or read any encrypted value with the contracts as deployed. But the owner can upgrade every contract, and an upgrade could do any of those things. So ownership must move to a multisig or timelock before real value is involved.
 - **Pausing is narrow.** A pause stops only new tables, joins and chip claims. Leaving, moves, timeouts, reveals, settlement, refunds and payouts always work.
 - **Upgrades are public.** Every upgrade is a public transaction and changes `version()`. After the competition, ownership moves to a timelock or upgrades are frozen ([ADR-2026-11-11-upgradeable-contracts-and-security](adr/ADR-2026-11-11-upgradeable-contracts-and-security.md)).
 
@@ -204,3 +205,9 @@ Slither runs on every pull request and fails on medium or higher. These lower fi
 | `reentrancy-events`       | `settleReveal`, `confirmSeats`                      | The external call is Zama's KMS verifier, which is the check itself and must come first. |
 | `calls-loop`              | refunds and payouts                                 | At most 4 iterations, calling only our own cashier and the chip token.                   |
 | `unindexed-event-address` | OpenZeppelin's `Paused`, `Unpaused`, `AdminChanged` | Inherited events, not ours.                                                              |
+
+## Accepted trade-offs
+
+- **A paid seat's payment check reveals one bit.** Once the host starts a paid table, anyone can read whether each seat paid in full. Since the app always sends exactly the buy-in, "not in full" shows that player had fewer chips than the buy-in. The host can remove a guest who isn't ready (`removeUnready`), so a player with no chips can't hold the table, but the bit is still public after a check.
+- **A stuck reveal can share a pot with the player who lost it.** If nobody settles a reveal within 10 minutes, `cancelStuckReveal` ends the game and shares the pot among the active players, even when the public reveal already shows who lost. The computer player and every sponsored browser settle reveals promptly, which keeps this rare.
+- **Chips sent to the cashier outside a join can't be recovered.** A plain transfer to `BluffCashier` (not through `confidentialTransferAndCall` with a join) isn't recorded in any pot, and no function returns it.

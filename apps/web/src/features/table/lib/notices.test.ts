@@ -60,6 +60,15 @@ describe("noticeFor", () => {
     expect(noticeFor(left(KOLA), ME, nameOf, undefined, true)).toBe(tableCopy.left("Kola #3C4D"));
   });
 
+  it("says when the host removed someone, and tells the player removed", () => {
+    expect(notice({ eventName: "PlayerRemoved", args: { player: KOLA } })).toBe(
+      tableCopy.removedByHost("Kola #3C4D")
+    );
+    expect(notice({ eventName: "PlayerRemoved", args: { player: ME } })).toBe(
+      tableCopy.youWereRemovedByHost
+    );
+  });
+
   it("tells a player when they become the host or were removed", () => {
     expect(notice({ eventName: "HostChanged", args: { host: ME } })).toBe(tableCopy.youAreHost);
     expect(notice({ eventName: "SeatRemoved", args: { player: ME } })).toBe(

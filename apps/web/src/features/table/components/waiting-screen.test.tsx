@@ -46,6 +46,7 @@ const actions = {
   join: vi.fn(),
   copyInvite: vi.fn(),
   callComputer: vi.fn(),
+  removePlayer: vi.fn(),
 };
 
 function room(overrides: Room = {}): Room {
@@ -93,6 +94,8 @@ function room(overrides: Room = {}): Room {
     computerComing: false,
     computerWait: null,
     computerLeft: false,
+    canRemove: () => false,
+    removing: false,
     ...actions,
     ...overrides,
   };
@@ -203,6 +206,24 @@ describe("WaitingScreen", () => {
       expect(
         screen.queryByRole("button", { name: tableCopy.callComputerBack })
       ).not.toBeInTheDocument();
+    });
+
+    it("lets the host remove a guest who isn't ready, once they confirm", async () => {
+      show(room({ canRemove: (player: string) => player === KOLA }));
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.removeGuest("Kola #3C4D") }));
+      expect(actions.removePlayer).not.toHaveBeenCalled();
+      expect(
+        await screen.findByRole("dialog", { name: tableCopy.removeConfirmTitle("Kola #3C4D") })
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.removeConfirm }));
+      expect(actions.removePlayer).toHaveBeenCalledWith(KOLA);
+    });
+
+    it("offers no Remove when nobody can be removed", () => {
+      show(room());
+      expect(
+        screen.queryByRole("button", { name: tableCopy.removeGuest("Kola #3C4D") })
+      ).toBeNull();
     });
 
     it("offers to close the table once time is up", () => {

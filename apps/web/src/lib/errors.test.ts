@@ -102,6 +102,9 @@ describe("explainProblem", () => {
       "NoCode",
       "AlreadyInvited",
       "NoAttempt",
+      "RemovedFromTable",
+      "PlayerIsReady",
+      "CannotRemoveHost",
     ];
     for (const name of players) expect(errorCopy.reasons).toHaveProperty(name);
   });
