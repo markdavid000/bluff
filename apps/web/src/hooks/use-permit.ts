@@ -13,7 +13,7 @@ import { useEnsureGameChain } from "./use-game-chain";
 
 const HIDDEN_VALUE_CONTRACTS = [contracts.chips, contracts.bluff, contracts.invites];
 
-type PermitStatus = "checking" | "needed" | "granted";
+type PermitStatus = "checking" | "needed" | "granted" | "failed";
 
 export function usePermit({ working, automatic }: { working: string; automatic: boolean }) {
   const { user } = usePrivy();
@@ -53,7 +53,9 @@ export function usePermit({ working, automatic }: { working: string; automatic: 
       ? "granted"
       : hasPermit.data === false
         ? "needed"
-        : "checking";
+        : hasPermit.isError
+          ? "failed"
+          : "checking";
 
   const grantSilently = useEffectEvent(() => grant.start());
 
@@ -63,5 +65,11 @@ export function usePermit({ working, automatic }: { working: string; automatic: 
     grantSilently();
   }, [automatic, status, embedded]);
 
-  return { status, granting: grant.working, grant: grant.start, asksWallet: !embedded };
+  return {
+    status,
+    granting: grant.working,
+    grant: grant.start,
+    retry: () => void hasPermit.refetch(),
+    asksWallet: !embedded,
+  };
 }

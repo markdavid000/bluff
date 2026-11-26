@@ -1,7 +1,7 @@
 "use client";
 
 import { chipFaucetAbi } from "@bluff/contracts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
@@ -52,6 +52,16 @@ export function useWelcome() {
   });
   const now = useNow(CLAIM_CHECK_MS, nextClaim.data !== undefined);
   const claimKnown = nextClaim.data !== undefined;
+  const claimFailed = nextClaim.isError;
+  const sayClaimProblem = useEffectEvent(() =>
+    notify.error(accountCopy.claimCheckProblem, {
+      id: "claim-check",
+      action: { label: accountCopy.tryAgain, onPress: () => void nextClaim.refetch() },
+    })
+  );
+  useEffect(() => {
+    if (claimFailed) sayClaimProblem();
+  }, [claimFailed]);
   const canClaim = claimKnown && Number(nextClaim.data) * 1000 <= now;
 
   const finish = () => {

@@ -37,6 +37,7 @@ export function useChipBalance({
   );
 
   if (!account || permit.status === "checking") return { status: "loading" };
+  if (permit.status === "failed") return { status: "failed", retry: permit.retry };
   if (permit.status === "needed") {
     return {
       status: "hidden",
