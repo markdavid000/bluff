@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { contracts, gameClient } from "@/config/chain";
 import { type RoundResult, toRoundResult } from "./use-table-events";
 
-const CHECK_EVERY_MS = 2_000;
+const CHECK_EVERY_MS = 5_000;
 
 export function useRoundResultCatchUp({
   id,

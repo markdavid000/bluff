@@ -60,6 +60,22 @@ describe("useRoundResultCatchUp", () => {
     expect(result.current).toBeNull();
   });
 
+  it("checks again every 5 seconds until the round has settled, not faster", async () => {
+    vi.useFakeTimers();
+    try {
+      getContractEvents.mockResolvedValue([settled(2)]);
+      render({ round: 3, fromBlock: 500n, wanted: true });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(getContractEvents).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(4_900);
+      expect(getContractEvents).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(200);
+      expect(getContractEvents).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("asks nothing when no reveal is waiting", () => {
     render({ round: 3, fromBlock: 500n, wanted: false });
     expect(getContractEvents).not.toHaveBeenCalled();

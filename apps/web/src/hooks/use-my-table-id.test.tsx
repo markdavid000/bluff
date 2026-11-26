@@ -20,6 +20,10 @@ const seats: Record<string, Promise<bigint>> = {
   [ADA]: Promise.resolve(7n),
   [KOLA]: new Promise<bigint>(() => undefined),
 };
+let pathname = "/play";
+vi.mock("next/navigation", () => ({ usePathname: () => pathname }));
+
+const asked: { refetchInterval?: number | false }[] = [];
 vi.mock("wagmi", () => ({
   useReadContract: ({
     functionName,
@@ -28,14 +32,20 @@ vi.mock("wagmi", () => ({
   }: {
     functionName: string;
     args?: readonly [string];
-    query: { enabled: boolean };
-  }) =>
-    useQuery({
+    query: { enabled: boolean; refetchInterval?: number | false };
+  }) => {
+    asked.push(query);
+    return useQuery({
       ...query,
       queryKey: ["readContract", { functionName, args }],
       queryFn: () => (args ? seats[args[0]] : undefined) ?? Promise.reject(new Error("unknown")),
-    }),
+    });
+  },
 }));
+
+function wrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>;
+}
 
 describe("useMyTableId", () => {
   it("never shows the last account's table as the new account's while its own read loads", async () => {
@@ -48,5 +58,19 @@ describe("useMyTableId", () => {
     account = KOLA;
     rerender();
     expect(result.current).toEqual({ status: "loading" });
+  });
+
+  it("checks for the player's table every 30 seconds away from a table", () => {
+    account = ADA;
+    pathname = "/play";
+    renderHook(() => useMyTableId(), { wrapper });
+    expect(asked.at(-1)?.refetchInterval).toBe(30_000);
+  });
+
+  it("stops checking on a table's own page, where the table already shows the seat", () => {
+    account = ADA;
+    pathname = "/table/7";
+    renderHook(() => useMyTableId(), { wrapper });
+    expect(asked.at(-1)?.refetchInterval).toBe(false);
   });
 });

@@ -68,22 +68,46 @@ async function searchLog(me: Address): Promise<GameLogMemory> {
   return next;
 }
 
-async function readEndings(ids: readonly bigint[]): Promise<Map<bigint, GameEnding>> {
+const knownEndings = new Map<bigint, { searchedTo: bigint; ending: GameEnding | null }>();
+
+async function readEndings(
+  ids: readonly bigint[],
+  joinedAt: ReadonlyMap<bigint, bigint>
+): Promise<Map<bigint, GameEnding>> {
   const endings = new Map<bigint, GameEnding>();
   if (ids.length === 0) return endings;
   const head = await logsClient.getBlockNumber();
-  for (const [fromBlock, toBlock] of blockSpans(bluffDeployBlock, head, SPAN)) {
-    const logs = await logsClient.getLogs({
-      address: contracts.bluff,
-      event: gameEnded,
-      args: { id: [...ids] },
-      fromBlock,
-      toBlock,
-    });
-    for (const log of logs) {
-      const ending = toGameEnding(log.args);
-      if (log.args.id !== undefined && ending) endings.set(log.args.id, ending);
+  const startOf = (id: bigint) => {
+    const known = knownEndings.get(id);
+    return known ? known.searchedTo + 1n : (joinedAt.get(id) ?? bluffDeployBlock);
+  };
+  const wanted = ids.filter((id) => startOf(id) <= head);
+  if (wanted.length > 0) {
+    const from = wanted.map(startOf).reduce((low, start) => (start < low ? start : low));
+    const found = new Map<bigint, GameEnding>();
+    for (const [fromBlock, toBlock] of blockSpans(from, head, SPAN)) {
+      const logs = await logsClient.getLogs({
+        address: contracts.bluff,
+        event: gameEnded,
+        args: { id: [...wanted] },
+        fromBlock,
+        toBlock,
+      });
+      for (const log of logs) {
+        const ending = toGameEnding(log.args);
+        if (log.args.id !== undefined && ending) found.set(log.args.id, ending);
+      }
     }
+    for (const id of wanted) {
+      knownEndings.set(id, {
+        searchedTo: head,
+        ending: found.get(id) ?? knownEndings.get(id)?.ending ?? null,
+      });
+    }
+  }
+  for (const id of ids) {
+    const ending = knownEndings.get(id)?.ending;
+    if (ending) endings.set(id, ending);
   }
   return endings;
 }
@@ -101,7 +125,8 @@ async function readGames(me: Address, memory: GameLogMemory, shown: number) {
   });
   const tables = reads.map(([view, seats]) => toTable(view, seats));
   const endings = await readEndings(
-    tables.filter((table) => table.status === "finished").map((table) => table.id)
+    tables.filter((table) => table.status === "finished").map((table) => table.id),
+    new Map(page.map((game) => [game.id, game.block]))
   );
   return historyGames({ tables, joins: memory.joins, lefts: memory.lefts, endings, me });
 }
