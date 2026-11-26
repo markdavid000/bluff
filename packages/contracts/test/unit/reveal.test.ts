@@ -11,6 +11,7 @@ import {
   trueBid,
 } from "../helpers/round";
 import { startFreeGame } from "../helpers/tables";
+import { kmsVerifier } from "../helpers/kms";
 
 const PLAYING = 3n;
 const REVEALING = 4n;
@@ -163,8 +164,9 @@ describe("calling and revealing", function () {
       const forged =
         result.abiEncodedClearValues.slice(0, -2) +
         (result.abiEncodedClearValues.endsWith("05") ? "04" : "05");
-      await expect(bluff.connect(bob).settleReveal(id, forged, result.decryptionProof)).to.be
-        .reverted;
+      await expect(
+        bluff.connect(bob).settleReveal(id, forged, result.decryptionProof)
+      ).to.be.revertedWithCustomError(await kmsVerifier(), "KMSInvalidSigner");
     });
 
     it("accepts a reveal only once", async function () {

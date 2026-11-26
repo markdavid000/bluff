@@ -229,6 +229,38 @@ describe("useWaitingRoom", () => {
     expect(viewOf(render().result).role).toBe("visitor");
   });
 
+  describe("removing a guest who isn't ready", () => {
+    it("lets only the host remove, and only guests who aren't ready", () => {
+      me = HOST;
+      const view = viewOf(render().result);
+      expect(view.canRemove(KOLA)).toBe(true);
+      expect(view.canRemove(HOST)).toBe(false);
+      tableRead = {
+        status: "ready",
+        table: table([
+          [HOST, false],
+          [KOLA, true],
+        ]),
+        readAt: 100n,
+      };
+      expect(viewOf(render().result).canRemove(KOLA)).toBe(false);
+      me = KOLA;
+      expect(viewOf(render().result).canRemove(HOST)).toBe(false);
+    });
+
+    it("sends the removal for the chosen guest", async () => {
+      me = HOST;
+      const { result } = render();
+      act(() => viewOf(result).removePlayer(KOLA));
+      await waitFor(() =>
+        expect(sendMove).toHaveBeenCalledWith(
+          expect.objectContaining({ functionName: "removeUnready", args: [12n, KOLA] }),
+          expect.any(Function)
+        )
+      );
+    });
+  });
+
   it("holds the host's start until everyone else is ready", () => {
     me = HOST;
     expect(viewOf(render().result).canStart).toBe(false);

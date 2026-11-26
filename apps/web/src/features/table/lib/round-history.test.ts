@@ -105,6 +105,17 @@ describe("roundHistory", () => {
 describe("withCurrentBid", () => {
   const read = [{ round: 2, bids: [{ player: ADA, quantity: 2, face: 4 }], end: null }];
 
+  it("never files the bid under a round older than the history's newest, nor repeats a round", () => {
+    const later = [
+      { round: 5, bids: [], end: null },
+      { round: 4, bids: [{ player: ADA, quantity: 2, face: 3 }], end: null },
+      { round: 3, bids: [{ player: KOLA, quantity: 3, face: 6 }], end: null },
+    ];
+    const shown = withCurrentBid(later, 3, { player: KOLA, quantity: 3, face: 6 });
+    expect(shown.map((entry) => entry.round)).toEqual([5, 4, 3]);
+    expect(shown[0]?.bids).toEqual([]);
+  });
+
   it("adds the table's bid when the history hasn't caught up with it yet", () => {
     expect(withCurrentBid(read, 2, { player: KOLA, quantity: 3, face: 4 })[0]?.bids).toEqual([
       { player: ADA, quantity: 2, face: 4 },

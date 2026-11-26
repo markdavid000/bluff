@@ -2,7 +2,7 @@ import { chipFaucetAbi, chipTokenAbi } from "@bluff/contracts";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { forgetBlocks, newestBlock } from "@/lib/block-clock";
-import { useSendMove } from "./use-send-move";
+import { SPONSOR_RETRY_MS, SPONSOR_TRIES, useSendMove } from "./use-send-move";
 
 vi.mock("@/config/env", () => ({
   publicEnv: { privyAppId: "test-app", sepoliaRpcUrl: "http://127.0.0.1:8545" },
@@ -70,6 +70,56 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+});
+
+describe("when the sponsor's node is behind", () => {
+  const unclear = () =>
+    new Error("Execution reverted for an unknown reason. Details: execution reverted");
+
+  it("checks the move again and resends it once the network catches up", async () => {
+    vi.useFakeTimers();
+    embedded = true;
+    sendSponsored.mockRejectedValueOnce(unclear());
+    const { result } = renderHook(() => useSendMove());
+    const sent = result.current(CLAIM, vi.fn());
+    await vi.advanceTimersByTimeAsync(SPONSOR_RETRY_MS);
+    await expect(sent).resolves.toMatchObject({ blockNumber: 4242n });
+    expect(order).toEqual(["simulate", "simulate", "sponsored"]);
+    vi.useRealTimers();
+  });
+
+  it("stops with the game's real reason when the check now fails", async () => {
+    vi.useFakeTimers();
+    embedded = true;
+    sendSponsored.mockRejectedValueOnce(unclear());
+    simulateContract
+      .mockImplementationOnce(async () => order.push("simulate"))
+      .mockRejectedValueOnce(new Error("NotEveryoneReady"));
+    const { result } = renderHook(() => useSendMove());
+    const sent = result.current(CLAIM, vi.fn());
+    const outcome = expect(sent).rejects.toThrow("NotEveryoneReady");
+    await vi.advanceTimersByTimeAsync(SPONSOR_RETRY_MS);
+    await outcome;
+    vi.useRealTimers();
+  });
+
+  it("gives up after a few tries and passes the refusal on", async () => {
+    vi.useFakeTimers();
+    embedded = true;
+    sendSponsored.mockRejectedValue(unclear());
+    const { result } = renderHook(() => useSendMove());
+    const sent = result.current(CLAIM, vi.fn());
+    const outcome = expect(sent).rejects.toThrow("unknown reason");
+    await vi.advanceTimersByTimeAsync(SPONSOR_RETRY_MS * SPONSOR_TRIES);
+    await outcome;
+    expect(sendSponsored).toHaveBeenCalledTimes(SPONSOR_TRIES);
+    sendSponsored.mockReset();
+    sendSponsored.mockImplementation(async () => {
+      order.push("sponsored");
+      return { hash: "0xaa" };
+    });
+    vi.useRealTimers();
+  });
 });
 
 describe("useSendMove", () => {

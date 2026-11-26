@@ -17,6 +17,7 @@ import {
 } from "../helpers/chips";
 import { readyAndStart } from "../helpers/tables";
 import type { Bluff } from "../../types";
+import { kmsVerifier } from "../helpers/kms";
 
 const WAITING = 1n;
 const VERIFYING = 2n;
@@ -125,7 +126,9 @@ describe("checking paid seats", function () {
     const id = await seatPaidTable(contracts, [alice, bob], BUY_IN);
     const result = await fhevm.publicDecrypt([...(await bluff.revealHandles(id))]);
     const forged = result.abiEncodedClearValues.slice(0, -1) + "0";
-    await expect(bluff.confirmSeats(id, forged, result.decryptionProof)).to.be.reverted;
+    await expect(
+      bluff.confirmSeats(id, forged, result.decryptionProof)
+    ).to.be.revertedWithCustomError(await kmsVerifier(), "KMSInvalidSigner");
     await bluff.confirmSeats(id, result.abiEncodedClearValues, result.decryptionProof);
     await expect(bluff.confirmSeats(id, result.abiEncodedClearValues, result.decryptionProof))
       .to.be.revertedWithCustomError(bluff, "WrongStatus")

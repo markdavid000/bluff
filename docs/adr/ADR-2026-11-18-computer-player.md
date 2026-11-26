@@ -10,6 +10,9 @@
   - [Ready again after a reopen](ADR-2026-11-17-ready-again-after-reopen.md)
   - [Back to your game](ADR-2026-11-17-back-to-your-game.md)
 - **Plan:** [2026-11-18-computer-player-plan.md](../plans/2026-11-18-computer-player-plan.md)
+- **Amended by:**
+  - [ADR-2026-11-25-keep-a-computer-ready](ADR-2026-11-25-keep-a-computer-ready.md);
+  - [ADR-2026-11-25-computer-on-fly](ADR-2026-11-25-computer-on-fly.md): hosted on Fly.io, always on, instead of Railway.
 
 ## Context
 
@@ -209,6 +212,8 @@ The chance that a bid is true is `bidChance(bid, ownFaces, hiddenDice)` from `@b
 Every seated computer runs the same duties as a seated browser: `settleReveal`, `claimTimeout`, `cancelStuckReveal` and `cancelTable`. It decides with the shared `keeperDuty`, staggers by seat position, and checks before sending that the duty is still due. It reveals with `decryptPublicValues`, retrying for up to 30 s.
 
 ### 9. Staying awake on Railway
+
+> **Replaced** by [ADR-2026-11-25-computer-on-fly](ADR-2026-11-25-computer-on-fly.md): on Fly.io the service runs on one always-on machine, so it never sleeps. The web app keeps its waking retry for restarts and deploys.
 
 - **While any player is seated,** the service polls the chain every 2 s with **one** request for all its tables: `Bluff`'s events since the last block. It reads only the tables those events touch, so 20 games cost about as much RPC as one. Those outbound packets keep Railway from sleeping mid-game.
 - **When no wallet is seated,** polling stops. The service sleeps after 5 to 10 minutes, so an idle week costs close to nothing.
