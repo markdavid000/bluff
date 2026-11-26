@@ -14,4 +14,8 @@ describe("rollFrame", () => {
     expect(rollFrame(STEP_MS * 29, 30)).toEqual({ index: 29, done: true });
     expect(rollFrame(STEP_MS * 500, 30)).toEqual({ index: 29, done: true });
   });
+
+  it("shows the dice where they land, without the tumble, with calm motion", () => {
+    expect(rollFrame(0, 30, true)).toEqual({ index: 29, done: true });
+  });
 });

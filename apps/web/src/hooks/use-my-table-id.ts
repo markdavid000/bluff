@@ -6,6 +6,7 @@ import { type Query, useQueryClient } from "@tanstack/react-query";
 import { type Address, isAddressEqual } from "viem";
 import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { markSeatGone } from "./use-left-tables";
 
 const REFRESH_MS = 6_000;
@@ -23,7 +24,7 @@ export function useMyTableId(): MyTableId {
     abi: bluffAbi,
     functionName: "tableOf",
     args: account ? [account] : undefined,
-    query: { enabled: Boolean(account), refetchInterval: REFRESH_MS },
+    query: { ...ACCOUNT_READ, enabled: Boolean(account), refetchInterval: REFRESH_MS },
   });
 
   if (read.data !== undefined) return { status: "ready", id: read.data === 0n ? null : read.data };

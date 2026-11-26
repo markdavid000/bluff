@@ -1,5 +1,7 @@
 import { QueryClient, keepPreviousData } from "@tanstack/react-query";
 
+export const ACCOUNT_READ = { placeholderData: undefined };
+
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {

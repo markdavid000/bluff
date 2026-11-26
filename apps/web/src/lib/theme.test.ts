@@ -44,4 +44,32 @@ describe("the theme set before the page draws", () => {
     console.warn = warn;
     expect(warned).toBe(true);
   });
+
+  it("calms the page before it draws when the player chose calm motion", () => {
+    boot(JSON.stringify({ calmMotion: true }), false);
+    expect(document.documentElement).toHaveClass("calm");
+    boot(JSON.stringify({ calmMotion: false }), false);
+    expect(document.documentElement).not.toHaveClass("calm");
+    boot(null, false);
+    expect(document.documentElement).not.toHaveClass("calm");
+  });
+
+  it("still sets the theme when browser storage cannot be reached", () => {
+    const storage = Object.getOwnPropertyDescriptor(window, "localStorage");
+    const warn = console.warn;
+    console.warn = () => undefined;
+    document.documentElement.className = "";
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("blocked");
+      },
+    });
+    window.matchMedia = (query: string) => ({ matches: query.includes("dark") }) as MediaQueryList;
+    new Function(THEME_BOOT_SCRIPT)();
+    if (storage) Object.defineProperty(window, "localStorage", storage);
+    console.warn = warn;
+    expect(document.documentElement).toHaveClass("dark");
+    expect(document.documentElement).not.toHaveClass("calm");
+  });
 });

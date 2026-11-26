@@ -11,6 +11,7 @@ import {
   Quaternion,
   Vector2,
 } from "three";
+import { useCalmMotion } from "@/hooks/use-calm-motion";
 import type { ThemeColors } from "@/hooks/use-theme-colors";
 import { BOX_FACE_ORDER, DIE_SIZE, type Throw, faceUpRotation } from "@/lib/dice-geometry";
 import type { ThrowState } from "../../hooks/use-dice-throw";
@@ -98,11 +99,13 @@ function Seat({
   colors,
   shaking,
   lifted,
+  calm,
 }: {
   seat: SeatPlacement;
   colors: ThemeColors;
   shaking: boolean;
   lifted: boolean;
+  calm: boolean;
 }) {
   const cup = useRef<Group>(null);
   const place = useRef<Group>(null);
@@ -123,6 +126,7 @@ function Seat({
       lift: { x: liftX, z: liftZ },
       shaking,
       lifted,
+      calm,
       time: state.clock.elapsedTime,
       delta,
     });
@@ -132,7 +136,7 @@ function Seat({
     group.rotation.x = step.tiltX;
     group.position.y = step.at.y;
     return step.moving;
-  }, `${shaking}:${lifted}:${restX}:${restZ}`);
+  }, `${shaking}:${lifted}:${calm}:${restX}:${restZ}`);
   return (
     <group ref={place} position={[restX, 0, restZ]} rotation-y={seat.facing}>
       <group ref={cup}>
@@ -235,10 +239,12 @@ function ThrownDice({
   result,
   startedAt,
   materials,
+  calm,
 }: {
   result: Throw;
   startedAt: number;
   materials: MeshStandardMaterial[];
+  calm: boolean;
 }) {
   const meshes = useRef<(Mesh | null)[]>([]);
   const turned = new Quaternion();
@@ -249,7 +255,7 @@ function ThrownDice({
     result.dice.forEach((die, index) => {
       const mesh = meshes.current[index];
       if (!mesh) return;
-      const { index: step, done } = rollFrame(elapsed, die.frames.length);
+      const { index: step, done } = rollFrame(elapsed, die.frames.length, calm);
       if (!done) rolling = true;
       const frame = die.frames[step];
       mesh.position.set(...frame.position);
@@ -258,7 +264,7 @@ function ThrownDice({
       mesh.quaternion.copy(turned.multiply(turn));
     });
     return rolling;
-  }, startedAt);
+  }, `${startedAt}:${calm}`);
   return (
     <>
       {result.dice.map((die, index) => (
@@ -349,6 +355,7 @@ export function BoardScene({
   paused?: boolean;
   label: string;
 }) {
+  const calm = useCalmMotion();
   const materials = diceMaterials(colors);
   const glowing = diceMaterials(colors, true);
   useEffect(
@@ -388,6 +395,7 @@ export function BoardScene({
             throwKind: throwState.kind,
             revealed,
             othersShaking,
+            calm,
           });
           return (
             <Seat
@@ -396,6 +404,7 @@ export function BoardScene({
               colors={colors}
               shaking={motion.shaking}
               lifted={motion.lifted}
+              calm={calm}
             />
           );
         })}
@@ -416,6 +425,7 @@ export function BoardScene({
             result={throwState.result}
             startedAt={throwState.startedAt}
             materials={materials}
+            calm={calm}
           />
         )}
         <OrbitControls

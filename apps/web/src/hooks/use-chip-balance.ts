@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useConfidentialBalance } from "@zama-fhe/react-sdk";
 import type { Address } from "viem";
 import { contracts } from "@/config/chain";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { usePermit } from "./use-permit";
 
 const DECRYPT_ATTEMPTS = 5;
@@ -28,6 +29,7 @@ export function useChipBalance({
   const balance = useConfidentialBalance(
     { address: contracts.chips, account },
     {
+      ...ACCOUNT_READ,
       enabled: permit.status === "granted",
       retry: DECRYPT_ATTEMPTS,
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY_MS),

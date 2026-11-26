@@ -13,6 +13,7 @@ import { tableCopy } from "../copy";
 import type { useGame } from "../hooks/use-game";
 import { useGameBoard } from "../hooks/use-game-board";
 import { useGameHistory } from "../hooks/use-round-history";
+import { useTurnFocus } from "../hooks/use-turn-focus";
 import { seatLayout } from "../lib/seat-layout";
 import { BidControl } from "./bid-control";
 import { GameBoard } from "./board/game-board";
@@ -36,11 +37,13 @@ const SLOT: Record<"top" | "left" | "right" | "bottom", string> = {
 
 const POT_STACKS = 6;
 const WIDE = "(min-width: 64rem)";
+const SMALL = "(max-width: 23rem), (max-height: 44rem)";
 
 export function GameView({ game }: { game: Game }) {
   const colors = useThemeColors();
   const { table, seats } = game;
   const wide = useMediaQuery(WIDE);
+  const small = useMediaQuery(SMALL);
   const [cardUp, setCardUp] = useState(false);
   if (game.reveal !== null && !cardUp) setCardUp(true);
   const history = useGameHistory(table, wide, { bid: game.bid, bidder: game.bidder });
@@ -57,9 +60,16 @@ export function GameView({ game }: { game: Game }) {
     faces: game.dice.status === "ready" && game.boardRound === table.round ? game.dice.faces : null,
     placement: game.stillIn ? mine : null,
   });
+  const controlsShown =
+    game.myTurn &&
+    !(waitingForDice && (game.dice.status === "loading" || game.dice.status === "ready"));
+  const { actionRef, headingRef, focusAfterReveal } = useTurnFocus(controlsShown);
 
   return (
     <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4">
+      <h1 ref={headingRef} tabIndex={-1} className="sr-only">
+        {tableCopy.tableName(table.id.toString())}
+      </h1>
       <div className="flex w-full items-center justify-between gap-3 pb-1 text-sm min-[68rem]:pr-8">
         <span className="flex min-w-0 items-center gap-2">
           <RoundBadge round={table.round} diceInPlay={table.diceInPlay} />
@@ -143,13 +153,10 @@ export function GameView({ game }: { game: Game }) {
         {game.myTurn && game.turnLow ? tableCopy.timeLow : ""}
       </span>
       <TurnBanner line={table.status === "playing" ? game.line : null} quiet={game.myTurn} />
-      <Appear
-        show={
-          game.myTurn &&
-          !(waitingForDice && (game.dice.status === "loading" || game.dice.status === "ready"))
-        }
-      >
+      <Appear show={controlsShown}>
         <BidControl
+          actionRef={actionRef}
+          compact={small}
           choice={game.choice}
           bid={game.bid}
           bidderName={game.bidderName}
@@ -164,7 +171,10 @@ export function GameView({ game }: { game: Game }) {
       <RevealCard
         reveal={game.reveal}
         onContinue={game.dismissReveal}
-        onGone={() => setCardUp(false)}
+        onGone={(event) => {
+          focusAfterReveal(event);
+          setCardUp(false);
+        }}
       />
     </div>
   );

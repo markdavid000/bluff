@@ -2,11 +2,12 @@
 
 import { bluffAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
-import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { hashFn } from "wagmi/query";
 import { type Address, getAbiItem } from "viem";
 import { bluffDeployBlock, contracts, gameClient, logsClient } from "@/config/chain";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { usePlayerProfiles } from "@/hooks/use-player-profiles";
 import { tableCopy } from "../copy";
 import { type GameEnding, toGameEnding } from "../lib/game-end";
@@ -123,6 +124,7 @@ export function useGameHistoryList(): GameHistoryList {
   const me = user?.wallet?.address as Address | undefined;
   const [shown, setShown] = useState(PAGE);
   const log = useQuery({
+    ...ACCOUNT_READ,
     queryKey: ["game-log", me],
     queryFn: me ? () => searchLog(me) : skipToken,
   });
@@ -131,7 +133,8 @@ export function useGameHistoryList(): GameHistoryList {
     queryKey: ["game-history", me, memory, shown],
     queryKeyHashFn: hashFn,
     queryFn: me && memory ? () => readGames(me, memory, shown) : skipToken,
-    placeholderData: keepPreviousData,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === me ? previous : undefined,
   });
   const players = [
     ...new Set((games.data ?? []).flatMap((game) => game.table.seats.map((seat) => seat.player))),
