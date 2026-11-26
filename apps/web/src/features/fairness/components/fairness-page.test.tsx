@@ -17,6 +17,7 @@ describe("FairnessPage", () => {
     expect(detail).not.toBeVisible();
     fireEvent.click(how);
     expect(detail).toBeVisible();
+    expect(detail.closest("details")).toHaveClass("smooth-details");
   });
 
   it("lets anyone check every contract and the tests, opening outside pages in a new tab", () => {
