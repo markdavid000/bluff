@@ -48,7 +48,13 @@ function BidLine({ bid, nameOf, latest }: { bid: HistoryBid; nameOf: NameOf; lat
   );
 }
 
-function Body({ history, nameOf }: { history: RoundHistoryState; nameOf: NameOf }) {
+export function RoundHistoryList({
+  history,
+  nameOf,
+}: {
+  history: RoundHistoryState;
+  nameOf: NameOf;
+}) {
   if (history.status === "loading") {
     return (
       <span
@@ -130,7 +136,7 @@ export function RoundHistory({ history, nameOf }: { history: RoundHistoryState; 
           </span>
         </summary>
         <div className="max-h-[26vh] [scrollbar-width:thin] overflow-y-auto px-4 pb-4">
-          <Body history={history} nameOf={nameOf} />
+          <RoundHistoryList history={history} nameOf={nameOf} />
         </div>
       </details>
     </div>

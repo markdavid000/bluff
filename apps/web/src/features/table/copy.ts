@@ -71,6 +71,8 @@ export const tableCopy = {
   hiddenMark: "?",
   timesMark: (quantity: number) => `${quantity} ×`,
   roundLine: (round: number, dice: number) => `Round ${round} · ${dice} dice in play`,
+  openHistory: (round: number, dice: number) =>
+    `Round ${round} · ${dice} dice in play. See the rounds so far`,
   raise: "Raise",
   oneMore: "One more die",
   oneFewer: "One fewer die",
@@ -147,6 +149,7 @@ export const tableCopy = {
   checkingInvite: "Checking your invite…",
   privateTable: "This table is private. Ask the host for the invite link.",
   leave: "Leave the table",
+  leaveShort: "Leave",
   leaving: "Leaving the table…",
   leftTable: "You left the table",
   leaveConfirmTitle: "Leave this game?",

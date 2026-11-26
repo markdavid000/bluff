@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tableCopy } from "../copy";
 import type { OwnDice } from "../hooks/use-own-dice";
@@ -225,6 +225,21 @@ describe("GameSeat", () => {
     rerender(seat(2, false));
     rerender(seat(2, false));
     expect(play.mock.calls.filter(([name]) => name === "thud")).toHaveLength(1);
+  });
+
+  it("fits a phone's opponents row: one dice count instead of a tile each, with the bid underneath", () => {
+    const { container } = show({ compact: true, dice: 4, lastBid: { quantity: 3, face: 4 } });
+    const dice = screen.getByRole("img", { name: tableCopy.hiddenDice(4) });
+    expect(dice).toHaveTextContent("4");
+    expect(within(dice).getAllByText("?")).toHaveLength(1);
+    expect(container.querySelector("[data-seat-bid]")).toHaveClass("static");
+  });
+
+  it("draws the player's own seat a little smaller on a phone", () => {
+    show({ isMe: true, tight: true, ownDice: { status: "ready", faces: [5, 2] } });
+    expect(screen.getByRole("img", { name: tableCopy.faceWords[4] }).firstElementChild).toHaveClass(
+      "size-8"
+    );
   });
 
   it("marks a player who is out, with no dice", () => {
