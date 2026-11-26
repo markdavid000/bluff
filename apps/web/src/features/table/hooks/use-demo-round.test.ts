@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe("useDemoRound", () => {
   it("plays the round step by step, then starts again", () => {
-    const { result } = renderHook(() => useDemoRound());
+    const { result } = renderHook(() => useDemoRound(true));
     const seen = [result.current.step];
     for (const step of DEMO_STEPS) {
       act(() => vi.advanceTimersByTime(STEP_MS[step]));
@@ -26,15 +26,30 @@ describe("useDemoRound", () => {
   });
 
   it("counts a new round each time it starts again, so the dice are thrown afresh", () => {
-    const { result } = renderHook(() => useDemoRound());
+    const { result } = renderHook(() => useDemoRound(true));
     expect(result.current.round).toBe(1);
     for (const step of DEMO_STEPS) act(() => vi.advanceTimersByTime(STEP_MS[step]));
     expect(result.current).toEqual({ step: DEMO_STEPS[0], round: 2 });
   });
 
+  it("waits where it is while the demo is off the screen, and carries on when it is back", () => {
+    let onScreen = true;
+    const { result, rerender } = renderHook(() => useDemoRound(onScreen));
+    act(() => vi.advanceTimersByTime(STEP_MS[DEMO_STEPS[0]]));
+    expect(result.current.step).toBe(DEMO_STEPS[1]);
+    onScreen = false;
+    rerender();
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(result.current.step).toBe(DEMO_STEPS[1]);
+    onScreen = true;
+    rerender();
+    act(() => vi.advanceTimersByTime(STEP_MS[DEMO_STEPS[1]]));
+    expect(result.current.step).toBe(DEMO_STEPS[2]);
+  });
+
   it("holds still on the reveal when motion should be calm", () => {
     calm = true;
-    const { result } = renderHook(() => useDemoRound());
+    const { result } = renderHook(() => useDemoRound(true));
     expect(result.current.step).toBe("reveal");
     act(() => vi.advanceTimersByTime(60_000));
     expect(result.current.step).toBe("reveal");

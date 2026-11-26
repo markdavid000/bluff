@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Face } from "@bluff/game";
-import { faceUpRotation, flatness, shownFace, throwDice } from "./dice-physics";
+import { flatness, shownFace, throwDice } from "./dice-physics";
 import { seededRandom } from "./random";
 
 const SIDES = [
@@ -52,32 +52,5 @@ describe("throwDice", () => {
     const first = throwDice({ faces: [3], from: SIDES[0], random: seededRandom(1) });
     const second = throwDice({ faces: [3], from: SIDES[0], random: seededRandom(2) });
     expect(second.dice[0].frames.at(-1)).not.toEqual(first.dice[0].frames.at(-1));
-  });
-});
-
-describe("faceUpRotation", () => {
-  function rotate([x, y, z, w]: readonly number[], [vx, vy, vz]: readonly number[]) {
-    const ix = w * vx + y * vz - z * vy;
-    const iy = w * vy + z * vx - x * vz;
-    const iz = w * vz + x * vy - y * vx;
-    const iw = -x * vx - y * vy - z * vz;
-    return [
-      ix * w + iw * -x + iy * -z - iz * -y,
-      iy * w + iw * -y + iz * -x - ix * -z,
-      iz * w + iw * -z + ix * -y - iy * -x,
-    ];
-  }
-
-  it.each([1, 2, 3, 4, 5, 6] as const)("turns face %i to the top", (face) => {
-    const normals: Record<number, number[]> = {
-      1: [0, 1, 0],
-      6: [0, -1, 0],
-      2: [1, 0, 0],
-      5: [-1, 0, 0],
-      3: [0, 0, 1],
-      4: [0, 0, -1],
-    };
-    const up = rotate(faceUpRotation(face), normals[face] ?? []);
-    expect(up[1]).toBeCloseTo(1, 5);
   });
 });

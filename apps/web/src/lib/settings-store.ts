@@ -16,6 +16,7 @@ export interface Settings {
   theme: ThemeSetting;
   seenTips: readonly string[];
   board: BoardSetting;
+  boardPicked: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "auto",
   seenTips: [],
   board: "3d",
+  boardPicked: false,
 };
 
 const STORAGE_KEY = "bluff.settings";
@@ -53,6 +55,7 @@ function fromSaved(saved: Record<string, unknown>): Settings {
       ? saved.seenTips.filter((tip): tip is string => typeof tip === "string")
       : DEFAULT_SETTINGS.seenTips,
     board: pick(saved.board, BOARD_CHOICES, DEFAULT_SETTINGS.board),
+    boardPicked: flag(saved.boardPicked, DEFAULT_SETTINGS.boardPicked),
   };
 }
 

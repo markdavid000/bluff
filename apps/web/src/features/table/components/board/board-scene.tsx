@@ -1,7 +1,7 @@
 "use client";
 
 import { ContactShadows, OrbitControls, RoundedBox } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import {
   DoubleSide,
@@ -12,20 +12,16 @@ import {
   Vector2,
 } from "three";
 import type { ThemeColors } from "@/hooks/use-theme-colors";
-import {
-  BOX_FACE_ORDER,
-  DIE_SIZE,
-  STEP_SECONDS,
-  type Throw,
-  faceUpRotation,
-} from "@/lib/dice-physics";
+import { BOX_FACE_ORDER, DIE_SIZE, type Throw, faceUpRotation } from "@/lib/dice-geometry";
 import type { ThrowState } from "../../hooks/use-dice-throw";
+import { useFramesWhileMoving } from "../../hooks/use-frames-while-moving";
 import { calabashTexture } from "../../lib/calabash-texture";
-import { cupMotion } from "../../lib/cup-motion";
+import { cupMotion, cupStep } from "../../lib/cup-motion";
 import type { RevealedSeat } from "../../lib/reveal";
 import { dieFaceTexture } from "../../lib/dice-textures";
 import { liftedCupPosition } from "../../lib/lifted-cup";
 import { revealedRowCentre } from "../../lib/revealed-row";
+import { rollFrame } from "../../lib/roll-frame";
 import { type SeatColor, type SeatPlacement } from "../../lib/seat-layout";
 
 const SEAT_TOKEN: Record<SeatColor, keyof ThemeColors> = {
@@ -117,20 +113,26 @@ function Seat({
     burnt: colors["--board-edge"],
   });
   useEffect(() => () => texture.dispose(), [texture]);
-  useFrame((state, delta) => {
+  useFramesWhileMoving((state, delta) => {
     const group = cup.current;
     const spot = place.current;
-    if (!group || !spot) return;
-    const ease = Math.min(1, delta * 10);
-    spot.position.x += ((lifted ? liftX : restX) - spot.position.x) * ease;
-    spot.position.z += ((lifted ? liftZ : restZ) - spot.position.z) * ease;
-    const time = state.clock.elapsedTime;
-    const wobble = shaking ? Math.sin(time * 38) * 0.18 : 0;
-    group.rotation.z = wobble;
-    group.rotation.x = shaking ? Math.cos(time * 31) * 0.12 : 0;
-    const targetY = lifted ? 1.4 : shaking ? 0.08 + Math.abs(Math.sin(time * 19)) * 0.12 : 0;
-    group.position.y += (targetY - group.position.y) * ease;
-  });
+    if (!group || !spot) return false;
+    const step = cupStep({
+      at: { x: spot.position.x, y: group.position.y, z: spot.position.z },
+      rest: { x: restX, z: restZ },
+      lift: { x: liftX, z: liftZ },
+      shaking,
+      lifted,
+      time: state.clock.elapsedTime,
+      delta,
+    });
+    spot.position.x = step.at.x;
+    spot.position.z = step.at.z;
+    group.rotation.z = step.tiltZ;
+    group.rotation.x = step.tiltX;
+    group.position.y = step.at.y;
+    return step.moving;
+  }, `${shaking}:${lifted}:${restX}:${restZ}`);
   return (
     <group ref={place} position={[restX, 0, restZ]} rotation-y={seat.facing}>
       <group ref={cup}>
@@ -241,18 +243,22 @@ function ThrownDice({
   const meshes = useRef<(Mesh | null)[]>([]);
   const turned = new Quaternion();
   const turn = new Quaternion();
-  useFrame(() => {
-    const step = Math.floor((performance.now() - startedAt) / 1000 / STEP_SECONDS);
+  useFramesWhileMoving(() => {
+    const elapsed = performance.now() - startedAt;
+    let rolling = false;
     result.dice.forEach((die, index) => {
       const mesh = meshes.current[index];
       if (!mesh) return;
-      const frame = die.frames[Math.min(step, die.frames.length - 1)];
+      const { index: step, done } = rollFrame(elapsed, die.frames.length);
+      if (!done) rolling = true;
+      const frame = die.frames[step];
       mesh.position.set(...frame.position);
       turned.set(...frame.rotation);
       turn.set(...die.faceTurn);
       mesh.quaternion.copy(turned.multiply(turn));
     });
-  });
+    return rolling;
+  }, startedAt);
   return (
     <>
       {result.dice.map((die, index) => (
@@ -329,6 +335,7 @@ export function BoardScene({
   revealedDice = null,
   ownSeat = 0,
   othersShaking = false,
+  paused = false,
   label,
 }: {
   colors: ThemeColors;
@@ -339,6 +346,7 @@ export function BoardScene({
   revealedDice?: readonly (RevealedSeat | null)[] | null;
   ownSeat?: number | null;
   othersShaking?: boolean;
+  paused?: boolean;
   label: string;
 }) {
   const materials = diceMaterials(colors);
@@ -358,7 +366,8 @@ export function BoardScene({
       className="aspect-square w-full cursor-grab active:cursor-grabbing"
     >
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
+        frameloop={paused ? "never" : "demand"}
         camera={{ position: [0, 10.4, 8.2], fov: 38 }}
         onCreated={({ camera }) => camera.lookAt(0, 0, 0.35)}
       >

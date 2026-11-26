@@ -1,4 +1,4 @@
-import type { Vector } from "@/lib/dice-physics";
+import type { Vector } from "@/lib/dice-geometry";
 import type { SeatPlacement } from "./seat-layout";
 
 export const ROW_TOWARD_CENTRE = 0.85;

@@ -1,13 +1,18 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Face } from "@bluff/game";
 import { seatLayout } from "../lib/seat-layout";
+import { loadDicePhysics } from "./use-dice-throw";
 import { OTHERS_SHAKE_MS, SHAKE_MS, useGameBoard } from "./use-game-board";
 
 const play = vi.fn();
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) }));
 
 const MINE = seatLayout(2, 0)[0];
+
+beforeAll(async () => {
+  await loadDicePhysics();
+});
 
 beforeEach(() => {
   vi.useFakeTimers();
