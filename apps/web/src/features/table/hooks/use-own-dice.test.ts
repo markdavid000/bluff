@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contracts } from "@/config/chain";
 import { forgetBlocks, seeBlock } from "@/lib/block-clock";
@@ -75,6 +75,22 @@ describe("useOwnDice", () => {
     const fourth = readAsked.at(-1);
     expect(third?.scopeKey).not.toEqual(fourth?.scopeKey);
     expect(fourth?.blockNumber).toBe(900n);
+  });
+
+  it("reads a round's dice once, not again at every new block", () => {
+    seeBlock(900n);
+    let round = 3;
+    const hook = renderHook(() => useOwnDice({ id: TABLE, me: ME, round, inGame: true }));
+    const first = readAsked.at(-1);
+    act(() => seeBlock(901n));
+    act(() => seeBlock(902n));
+    hook.rerender();
+    expect(readAsked.at(-1)?.blockNumber).toBe(first?.blockNumber);
+    expect(readAsked.at(-1)?.scopeKey).toBe(first?.scopeKey);
+    round = 4;
+    hook.rerender();
+    expect(readAsked.at(-1)?.blockNumber).toBe(902n);
+    expect(readAsked.at(-1)?.scopeKey).not.toBe(first?.scopeKey);
   });
 
   it("never shows the last round's dice while this round's are read", () => {

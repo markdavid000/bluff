@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COMPUTER_PLAYERS } from "@/config/computer-players";
 import { forgetBlocks, newestBlock } from "@/lib/block-clock";
@@ -16,13 +16,18 @@ const COMPUTER = COMPUTER_PLAYERS[0] ?? KOLA;
 
 type OnLogs = (logs: unknown[]) => void;
 let deliver: OnLogs = () => undefined;
+let watching: boolean | undefined;
 const readContract = vi.fn();
 vi.mock("wagmi", () => ({
-  useWatchContractEvent: ({ onLogs }: { onLogs: OnLogs }) => {
+  useWatchContractEvent: ({ onLogs, enabled }: { onLogs: OnLogs; enabled?: boolean }) => {
     deliver = onLogs;
+    watching = enabled;
   },
   usePublicClient: () => ({ readContract: (request: unknown) => readContract(request) }),
 }));
+
+let visibility: DocumentVisibilityState = "visible";
+vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
 
 let shown: string[] = [];
 let stop: () => void = () => undefined;
@@ -37,6 +42,7 @@ beforeEach(() => {
 afterEach(() => {
   stop();
   forgetBlocks();
+  visibility = "visible";
 });
 
 function log(eventName: string, args: Record<string, unknown>, blockNumber: bigint, logIndex = 0) {
@@ -50,6 +56,21 @@ function log(eventName: string, args: Record<string, unknown>, blockNumber: bigi
 }
 
 describe("useTableEvents", () => {
+  it("stops watching the table while the tab is hidden, and starts again when it is shown", () => {
+    renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => null }));
+    expect(watching).toBe(true);
+    act(() => {
+      visibility = "hidden";
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(watching).toBe(false);
+    act(() => {
+      visibility = "visible";
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(watching).toBe(true);
+  });
+
   it("tells the player about others at this table and moves the block clock", () => {
     renderHook(() => useTableEvents({ id: 12n, me: ME, nameOf: () => "Kola #3C4D" }));
     deliver([

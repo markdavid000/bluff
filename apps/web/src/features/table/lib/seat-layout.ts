@@ -1,5 +1,5 @@
 import type { TableSize } from "@bluff/game";
-import type { Vector } from "@/lib/dice-physics";
+import type { Vector } from "@/lib/dice-geometry";
 
 export type SeatColor = "red" | "green" | "yellow" | "blue";
 

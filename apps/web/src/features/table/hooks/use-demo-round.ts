@@ -22,16 +22,16 @@ function stepAt(index: number): DemoStep {
   return step;
 }
 
-export function useDemoRound(): { step: DemoStep; round: number } {
+export function useDemoRound(onScreen: boolean): { step: DemoStep; round: number } {
   const calm = useCalmMotion();
   const [played, setPlayed] = useState(0);
   const step = stepAt(played % DEMO_STEPS.length);
 
   useEffect(() => {
-    if (calm) return;
+    if (calm || !onScreen) return;
     const timer = window.setTimeout(() => setPlayed((now) => now + 1), STEP_MS[step]);
     return () => window.clearTimeout(timer);
-  }, [calm, step, played]);
+  }, [calm, onScreen, step, played]);
 
   return {
     step: calm ? "reveal" : step,
