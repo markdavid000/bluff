@@ -411,6 +411,22 @@ describe("useWaitingRoom", () => {
     expect(viewOf(result).starting).toBe(false);
   });
 
+  it("lets the host start again after a paid table reopens because someone couldn't pay", async () => {
+    me = HOST;
+    sendMove.mockResolvedValue({ blockNumber: 101n });
+    const { result, rerender } = render();
+    act(() => viewOf(result).start());
+    await waitFor(() => expect(sendMove).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const waiting = tableRead.table as Table;
+    tableRead = { ...tableRead, table: { ...waiting, status: "verifying" } };
+    rerender();
+    tableRead = { ...tableRead, table: { ...waiting, status: "waiting" } };
+    rerender();
+    expect(viewOf(result).starting).toBe(false);
+    expect(viewOf(result).busy).toBe(false);
+  });
+
   it("forgets the player's seat once the table closes, so the lobby opens without it", () => {
     const { rerender } = render();
     expect(forgetMyTable).not.toHaveBeenCalled();
