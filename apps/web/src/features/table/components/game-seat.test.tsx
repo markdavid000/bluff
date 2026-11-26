@@ -235,17 +235,6 @@ describe("GameSeat", () => {
     expect(container.querySelector("[data-seat-bid]")).toHaveClass("static");
   });
 
-  it("lays the player's own seat out in a row on a phone, with the bid beside the dice", () => {
-    const { container } = show({
-      isMe: true,
-      tight: true,
-      lastBid: { quantity: 3, face: 4 },
-      ownDice: { status: "ready", faces: [5, 2] },
-    });
-    expect(screen.getByRole("figure")).toHaveClass("flex-row");
-    expect(container.querySelector("[data-seat-bid]")).toHaveClass("static");
-  });
-
   it("draws the player's own seat a little smaller on a phone", () => {
     show({ isMe: true, tight: true, ownDice: { status: "ready", faces: [5, 2] } });
     expect(screen.getByRole("img", { name: tableCopy.faceWords[4] }).firstElementChild).toHaveClass(

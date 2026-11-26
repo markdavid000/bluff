@@ -32,7 +32,7 @@ From the maintainer's screenshots on 2026-11-26.
   - Leave reads "Leave", or just its flag on screens 368 px wide or less, with the full name kept for screen readers.
 - **Rounds so far:** the Round badge becomes a button that opens the rounds in a sheet, and the history is only read while the sheet is open.
 
-- **Your own seat sits in a row** on phones: your picture and turn ring on the left, with your name, dice and last bid beside them. The bid controls use their shorter layout. This roughly doubles the board on your turn: 69 → 133 px on a 328 px phone, and 157 → 305 px on a 390 px one.
+- **The bid controls use their shorter layout on phones,** so the board keeps more room on your turn: 157 → 241 px on a 390 px phone. Your own seat stays stacked (picture, name, dice), which the maintainer preferred to a row.
 
 ## The waiting room, on screens narrower than 40rem
 
@@ -66,4 +66,5 @@ Wider screens keep today's layout.
 - **The waiting room, rendered the same way with 2, 3 and 4 seats, full and part full,** at 328, 360 and 390 px wide:
   - the board is 132–350 px, where before it was a sliver;
   - no element runs off the screen, no buttons overlap, and the page never scrolls.
-- **The game on your own turn,** at the same sizes: the board is 133–305 px, and 280–342 px on other turns.
+- **The game on your own turn,** at the same sizes: the board is 69, 137 and 241 px wide, and 280–342 px on other turns.
+- **Known limit:** on the smallest phones (328 × 720) the board is still small, about 69 px, while the bid controls are open on your turn.
