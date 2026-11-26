@@ -214,16 +214,23 @@ Game data does not use server caching: it is read in the browser and cached by T
 
 - **Web app:** [Vercel](https://vercel.com), Hobby plan, with `apps/web` as the project root. `main` deploys production, `staging` deploys to the staging URL, and every pull request gets a preview link. `siteConfig.url` reads Vercel's production host at build time.
 - **Contracts:** UUPS proxies on Sepolia, deployed with `pnpm --filter @bluff/contracts deploy:sepolia` and upgraded in place with `upgrade:sepolia`. Addresses live in `packages/contracts/deployments/sepolia.json`, which the web app reads; the proxy addresses never change.
-- **Computer player (`apps/bot`):** a [Railway](https://railway.com) service ([ADR-2026-11-18-computer-player](adr/ADR-2026-11-18-computer-player.md)). Its settings live in Railway's dashboard, not in a file, since Railway's `railway.json` stops being read for new services on 2026-12-01.
-  - **Root directory:** the repository root, so the whole pnpm workspace installs.
-  - **Build command:** `pnpm --filter @bluff/bot build`.
-  - **Start command:** `pnpm --filter @bluff/bot start`.
-  - **Health check:** `/health`.
-  - **App sleeping:** on.
-  - **Variables** (also listed by name in `apps/bot/.env.example`):
-    - `BOT_MNEMONIC`: secret;
+- **Computer player (`apps/bot`):** one always-on [Fly.io](https://fly.io) machine ([ADR-2026-11-25-computer-on-fly](adr/ADR-2026-11-25-computer-on-fly.md), amending [ADR-2026-11-18-computer-player](adr/ADR-2026-11-18-computer-player.md)).
+  - **Build:** `apps/bot/Dockerfile`, built from the repository root.
+    - It compiles the contracts' ABIs and bundles the service.
+    - It ships only the production dependencies, running as a non-root user.
+    - `.dockerignore` keeps every `.env` file out of the build.
+  - **Run:** `apps/bot/fly.toml`.
+    - Port 8080, HTTPS forced.
+    - `auto_stop_machines = "off"` and `min_machines_running = 1`, so it never sleeps mid-game.
+    - A `/health` check, the restart policy `always`, rolling deploys, and `SIGTERM` with 30 s to stop.
+    - A 512 MB `shared-cpu-1x` machine.
+  - **Exactly one machine.** Every computer wallet comes from one secret phrase, and a second copy would play the same wallets twice. Deploy with `--ha=false` and check `fly status` shows one machine.
+  - **Variables:**
+    - `BOT_MNEMONIC`: secret, set in Fly's dashboard by the maintainer;
     - `SEPOLIA_RPC_URL`: secret, an https RPC key not limited to a domain;
     - `ALLOWED_ORIGINS`: the web app's sites, separated by commas;
     - optionally `BOT_MAX_PLAYERS` (1 to 24, default 20).
-  - Railway sets `PORT`. Node 24 comes from `engines` and `.nvmrc`, and pnpm from `packageManager`.
+
+    `PORT` comes from `fly.toml`. The names are listed in `apps/bot/.env.example`.
+
   - **The web app finds it** through `NEXT_PUBLIC_BOT_URL`, the service's public address (not a secret), set in Vercel and in `apps/web/.env.local`. The computers' public addresses are listed in `apps/web/src/config/computer-players.ts` for the Computer badge; a new secret phrase means a new list.
