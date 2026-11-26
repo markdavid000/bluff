@@ -9,6 +9,15 @@ vi.mock("@/hooks/use-sound", () => ({
 }));
 
 describe("ActionButton", () => {
+  it.each([
+    ["large", "max-[40rem]:min-h-12"],
+    ["medium", "max-[40rem]:min-h-10"],
+    ["small", "max-[40rem]:min-h-9"],
+  ] as const)("is shorter and narrower on a phone at %s size", (size, phoneHeight) => {
+    render(<ActionButton size={size}>Go</ActionButton>);
+    expect(screen.getByRole("button", { name: "Go" })).toHaveClass(phoneHeight);
+  });
+
   it("shows its label when ready, and is not busy", () => {
     render(<ActionButton workingLabel="Signing you out…">Sign out</ActionButton>);
     const button = screen.getByRole("button", { name: "Sign out" });

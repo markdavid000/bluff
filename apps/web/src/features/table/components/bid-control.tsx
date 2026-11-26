@@ -102,7 +102,7 @@ export function BidControl({
       sound="knock"
       size={compact ? "small" : "medium"}
       ref={actionRef}
-      className="min-w-36"
+      className="min-w-36 max-[40rem]:min-w-28"
       disabled={busy && !placing}
       working={placing}
       workingLabel={label(tableCopy.placingBid)}
@@ -119,7 +119,7 @@ export function BidControl({
         sound="drum"
         size={compact ? "small" : "medium"}
         ref={chosen ? undefined : actionRef}
-        className="min-w-36"
+        className="min-w-36 max-[40rem]:min-w-28"
         disabled={busy && !calling}
         working={calling}
         workingLabel={label(tableCopy.callingBluff)}

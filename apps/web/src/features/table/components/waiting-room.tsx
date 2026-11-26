@@ -174,7 +174,7 @@ export function WaitingRoom({ room }: { room: Room }) {
       <Appear show={room.computerWait !== null} swapKey={room.computerWait ?? ""}>
         <p className="text-center text-sm text-muted-foreground">{room.computerWait}</p>
       </Appear>
-      <div className="flex flex-wrap items-center justify-center gap-3 max-[40rem]:gap-2 max-[40rem]:[&>*_button]:min-h-12 max-[40rem]:[&>*_button]:px-5 max-[40rem]:[&>*_button]:py-2 max-[40rem]:[&>*_button]:text-lg">
+      <div className="flex flex-wrap items-center justify-center gap-3 max-[40rem]:gap-2">
         <Appear show={waiting && room.role === "guest"}>
           <ActionButton
             tone={room.myReady ? "quiet" : "green"}
@@ -232,7 +232,6 @@ export function WaitingRoom({ room }: { room: Room }) {
           workingLabel={label(tableCopy.leaving)}
           onClick={room.leave}
           aria-label={tableCopy.leave}
-          className="max-[40rem]:min-h-12 max-[40rem]:px-5 max-[40rem]:py-2 max-[40rem]:text-lg"
         >
           <span className="max-[40rem]:hidden">{tableCopy.leave}</span>
           <span className="min-[40rem]:hidden">{tableCopy.leaveShort}</span>
