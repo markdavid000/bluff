@@ -161,7 +161,7 @@ Every proxy and implementation is verified on Etherscan, so its source is readab
 
 | Contract       | Proxy                                                                                                 | Implementation                                                                                                |
 | -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0xB5d0…88f8`](https://sepolia.etherscan.io/address/0xB5d0eAd59e9cD5cAC7DBeA3c309cdE54dF9A88f8#code) (1.4.0) |
+| `Bluff`        | [`0x46B6…E23e`](https://sepolia.etherscan.io/address/0x46B6D765E3F12cB72F6d50f86ea57C436D4AE23e#code) | [`0x4D3B…BFAB`](https://sepolia.etherscan.io/address/0x4D3B8FfF05dbF258AE7Ab011289916BFc486BFAB#code) (1.5.0) |
 | `BluffCashier` | [`0x4837…5EEe`](https://sepolia.etherscan.io/address/0x4837497FEf56758e1bE765062a1504303bDC5EEe#code) | [`0xA10e…c322`](https://sepolia.etherscan.io/address/0xA10e003BfE989b4651602BC310208461bF96c322#code)         |
 | `BluffInvites` | [`0x5bAC…F140`](https://sepolia.etherscan.io/address/0x5bACDa7BACa6f67754122F49b59B404471C3F140#code) | [`0x7a96…975B`](https://sepolia.etherscan.io/address/0x7a9637Be08c5E8002B38db785F3F4DE0F809975B#code) (1.0.0) |
 | `ChipFaucet`   | [`0xfdB7…A2DC`](https://sepolia.etherscan.io/address/0xfdB752Cc6cCaDc15fD858E8d8011B1dd75f2A2DC#code) | [`0x1E16…9C85`](https://sepolia.etherscan.io/address/0x1E16DD83Ac787FeB6F5998900EbB5E05907D9C85#code) (1.2.0) |
