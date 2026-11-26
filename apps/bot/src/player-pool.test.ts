@@ -272,6 +272,24 @@ describe("player pool", () => {
     });
   });
 
+  it("resumes a seated computer even when one before it was never named", async () => {
+    const fake = fakeChain();
+    fake.names.set(player(1), "Baba Dice");
+    fake.names.set(player(3), "Oga Dice");
+    fake.tables.set(player(3), 77n);
+    const players = pool(fake.chain);
+    expect(await players.resume()).toEqual([
+      { player: { index: 3, address: player(3), name: "Oga Dice" }, tableId: 77n },
+    ]);
+  });
+
+  it("knows its own computers from anyone else", () => {
+    const players = pool(fakeChain().chain);
+    expect(players.owns(player(2).toUpperCase().replace("0X", "0x"))).toBe(true);
+    expect(players.owns(BANK)).toBe(false);
+    expect(players.owns("0x0000000000000000000000000000000000009f9f")).toBe(false);
+  });
+
   it("reports each player it knows and whether it's playing, for the health check", async () => {
     const players = pool(fakeChain().chain);
     await players.acquire();

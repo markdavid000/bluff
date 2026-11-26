@@ -56,6 +56,8 @@ function harness({
   const sent: BluffCall[] = [];
   const reads: (bigint | undefined)[] = [];
   const limits: number[] = [];
+  const diceAt: (bigint | undefined)[] = [];
+  const revealAt: (bigint | undefined)[] = [];
   const sentAt: (bigint | undefined)[] = [];
   const lines: string[] = [];
   let done = 0;
@@ -71,14 +73,16 @@ function harness({
       block += 1n;
       return { blockNumber: block };
     },
-    ownDice: async (_index, _id, timeoutMs) => {
+    ownDice: async (_index, _id, timeoutMs, atBlock) => {
       limits.push(timeoutMs);
+      diceAt.push(atBlock);
       const result = next(dice);
       if (result instanceof Error) throw result;
       return result;
     },
-    revealProof: async (_id, timeoutMs) => {
+    revealProof: async (_id, timeoutMs, atBlock) => {
       limits.push(timeoutMs);
+      revealAt.push(atBlock);
       const result = next(proofs);
       if (result instanceof Error) throw result;
       return result;
@@ -111,6 +115,8 @@ function harness({
     advance: (ms: number) => (clock += ms),
     spent: () => clock - NOW,
     sentAt,
+    diceAt,
+    revealAt,
   };
 }
 
@@ -153,6 +159,26 @@ describe("seat runner", () => {
     }
     expect(h.lines.some((line) => line.includes("dice not ready"))).toBe(true);
     expect(h.lines.some((line) => line.includes("thinking"))).toBe(true);
+  });
+
+  it("reads its dice at the newest block it has seen, never from a node behind it", async () => {
+    const h = harness({ tables: [table()] });
+    await h.runner.update(140n);
+    expect(h.diceAt).toEqual([140n]);
+  });
+
+  it("never bids on dice that don't match its seat, such as last round's", async () => {
+    const h = harness({
+      tables: [table({ seats: [seat(HOST, { dice: 4 }), seat(ME, { dice: 3 })] })],
+      dice: [
+        [5n, 5n, 5n, 0n],
+        [5n, 5n, 5n],
+      ],
+    });
+    await h.runner.update();
+    expect(h.diceAt).toHaveLength(2);
+    expect(h.sent).toHaveLength(1);
+    expect(h.lines.some((line) => line.includes("dice not ready"))).toBe(true);
   });
 
   it("lets the turn lapse rather than move without seeing its dice", async () => {
@@ -215,6 +241,27 @@ describe("seat runner", () => {
     expect(alone.sent).toEqual([{ functionName: "leaveTable", args: [12n] }]);
   });
 
+  it("mentions a proof that isn't ready at most every 30 seconds while it keeps trying", async () => {
+    const revealing = table({
+      status: "revealing",
+      deadline: NOW + 9 * 60_000,
+      caller: 1,
+      turn: 0,
+    });
+    const h = harness({
+      tables: [revealing],
+      proofs: [
+        ...Array.from({ length: 12 }, () => new Error("not yet")),
+        { clearValues: "0x01", proof: "0x02" },
+      ],
+    });
+    await h.runner.update();
+    expect(h.sent).toHaveLength(1);
+    expect(h.lines.filter((line) => line.includes("reveal not ready")).length).toBeLessThanOrEqual(
+      2
+    );
+  });
+
   it("settles a reveal with a proof, retrying while the proof isn't ready", async () => {
     const revealing = table({
       status: "revealing",
@@ -226,8 +273,9 @@ describe("seat runner", () => {
       tables: [revealing],
       proofs: [new Error("not yet"), { clearValues: "0x01", proof: "0x02" }],
     });
-    await h.runner.update();
+    await h.runner.update(150n);
     expect(h.sent).toEqual([{ functionName: "settleReveal", args: [12n, "0x01", "0x02"] }]);
+    expect(h.revealAt.every((block) => block === 150n)).toBe(true);
   });
 
   it("stops waiting for a reveal as soon as someone else has settled it, so its own turn isn't held up", async () => {

@@ -12,3 +12,9 @@ export class MoveRefused extends Error {
     super(`The game refused the move: ${errorName}`, { cause });
   }
 }
+
+export class MoveReverted extends Error {
+  constructor(readonly hash: string) {
+    super(`Transaction ${hash} reverted`);
+  }
+}
