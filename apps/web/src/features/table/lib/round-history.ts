@@ -85,6 +85,7 @@ export function withCurrentBid(
   bid: HistoryBid | null
 ): HistoryRound[] {
   const [latest, ...older] = rounds;
+  if (latest && round < latest.round) return [...rounds];
   const current: HistoryRound = latest?.round === round ? latest : { round, bids: [], end: null };
   const rest = latest?.round === round ? older : rounds;
   const last = current.bids.at(-1);

@@ -135,6 +135,23 @@ describe("useTable", () => {
     expect(requests.at(-1)?.blockNumber).toBeUndefined();
   });
 
+  it("reads the latest table instead of holding an old one when a node hasn't caught up with the newest block", () => {
+    seeBlock(900n);
+    readAtBlock = (blockNumber) =>
+      blockNumber === undefined
+        ? { isError: false, isPlaceholderData: false, data: [{ ...TABLE, round: 5 }, []] }
+        : {
+            isError: true,
+            error: new Error("Requested resource not found"),
+            isPlaceholderData: true,
+            data: [{ ...TABLE, round: 3 }, []],
+          };
+    const { result, rerender } = renderHook(() => useTable(12n, { onScreen: true }));
+    rerender();
+    expect(requests.at(-1)?.blockNumber).toBeUndefined();
+    expect(result.current).toMatchObject({ status: "ready", table: { round: 5 } });
+  });
+
   it("starts from the block-pinned read when the table is already on screen, so switching screens never loads", () => {
     seeBlock(900n);
     readAtBlock = (blockNumber) =>
