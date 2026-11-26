@@ -120,7 +120,7 @@ export function RoundHistory({ history, nameOf }: { history: RoundHistoryState; 
       <details
         open
         className={cn(
-          "group w-72 origin-left overflow-hidden rounded-2xl border-2 border-board-edge bg-board text-sm text-cowrie",
+          "group w-72 origin-left overflow-hidden smooth-details rounded-2xl border-2 border-board-edge bg-board text-sm text-cowrie",
           "shadow-[inset_0_1px_0_rgb(255_255_255/0.15),0_6px_0_0_var(--color-board-edge),0_18px_30px_-12px_rgb(0_0_0/0.5)]",
           "transition-transform duration-300 motion-safe:[transform:rotateY(10deg)_rotateX(3deg)] motion-safe:hover:[transform:rotateY(0deg)_rotateX(0deg)]"
         )}

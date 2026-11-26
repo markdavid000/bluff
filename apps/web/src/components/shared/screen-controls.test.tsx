@@ -37,6 +37,16 @@ function openSettings() {
 }
 
 describe("ScreenControls", () => {
+  it("opens its menus with a visible grow and fade, and closes them the same way", async () => {
+    openSettings();
+    const menu = (await screen.findByRole("menu")).closest("[data-slot=dropdown-menu-content]");
+    expect(menu).toHaveClass(
+      "duration-200",
+      "data-[state=open]:zoom-in-90",
+      "data-[state=closed]:zoom-out-90"
+    );
+  });
+
   it("keeps the night switch's name fixed and says whether it is on", () => {
     render(<ScreenControls />);
     const night = screen.getByRole("button", { name: sharedCopy.nightMode });
