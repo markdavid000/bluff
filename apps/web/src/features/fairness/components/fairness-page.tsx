@@ -44,7 +44,7 @@ export function FairnessPage() {
                 <GameIcon name={point.icon satisfies GameIconName} size={36} />
                 {point.title}
               </h2>
-              <details className="group">
+              <details className="group smooth-details">
                 <summary className="w-fit cursor-pointer rounded font-game underline decoration-seat-blue decoration-2 underline-offset-4 select-none focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:outline-none">
                   {fairnessCopy.how}
                 </summary>
