@@ -84,6 +84,7 @@ export function gameView(overrides: Partial<GameView> = {}): GameView {
     turnLow: false,
     clockLeft: 600_000,
     pot: 0n,
+    history: { status: "ready", rounds: [{ round: 3, bids: [], end: null }] },
     reveal: null,
     revealedDice: null,
     dismissReveal: vi.fn(),

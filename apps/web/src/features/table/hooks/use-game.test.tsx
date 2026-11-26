@@ -7,6 +7,7 @@ import { type Notice, onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { NO_GAME } from "@bluff/game/testing";
 import type { GameEnding } from "../lib/game-end";
+import type { HistoryRound } from "../lib/round-history";
 import type { Table } from "@bluff/game";
 import type { PlacedBid, RoundResult } from "./use-table-events";
 import { useGame } from "./use-game";
@@ -77,6 +78,14 @@ const forgetMyTable = vi.fn();
 vi.mock("@/hooks/use-my-table-id", () => ({ useForgetMyTable: () => forgetMyTable }));
 vi.mock("./use-own-dice", () => ({ useOwnDice: () => dice }));
 vi.mock("./use-game-end", () => ({ useGameEnd: () => end }));
+let historyRounds: HistoryRound[] = [];
+const historyAsked: { table: Table | null; enabled: boolean }[] = [];
+vi.mock("./use-round-history", () => ({
+  useGameHistory: (table: Table | null, enabled: boolean) => {
+    historyAsked.push({ table, enabled });
+    return { status: "ready", rounds: historyRounds };
+  },
+}));
 let caughtUp: RoundResult | null = null;
 const catchUpAsked: Record<string, unknown>[] = [];
 vi.mock("./use-round-result-catch-up", () => ({
@@ -127,6 +136,8 @@ function viewOf(result: { current: ReturnType<typeof useGame> }) {
 
 beforeEach(() => {
   block = 100n;
+  historyRounds = [];
+  historyAsked.length = 0;
   vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
   vi.setSystemTime(NOW);
   show(game());
@@ -345,6 +356,33 @@ describe("useGame", () => {
     show(game({ round: 2 }));
     rerender();
     expect(viewOf(result).seats[1]?.lastBid).toBeNull();
+  });
+
+  it("shows bids made before this page was open, from the rounds read from the chain", () => {
+    historyRounds = [
+      {
+        round: 1,
+        bids: [{ player: FOX.toUpperCase().replace("0X", "0x"), quantity: 2, face: 6 }],
+        end: null,
+      },
+    ];
+    const { result } = render();
+    expect(viewOf(result).seats[1]?.lastBid).toEqual({ quantity: 2, face: 6 });
+    expect(viewOf(result).seats[0]?.lastBid).toBeNull();
+    expect(viewOf(result).history).toEqual({ status: "ready", rounds: historyRounds });
+    expect(historyAsked.at(-1)?.enabled).toBe(true);
+  });
+
+  it("ignores earlier rounds' bids, and lets a live bid replace the chain's", () => {
+    historyRounds = [
+      { round: 1, bids: [{ player: FOX, quantity: 2, face: 6 }], end: null },
+      { round: 2, bids: [{ player: FOX, quantity: 2, face: 3 }], end: null },
+    ];
+    show(game({ round: 2 }));
+    const { result } = render();
+    expect(viewOf(result).seats[1]?.lastBid).toEqual({ quantity: 2, face: 3 });
+    act(() => placed({ round: 2, player: FOX, quantity: 4, face: 3 }));
+    expect(viewOf(result).seats[1]?.lastBid).toEqual({ quantity: 4, face: 3 });
   });
 
   it("opens the reveal card after a call, then closes it after 6 seconds", () => {

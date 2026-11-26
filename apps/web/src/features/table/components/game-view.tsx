@@ -14,7 +14,6 @@ import { formatChips } from "@/lib/chips";
 import { tableCopy } from "../copy";
 import type { useGame } from "../hooks/use-game";
 import { useGameBoard } from "../hooks/use-game-board";
-import { useGameHistory } from "../hooks/use-round-history";
 import { useTurnFocus } from "../hooks/use-turn-focus";
 import { seatLayout } from "../lib/seat-layout";
 import { BidControl } from "./bid-control";
@@ -52,10 +51,7 @@ export function GameView({ game }: { game: Game }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [cardUp, setCardUp] = useState(false);
   if (game.reveal !== null && !cardUp) setCardUp(true);
-  const history = useGameHistory(table, wide || historyOpen, {
-    bid: game.bid,
-    bidder: game.bidder,
-  });
+  const history = game.history;
   useSoundOn("tick", game.myTurn && game.turnLow ? Math.ceil(game.turnLeft / 1000) : null);
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
@@ -73,7 +69,7 @@ export function GameView({ game }: { game: Game }) {
     game.myTurn &&
     !(waitingForDice && (game.dice.status === "loading" || game.dice.status === "ready"));
   const { actionRef, headingRef, focusAfterReveal } = useTurnFocus(controlsShown);
-  const seatAt = (index: number, compact: boolean, tight = false) => {
+  const seatAt = (index: number, compact: boolean, tight = false, bidOnLeft = false) => {
     const seat = seats[index];
     if (!seat) return null;
     return (
@@ -92,6 +88,7 @@ export function GameView({ game }: { game: Game }) {
         holdDice={game.boardRevealed || cardUp}
         compact={compact}
         tight={tight}
+        bidOnLeft={bidOnLeft}
       />
     );
   };
@@ -184,7 +181,7 @@ export function GameView({ game }: { game: Game }) {
           {layout.map((placement, index) =>
             seats[index] ? (
               <div key={placement.side} className={SLOT[placement.side]}>
-                {seatAt(index, false)}
+                {seatAt(index, false, false, placement.side === "right")}
               </div>
             ) : null
           )}
