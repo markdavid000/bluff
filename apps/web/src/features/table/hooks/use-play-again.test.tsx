@@ -1,3 +1,4 @@
+import type { Address } from "viem";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -37,6 +38,10 @@ vi.mock("@/hooks/use-go-to-table", () => ({
 }));
 vi.mock("@/hooks/use-chip-balance", () => ({ useChipBalance: () => balance }));
 vi.mock("@zama-fhe/sdk/query", () => ({ invalidateBalanceQueries: vi.fn() }));
+const callComputer = vi.fn();
+vi.mock("@/hooks/use-computer-call", () => ({
+  callComputer: (id: bigint) => callComputer(id),
+}));
 vi.mock("wagmi", () => ({
   useReadContracts: ({
     contracts,
@@ -79,7 +84,9 @@ function waitingTable(id: bigint, host: string, buyIn = 0n) {
   ];
 }
 
-function render(buyIn = 0n, isPrivate = false, watching = false) {
+const COMPUTER: Address = "0xA801FA5F654088a288c4B4eA27407FA10c17e12F";
+
+function render(buyIn = 0n, isPrivate = false, watching = false, opponent: Address = ADA) {
   const queryClient = new QueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -90,7 +97,7 @@ function render(buyIn = 0n, isPrivate = false, watching = false) {
         last: { id: 12n, seatCount: 2, buyIn, isPrivate, startedAt: NOW - 300_000 },
         players: [
           { player: ME, name: "Me #1A2B", isMe: true },
-          { player: ADA, name: "Ada #3C4D", isMe: false },
+          { player: opponent, name: "Ada #3C4D", isMe: false },
         ],
         watching,
       }),
@@ -130,6 +137,22 @@ describe("usePlayAgain", () => {
       { kind: "create", seatCount: 2, buyIn: 10n * ONE_CHIP, isPrivate: true },
       expect.any(Function)
     );
+  });
+
+  it("calls the computer back to the new table after a game against it", async () => {
+    vi.useRealTimers();
+    const { result } = render(0n, false, false, COMPUTER);
+    act(() => result.current.playAgain());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/table/30"));
+    expect(callComputer).toHaveBeenCalledWith(30n);
+  });
+
+  it("doesn't call the computer after a game between people", async () => {
+    vi.useRealTimers();
+    const { result } = render();
+    act(() => result.current.playAgain());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/table/30"));
+    expect(callComputer).not.toHaveBeenCalled();
   });
 
   it("says how many chips it takes instead of paying for a seat it can't afford", () => {
