@@ -1,14 +1,14 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { loadPage } from "@/lib/load-page";
 import { notify } from "@/lib/notify";
 import { accountCopy } from "../copy";
 import { closeSession } from "../lib/session-client";
+import { startSigningOut, stopSigningOut } from "./use-signing-out";
 
 export function useSignOut() {
-  const router = useRouter();
   const { logout } = usePrivy();
   const [working, setWorking] = useState(false);
 
@@ -16,14 +16,15 @@ export function useSignOut() {
     working,
     async signOut() {
       setWorking(true);
+      startSigningOut();
       try {
         await closeSession();
         await logout();
-        notify.info(accountCopy.signedOut, { id: "sign-out" });
-        router.replace("/");
+        loadPage("/");
       } catch (error) {
+        stopSigningOut();
         console.error("Sign out failed.", error);
-        notify.error(accountCopy.signInProblem, { id: "sign-out" });
+        notify.error(accountCopy.signOutProblem, { id: "sign-out" });
         setWorking(false);
       }
     },
