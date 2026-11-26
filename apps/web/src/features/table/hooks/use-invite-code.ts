@@ -46,6 +46,7 @@ export function useInviteCode({
   if (permit.status === "needed") {
     return { status: "locked", unlock: permit.grant, unlocking: permit.granting };
   }
+  if (permit.status === "failed") return { status: "failed", retry: permit.retry };
   if (permit.status !== "granted") return { status: "loading" };
   if (decrypted.isError) return { status: "failed", retry: () => void decrypted.refetch() };
   const code = decrypted.data?.[handle];

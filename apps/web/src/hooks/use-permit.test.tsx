@@ -18,6 +18,7 @@ const { HAS_PERMIT } = vi.hoisted(() => ({ HAS_PERMIT: ["zama.hasPermit"] as con
 const sign = vi.fn();
 const switchChain = vi.fn();
 let stored = false;
+let checkFails = false;
 let walletClientType = "privy";
 let walletChainId: number | undefined = 11155111;
 let connectedAddress: string | undefined = "0x1";
@@ -51,7 +52,15 @@ vi.mock("@zama-fhe/sdk/query", () => ({
 }));
 vi.mock("@zama-fhe/react-sdk", () => ({
   useZamaSDK: () => sdk,
-  useHasPermit: () => useQuery({ queryKey: [...HAS_PERMIT, "0x1"], queryFn: async () => stored }),
+  useHasPermit: () =>
+    useQuery({
+      queryKey: [...HAS_PERMIT, "0x1"],
+      queryFn: async () => {
+        if (checkFails) throw new Error("check failed");
+        return stored;
+      },
+      retry: false,
+    }),
   useGrantPermit: () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -73,6 +82,7 @@ function render(automatic: boolean, queryClient = new QueryClient()) {
 
 beforeEach(() => {
   stored = false;
+  checkFails = false;
   walletClientType = "privy";
   walletChainId = 11155111;
   connectedAddress = "0x1";
@@ -88,6 +98,15 @@ afterEach(() => {
 });
 
 describe("usePermit", () => {
+  it("offers to try again when it can't check, instead of loading forever", async () => {
+    checkFails = true;
+    const { result } = render(false);
+    await waitFor(() => expect(result.current.status).toBe("failed"));
+    checkFails = false;
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.status).toBe("needed"));
+  });
+
   it("signs once, without asking, for a wallet Bluff made", async () => {
     const { result, rerender } = render(true);
     rerender();

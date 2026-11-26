@@ -14,6 +14,7 @@ export const accountCopy = {
   signingIn: "Signing you in…",
   signInProblem: "We could not sign you in. Please try again.",
   tryAgain: "Try again",
+  claimCheckProblem: "We could not check your free chips.",
   cancelled: "Sign in cancelled",
   refreshing: "Welcome back. Getting your seat ready…",
   gettingReady: "Getting your seat ready…",

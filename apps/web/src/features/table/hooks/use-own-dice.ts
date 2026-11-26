@@ -78,6 +78,7 @@ export function useOwnDice({
   if (permit.status === "needed") {
     return { status: "locked", unlock: permit.grant, unlocking: permit.granting };
   }
+  if (permit.status === "failed") return { status: "failed", retry: permit.retry };
   if (permit.status !== "granted") return { status: "loading" };
   const values = handles.map((handle) => decrypted.data?.[handle]);
   if (values.some((value) => value === undefined)) {

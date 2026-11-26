@@ -1,7 +1,7 @@
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryClient } from "@/lib/query-client";
 import { useChipBalance } from "./use-chip-balance";
 
@@ -15,8 +15,16 @@ let account = ADA;
 vi.mock("@privy-io/react-auth", () => ({
   usePrivy: () => ({ user: { wallet: { address: account } } }),
 }));
+const retryPermit = vi.fn();
+let permitStatus = "granted";
 vi.mock("./use-permit", () => ({
-  usePermit: () => ({ status: "granted", grant: vi.fn(), granting: false, asksWallet: false }),
+  usePermit: () => ({
+    status: permitStatus,
+    grant: vi.fn(),
+    granting: false,
+    asksWallet: false,
+    retry: retryPermit,
+  }),
 }));
 
 const balances: Record<string, Promise<bigint>> = {
@@ -35,7 +43,24 @@ vi.mock("@zama-fhe/react-sdk", () => ({
     }),
 }));
 
+beforeEach(() => {
+  permitStatus = "granted";
+  retryPermit.mockClear();
+});
+
 describe("useChipBalance", () => {
+  it("offers to try again when the chips can't be unlocked, instead of loading forever", () => {
+    permitStatus = "failed";
+    const queryClient = createQueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useChipBalance({ working: "Working" }), { wrapper });
+    expect(result.current.status).toBe("failed");
+    if (result.current.status === "failed") result.current.retry();
+    expect(retryPermit).toHaveBeenCalledOnce();
+  });
+
   it("never shows the last account's chips as the new account's while its own balance loads", async () => {
     const queryClient = createQueryClient();
     const wrapper = ({ children }: { children: ReactNode }) => (

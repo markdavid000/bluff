@@ -54,6 +54,15 @@ afterEach(() => {
 });
 
 describe("useOwnDice", () => {
+  it("offers to try again when the dice can't be unlocked, instead of loading forever", () => {
+    const retry = vi.fn();
+    permit = { status: "failed", granting: false, retry };
+    const dice = render();
+    expect(dice.status).toBe("failed");
+    if (dice.status === "failed") dice.retry();
+    expect(retry).toHaveBeenCalledOnce();
+  });
+
   it("shows the player their own dice as faces, in order", () => {
     expect(render()).toEqual({ status: "ready", faces: [5, 1] });
     expect(readAsked.at(-1)).toMatchObject({

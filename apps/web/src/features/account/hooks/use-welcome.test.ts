@@ -12,6 +12,8 @@ vi.mock("@/config/env", () => ({
 const sendMove = vi.fn();
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
 let nextClaimAt: bigint | undefined = 0n;
+let claimCheckFails = false;
+const refetchClaim = vi.fn();
 let takenNames: string[] = [];
 const askedTaken: string[] = [];
 vi.mock("wagmi", () => ({
@@ -24,7 +26,11 @@ vi.mock("wagmi", () => ({
     args?: [string, string];
     query?: { enabled?: boolean };
   }) => {
-    if (functionName !== "isNicknameTaken") return { data: nextClaimAt };
+    if (functionName !== "isNicknameTaken") {
+      return claimCheckFails
+        ? { data: undefined, isError: true, refetch: refetchClaim }
+        : { data: nextClaimAt, isError: false, refetch: refetchClaim };
+    }
     if (!query?.enabled || !args) return { data: undefined, isPlaceholderData: false };
     askedTaken.push(args[0]);
     return {
@@ -46,13 +52,18 @@ vi.mock("./use-player", () => ({
 }));
 
 let shown: string[] = [];
+let actions: { label: string; onPress: () => void }[] = [];
 let stop: () => void = () => undefined;
 
 beforeEach(() => {
   shown = [];
   stop = onNotice((event) => {
-    if (event.type === "show") shown.push(event.notice.title);
+    if (event.type !== "show") return;
+    shown.push(event.notice.title);
+    if (event.notice.action) actions.push(event.notice.action);
   });
+  actions = [];
+  claimCheckFails = false;
   sendMove.mockResolvedValue({ status: "success" });
   nextClaimAt = 0n;
   takenNames = [];
@@ -178,6 +189,15 @@ describe("useWelcome", () => {
     await waitFor(() => expect(sendMove).toHaveBeenCalledTimes(2));
     expect(sent().map((call) => call.functionName)).toEqual(["setNickname", "setAvatar"]);
     expect(sent()[0]?.args).toEqual(["Brave Otter"]);
+  });
+
+  it("says when it can't check today's chips, with a way to try again", () => {
+    claimCheckFails = true;
+    renderHook(() => useWelcome());
+    expect(shown).toContain(accountCopy.claimCheckProblem);
+    const retry = actions.find((action) => action.label === accountCopy.tryAgain);
+    retry?.onPress();
+    expect(refetchClaim).toHaveBeenCalledOnce();
   });
 
   it("holds the button until it knows whether today's chips are still there", () => {
