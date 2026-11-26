@@ -3,6 +3,7 @@ import { createChainWatch } from "./chain-watch";
 import { readConfig } from "./config";
 import { createLog } from "./log";
 import { type PoolPlayer, createPlayerPool } from "./player-pool";
+import { createRunners } from "./runners";
 import { type SeatRunner, createSeatRunner } from "./seat-runner";
 import { createSeatService } from "./seat-service";
 import { startServer } from "./server";
@@ -18,27 +19,27 @@ async function main() {
   const config = readConfig(process.env);
   const { chain, bank, players } = createChain(config);
   const pool = createPlayerPool({ bank, players, chain, log });
-  const runners = new Map<bigint, SeatRunner>();
+  const runners = createRunners<SeatRunner>(log);
 
   function startRunner(player: PoolPlayer, tableId: bigint, seatedAt: number, seatedBlock: bigint) {
-    const runner = createSeatRunner({
-      index: player.index,
-      address: player.address,
-      tableId,
-      seatedAt,
-      seatedBlock,
-      chain,
-      log,
-      random: Math.random,
-      now: Date.now,
-      sleep,
-      onDone: () => {
-        runners.delete(tableId);
-        void pool.finishGame(player.index);
-      },
-    });
-    runners.set(tableId, runner);
-    void runner.update();
+    runners.start(tableId, (finished) =>
+      createSeatRunner({
+        index: player.index,
+        address: player.address,
+        tableId,
+        seatedAt,
+        seatedBlock,
+        chain,
+        log,
+        random: Math.random,
+        now: Date.now,
+        sleep,
+        onDone: () => {
+          finished();
+          void pool.finishGame(player.index);
+        },
+      })
+    );
   }
 
   const resumedAt = await untilStarted("blockNumber", () => chain.blockNumber(), { sleep, log });
@@ -51,7 +52,7 @@ async function main() {
 
   const watch = createChainWatch({
     chain,
-    seated: () => [...runners.keys()],
+    seated: runners.tables,
     onTables: (ids, head) => {
       for (const id of ids) void runners.get(id)?.update(head);
     },
@@ -81,7 +82,7 @@ async function main() {
   const stop = () => {
     if (stopping) return;
     stopping = true;
-    log.info("stopping", { count: runners.size });
+    log.info("stopping", { count: runners.count() });
     stopWatching();
     server.close();
   };
