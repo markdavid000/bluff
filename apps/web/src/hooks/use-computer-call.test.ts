@@ -32,7 +32,7 @@ afterEach(() => {
 });
 
 describe("useComputerCall", () => {
-  it("follows the call from asking, through waking, to the answer", async () => {
+  it("follows the call from asking, through waking, to the answer and when it came", async () => {
     const answer = deferred<{ kind: "seated" }>();
     let wake: () => void = () => undefined;
     requestComputer.mockImplementation(({ onWaking }: { onWaking: () => void }) => {
@@ -45,15 +45,28 @@ describe("useComputerCall", () => {
     expect(requestComputer).toHaveBeenCalledWith(
       expect.objectContaining({ botUrl: "https://bot.example", tableId: 12n })
     );
-    expect(result.current).toEqual({ tableId: 12n, phase: "asking", outcome: null });
+    expect(result.current).toEqual({
+      tableId: 12n,
+      phase: "asking",
+      outcome: null,
+      answeredAt: null,
+    });
     act(() => wake());
-    expect(result.current).toEqual({ tableId: 12n, phase: "waking", outcome: null });
+    expect(result.current).toEqual({
+      tableId: 12n,
+      phase: "waking",
+      outcome: null,
+      answeredAt: null,
+    });
+    const before = Date.now();
     await act(async () => answer.resolve({ kind: "seated" }));
     expect(result.current).toEqual({
       tableId: 12n,
       phase: "answered",
       outcome: { kind: "seated" },
+      answeredAt: expect.any(Number),
     });
+    expect(result.current?.answeredAt).toBeGreaterThanOrEqual(before);
   });
 
   it("treats an answer it can't read as the computer being unable to play, and says so in the console", async () => {

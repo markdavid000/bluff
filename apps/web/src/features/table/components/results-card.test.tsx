@@ -11,12 +11,25 @@ vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) 
 const playAgain = vi.fn();
 const joinOffer = vi.fn();
 let again: Record<string, unknown> = {};
+const againAsked: { watching: boolean }[] = [];
 vi.mock("../hooks/use-play-again", () => ({
-  usePlayAgain: () => ({ playAgain, joinOffer, ...again }),
+  usePlayAgain: (request: { watching: boolean }) => {
+    againAsked.push(request);
+    return { playAgain, joinOffer, ...again };
+  },
 }));
 
 beforeEach(() => {
-  again = { offer: null, playing: false, joining: false, busy: false, confirm: false };
+  again = {
+    offer: null,
+    playing: false,
+    joining: false,
+    busy: false,
+    confirm: false,
+    waitingForChips: false,
+    offerWaitsForChips: false,
+  };
+  againAsked.length = 0;
   vi.clearAllMocks();
 });
 
@@ -37,6 +50,7 @@ describe("ResultsCard", () => {
       />
     );
     expect(play).not.toHaveBeenCalledWith("celebration");
+    expect(againAsked.at(-1)?.watching).toBe(true);
     expect(screen.getByRole("link", { name: tableCopy.backToLobby })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: tableCopy.playAgain })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
@@ -213,6 +227,20 @@ describe("ResultsCard", () => {
       render(<ResultsCard game={gameView({ table: finished() })} />);
       expect(screen.getByText(tableCopy.newPrivateTable("Sly Fox #3C4D"))).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /new table/ })).toBeNull();
+    });
+
+    it("holds Play again and the new table while the player's chips are still loading", () => {
+      again = {
+        ...again,
+        waitingForChips: true,
+        offerWaitsForChips: true,
+        offer: { id: 20n, hostName: "Sly Fox #3C4D", buyIn: 10n * ONE_CHIP, isPrivate: false },
+      };
+      render(<ResultsCard game={gameView({ table: finished(10n * ONE_CHIP) })} />);
+      expect(screen.getByRole("button", { name: tableCopy.playAgain })).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: tableCopy.payAndJoinNewTable("10", "Sly Fox #3C4D") })
+      ).toBeDisabled();
     });
 
     it("shows the table being set up while it lands", () => {

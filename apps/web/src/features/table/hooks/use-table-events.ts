@@ -4,6 +4,7 @@ import { bluffAbi, chipFaucetAbi } from "@bluff/contracts";
 import { getAddress } from "viem";
 import { usePublicClient, useWatchContractEvent } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
+import { usePageVisible } from "@/hooks/use-page-visible";
 import { seeBlock } from "@/lib/block-clock";
 import { notify } from "@/lib/notify";
 import { plainName } from "@/lib/player-tag";
@@ -117,6 +118,7 @@ export function useTableEvents({
   onGameEnded?: (ending: GameEnding) => void;
 }) {
   const client = usePublicClient({ chainId: gameChain.id });
+  const visible = usePageVisible();
 
   async function lookUp(address: string): Promise<string> {
     try {
@@ -193,6 +195,7 @@ export function useTableEvents({
     address: contracts.bluff,
     abi: bluffAbi,
     chainId: gameChain.id,
+    enabled: visible,
     onLogs: handle,
   });
 }

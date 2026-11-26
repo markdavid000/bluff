@@ -1,13 +1,18 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Face } from "@bluff/game";
 import { seatLayout } from "../lib/seat-layout";
-import { OTHERS_SHAKE_MS, SHAKE_MS, useGameBoard } from "./use-game-board";
+import { loadDicePhysics } from "./use-dice-throw";
+import { DICE_WAIT_MS, OTHERS_SHAKE_MS, SHAKE_MS, useGameBoard } from "./use-game-board";
 
 const play = vi.fn();
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play, stop: vi.fn() }) }));
 
 const MINE = seatLayout(2, 0)[0];
+
+beforeAll(async () => {
+  await loadDicePhysics();
+});
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -35,6 +40,32 @@ describe("useGameBoard", () => {
     if (result.current.throwState.kind !== "rolling") throw new Error("Expected a throw.");
     expect(result.current.throwState.result.dice).toHaveLength(4);
     expect(play).toHaveBeenCalledWith("roll");
+  });
+
+  it("stops waiting on dice that take too long to read, so the player can still move", () => {
+    const { result } = renderHook(() => useGameBoard({ round: 1, faces: null, placement: MINE }));
+    expect(result.current.waitingForDice).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(DICE_WAIT_MS - 100);
+    });
+    expect(result.current.waitingForDice).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(result.current.waitingForDice).toBe(false);
+  });
+
+  it("waits on the dice again at the next round", () => {
+    let round = 1;
+    const { result, rerender } = renderHook(() =>
+      useGameBoard({ round, faces: null, placement: MINE })
+    );
+    act(() => {
+      vi.advanceTimersByTime(DICE_WAIT_MS);
+    });
+    round = 2;
+    rerender();
+    expect(result.current.waitingForDice).toBe(true);
   });
 
   it("lets the dice land with a settle once they stop rolling", () => {

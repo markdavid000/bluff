@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { Hex } from "viem";
 import { usePublicClient } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
+import { useMovesSponsored } from "@/hooks/use-moves-sponsored";
 import { useSendMove } from "@/hooks/use-send-move";
 import { MoveNotReadyError } from "@/lib/errors";
 import { keepTrying } from "@/lib/keep-trying";
@@ -17,6 +18,7 @@ const RETRY_MS = 15_000;
 const REVEAL_DEADLINE_MS = 30_000;
 const REVEAL_RETRY_MS = 3_000;
 const FAILURES_BEFORE_NOTICE = 2;
+export const OWN_WALLET_GRACE_MS = 60_000;
 
 export function useTableKeeper({
   table,
@@ -29,10 +31,12 @@ export function useTableKeeper({
 }) {
   const publicClient = usePublicClient({ chainId: gameChain.id });
   const sendMove = useSendMove();
+  const sponsored = useMovesSponsored();
   const { mutateAsync: decryptPublic } = useDecryptPublicValues();
   const failures = useRef(0);
   const [retryAt, setRetryAt] = useState(0);
-  const duty = table ? keeperDuty(table, now, me) : null;
+  const found = table ? keeperDuty(table, now, me) : null;
+  const duty = found && !sponsored ? { ...found, dueAt: found.dueAt + OWN_WALLET_GRACE_MS } : found;
   const action = duty?.action ?? null;
   const dueAt = duty ? Math.max(duty.dueAt, retryAt) : 0;
   const id = table?.id ?? null;
@@ -57,6 +61,7 @@ export function useTableKeeper({
 
   async function sendIfStillDue(tableId: bigint, chosen: KeeperAction, args: readonly unknown[]) {
     if (!(await stillDue(tableId, chosen))) return;
+    if (!sponsored) notify.info(tableCopy.keeperFromOwnWallet, { id: "keeper-own-wallet" });
     try {
       await sendMove(
         { address: contracts.bluff, abi: bluffAbi, functionName: chosen, args },

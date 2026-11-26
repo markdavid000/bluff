@@ -3,12 +3,13 @@
 import { bluffAbi, chipTokenAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEncrypt } from "@zama-fhe/react-sdk";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { type Address, isAddressEqual, parseEventLogs } from "viem";
 import { usePublicClient } from "wagmi";
 import { contracts, gameChain } from "@/config/chain";
 import { MoveNotReadyError, mayStillLand } from "@/lib/errors";
 import { joinRequestData } from "@/lib/join-request";
-import { takeSeatWhileHere } from "./use-go-to-table";
+import { stopHeadingTo, takeSeatWhileHere } from "./use-go-to-table";
 import { type MoveStep, useSendMove } from "./use-send-move";
 
 export const SEAT_RECHECK_MS = 3_000;
@@ -28,6 +29,19 @@ export function useTakeSeat() {
   const sendMove = useSendMove();
   const { mutateAsync: encrypt } = useEncrypt();
   const publicClient = usePublicClient({ chainId: gameChain.id });
+  const here = useRef(false);
+  const landed = useRef<bigint | null>(null);
+
+  const leave = useEffectEvent(() => {
+    here.current = false;
+    if (landed.current !== null) stopHeadingTo(landed.current);
+    landed.current = null;
+  });
+
+  useEffect(() => {
+    here.current = true;
+    return () => leave();
+  }, []);
 
   async function seatThatLanded(seat: SeatRequest, player: Address): Promise<bigint | null> {
     if (!publicClient) return null;
@@ -121,6 +135,11 @@ export function useTakeSeat() {
     report: (step: MoveStep) => void
   ): Promise<bigint> {
     if (!account) throw new MoveNotReadyError();
-    return takeSeatWhileHere(() => seatOf(seat, account, report));
+    const id = await takeSeatWhileHere(
+      () => seatOf(seat, account, report),
+      () => here.current
+    );
+    if (here.current) landed.current = id;
+    return id;
   };
 }

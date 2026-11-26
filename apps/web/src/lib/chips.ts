@@ -22,13 +22,15 @@ export function parseChips(input: string): bigint | null {
   return amount > 0n ? amount : null;
 }
 
-export type KnownBalance = { status: "ready"; amount: bigint } | { status: "unknown" };
+export type KnownBalance =
+  { status: "ready"; amount: bigint } | { status: "loading" } | { status: "unknown" };
 
 export function whyUnaffordable(
   buyIn: bigint,
   balance: KnownBalance
-): "show-chips" | "too-few" | null {
+): "checking" | "show-chips" | "too-few" | null {
   if (buyIn === 0n) return null;
+  if (balance.status === "loading") return "checking";
   if (balance.status !== "ready") return "show-chips";
   return balance.amount >= buyIn ? null : "too-few";
 }

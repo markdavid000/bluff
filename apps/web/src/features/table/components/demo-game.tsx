@@ -8,8 +8,9 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { tableCopy } from "../copy";
 import { type DemoStep, useDemoRound } from "../hooks/use-demo-round";
 import { useGameBoard } from "../hooks/use-game-board";
+import { useOnScreen } from "../hooks/use-on-screen";
 import { seatLayout } from "../lib/seat-layout";
-import { GameBoard } from "./board/game-board";
+import { BoardPlaceholder, GameBoard } from "./board/game-board";
 import { CurrentBid } from "./current-bid";
 import { GameSeat } from "./game-seat";
 
@@ -51,9 +52,10 @@ function counts(face: Face): boolean {
 }
 
 export function DemoGame() {
-  const { step, round } = useDemoRound();
+  const { ref: boardSpot, seen, onScreen } = useOnScreen();
+  const { step, round } = useDemoRound(onScreen);
   const { throwState, othersShaking } = useGameBoard({
-    round,
+    round: seen ? round : 0,
     faces: YOUR_DICE,
     placement: LAYOUT[0] ?? null,
     quiet: true,
@@ -124,18 +126,26 @@ export function DemoGame() {
             </div>
           );
         })}
-        <div className="[container-type:size] relative col-start-2 row-start-2 flex aspect-square w-full items-center justify-center">
-          <GameBoard
-            colors={colors}
-            seats={LAYOUT}
-            throwState={throwState}
-            chipsEach={0}
-            revealed={open}
-            revealedDice={revealedDice}
-            ownSeat={0}
-            othersShaking={othersShaking}
-            label={tableCopy.boardLabel}
-          />
+        <div
+          ref={boardSpot}
+          className="[container-type:size] relative col-start-2 row-start-2 flex aspect-square w-full items-center justify-center"
+        >
+          {seen ? (
+            <GameBoard
+              colors={colors}
+              seats={LAYOUT}
+              throwState={throwState}
+              chipsEach={0}
+              revealed={open}
+              revealedDice={revealedDice}
+              ownSeat={0}
+              othersShaking={othersShaking}
+              paused={!onScreen}
+              label={tableCopy.boardLabel}
+            />
+          ) : (
+            <BoardPlaceholder />
+          )}
           <AnimatePresence>
             {step === "result" ? (
               <motion.span

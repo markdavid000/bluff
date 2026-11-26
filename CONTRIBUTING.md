@@ -268,6 +268,8 @@ Bluff is for everyone, not only people who know crypto. Every word a player read
 
 ## Deployment
 
+Before `staging` or `main` serves players, go through [the deploy checklist](docs/deploy-checklist.md): environment variables, allowed origins, Google sign-in, the computer service and the checks to do by hand.
+
 - **Web app:** Vercel deploys from GitHub. A merge to `main` deploys production; `staging` deploys to the staging URL; every pull request gets its own preview link. The Vercel project uses `apps/web` as its root directory and needs no secrets to build.
 - **Contracts:** `Bluff`, `BluffCashier`, `BluffInvites` and `ChipFaucet` are UUPS proxies; the deploy task links the cashier and the invites contract to `Bluff`. Every live task refuses to run without your own `MNEMONIC` (`npx hardhat vars set MNEMONIC`) and refuses the public test key. The repository owner deploys them once with `pnpm --filter @bluff/contracts deploy:sepolia`, which writes `packages/contracts/deployments/sepolia.json` and verifies the implementations on Etherscan. Later changes are upgrades, never redeploys: bump `version()`, then run `pnpm --filter @bluff/contracts upgrade:sepolia --contract <name>`, which refuses an unsafe storage layout. Commit `deployments/sepolia.json` and the `.openzeppelin/` manifest with every deploy or upgrade; the manifest is what the next upgrade is checked against.
 

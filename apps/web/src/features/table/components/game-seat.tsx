@@ -53,6 +53,11 @@ export function GameSeat({
     if (dice < diceShown) setLost((count) => count + 1);
     setDiceShown(dice);
   }
+  const liveFaces = ownDice?.status === "ready" ? ownDice.faces : null;
+  const [heldFaces, setHeldFaces] = useState(liveFaces);
+  if (!holdDice && heldFaces?.join() !== liveFaces?.join()) setHeldFaces(liveFaces);
+  const ownShown: OwnDice | null =
+    holdDice && heldFaces !== null ? { status: "ready", faces: heldFaces } : ownDice;
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
   return (
@@ -118,7 +123,7 @@ export function GameSeat({
       </figcaption>
       {isComputer ? <ComputerTag /> : null}
       <span className="relative">
-        {isActive ? <SeatDice dice={diceShown} ownDice={ownDice} matching={matching} /> : null}
+        {isActive ? <SeatDice dice={diceShown} ownDice={ownShown} matching={matching} /> : null}
         <AnimatePresence>
           {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
         </AnimatePresence>

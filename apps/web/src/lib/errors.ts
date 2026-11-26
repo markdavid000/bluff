@@ -4,7 +4,10 @@ import {
   BaseError,
   ContractFunctionRevertedError,
   HttpRequestError,
+  InsufficientFundsError,
+  ProviderDisconnectedError,
   TimeoutError,
+  UnauthorizedProviderError,
   UserRejectedRequestError,
   toFunctionSelector,
 } from "viem";
@@ -37,6 +40,13 @@ function isKnownReason(name: string): name is KnownReason {
 
 const USER_CANCELLED_CODES = new Set([4001, "ACTION_REJECTED"]);
 
+const WALLET_NOT_CONNECTED = new Set([
+  "ConnectorNotConnectedError",
+  "ConnectorNotFoundError",
+  "ConnectorAccountNotFoundError",
+  "ConnectorUnavailableReconnectingError",
+]);
+
 const RULE_BY_SELECTOR = new Map<string, string>(
   [...bluffAbi, ...bluffInvitesAbi, ...chipFaucetAbi, ...bluffCashierAbi].flatMap((item) =>
     item.type === "error" ? [[toFunctionSelector(formatAbiItem(item)), item.name] as const] : []
@@ -57,8 +67,19 @@ export function mayStillLand(error: unknown): boolean {
   );
 }
 
+function walletNotConnected(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    typeof error.name === "string" &&
+    WALLET_NOT_CONNECTED.has(error.name)
+  );
+}
+
 export function explainProblem(error: unknown): ActionProblem {
   if (mayStillLand(error)) return { kind: "unsure", reason: errorCopy.mayStillLand };
+  if (walletNotConnected(error)) return { kind: "failed", reason: errorCopy.walletNotConnected };
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
   if (error instanceof InviteNotWorkingError) {
     return { kind: "failed", reason: errorCopy.inviteNotWorking };
@@ -71,6 +92,17 @@ export function explainProblem(error: unknown): ActionProblem {
   if (error instanceof BaseError) {
     if (error.walk((cause) => cause instanceof UserRejectedRequestError)) {
       return { kind: "cancelled", reason: errorCopy.cancelled };
+    }
+    if (error.walk((cause) => cause instanceof InsufficientFundsError)) {
+      return { kind: "failed", reason: errorCopy.walletNeedsCoins };
+    }
+    if (
+      error.walk(
+        (cause) =>
+          cause instanceof UnauthorizedProviderError || cause instanceof ProviderDisconnectedError
+      )
+    ) {
+      return { kind: "failed", reason: errorCopy.walletNotConnected };
     }
     const reverted = error.walk((cause) => cause instanceof ContractFunctionRevertedError);
     if (reverted instanceof ContractFunctionRevertedError) {

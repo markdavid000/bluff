@@ -48,6 +48,7 @@ export function VisitorView({ room }: { room: Room }) {
               tone="green"
               size="large"
               icon={paid ? "cowrie" : "rocket"}
+              disabled={room.checkingChips}
               working={room.joining}
               workingLabel={label(
                 room.joinStep === "invite" ? tableCopy.checkingInvite : tableCopy.joining
