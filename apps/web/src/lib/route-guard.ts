@@ -1,7 +1,7 @@
 import { safeNextPath } from "./safe-redirect";
 import type { SessionCheck } from "./session-token";
 
-const PROTECTED_PREFIXES = ["/play", "/welcome", "/profile", "/table", "/history"] as const;
+const PROTECTED_PREFIXES = ["/play", "/welcome", "/table", "/history"] as const;
 
 const SIGN_IN_PAGES = ["/sign-in", "/refresh"] as const;
 
@@ -27,7 +27,6 @@ export function decideRoute(
       : { action: "allow" };
   }
   if (!isProtectedPath(pathname)) return { action: "allow" };
-  if (returningFromGoogle) return { action: "allow" };
   if (session.status === "valid") return { action: "allow" };
   const query = search.toString();
   const next = encodeURIComponent(query ? `${pathname}?${query}` : pathname);

@@ -17,11 +17,17 @@ describe("route coverage", () => {
     }
   });
 
+  it("guards only pages that exist in the game route group", () => {
+    const guarded = config.matcher.filter((entry) => entry.endsWith("/:path*"));
+    expect(guarded.map((entry) => entry.replace("/:path*", "")).sort()).toEqual(
+      [...gameRoutes].sort()
+    );
+  });
+
   it("runs the proxy on exactly the protected pages and the sign-in pages", () => {
     expect([...config.matcher].sort()).toEqual(
       [
         "/play/:path*",
-        "/profile/:path*",
         "/table/:path*",
         "/history/:path*",
         "/welcome/:path*",

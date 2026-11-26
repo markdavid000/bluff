@@ -4,6 +4,7 @@ import type { Log } from "./log";
 const POLL_MS = 2_000;
 export const SWEEP_MS = 10_000;
 export const LOG_SPAN = 10n;
+const BEHIND_NOTE_MS = 60_000;
 
 export interface WatchChain {
   blockNumber(): Promise<bigint>;
@@ -25,6 +26,7 @@ export function createChainWatch({
 }) {
   let lastBlock: bigint | null = null;
   let lastSweep = 0;
+  let lastBehindNote: number | null = null;
 
   async function touchedSince(from: bigint, to: bigint): Promise<Set<bigint>> {
     const touched = new Set<bigint>();
@@ -56,7 +58,10 @@ export function createChainWatch({
           error instanceof BaseError &&
           error.walk((cause) => cause instanceof InvalidParamsRpcError) !== null;
         if (!behind) throw error;
-        log.info("search behind", { block: head.toString(), count: tables.length });
+        if (lastBehindNote === null || now() - lastBehindNote >= BEHIND_NOTE_MS) {
+          lastBehindNote = now();
+          log.info("search behind", { block: head.toString(), count: tables.length });
+        }
         await onTables([...tables], head);
         return;
       }

@@ -171,6 +171,9 @@ export function createPlayerPool({
     release(index: number) {
       busy.delete(index);
     },
+    owns(address: string): boolean {
+      return players.some((player) => player.toLowerCase() === address.toLowerCase());
+    },
     async finishGame(index: number): Promise<void> {
       const player = known.get(index);
       try {
@@ -186,7 +189,7 @@ export function createPlayerPool({
       for (let index = 1; index <= players.length; index++) {
         const address = addressOf(index);
         const name = await chain.nicknameOf(address);
-        if (name === "") break;
+        if (name === "") continue;
         const player = { index, address, name };
         known.set(index, player);
         const tableId = await chain.tableOf(address);

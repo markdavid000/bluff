@@ -2,6 +2,7 @@ import { SignJWT, errors, jwtVerify } from "jose";
 
 export const SESSION_COOKIE = "bluff-session";
 export const SESSION_SECONDS = 60 * 60;
+const SESSION_COOKIE_SECONDS = 24 * 60 * 60;
 
 const ISSUER = "bluff";
 
@@ -54,6 +55,6 @@ export function sessionCookieOptions(secure: boolean) {
     secure,
     sameSite: "lax" as const,
     path: "/",
-    maxAge: SESSION_SECONDS,
+    maxAge: SESSION_COOKIE_SECONDS,
   };
 }
