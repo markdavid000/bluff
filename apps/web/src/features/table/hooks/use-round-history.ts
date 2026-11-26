@@ -63,18 +63,18 @@ export function useRoundHistory({
 }
 
 export function useGameHistory(
-  table: Table,
+  table: Table | null,
   enabled: boolean,
   shown: { bid: Bid | null; bidder: string | null }
 ): RoundHistoryState {
-  const bid = table.bid;
+  const bid = table?.bid ?? null;
   const history = useRoundHistory({
-    id: table.id,
-    round: table.round,
-    bidKey: `${table.status}-${table.turn}-${bid?.quantity ?? 0}-${bid?.face ?? 0}`,
-    enabled,
+    id: table?.id ?? 0n,
+    round: table?.round ?? 0,
+    bidKey: `${table?.status ?? ""}-${table?.turn ?? 0}-${bid?.quantity ?? 0}-${bid?.face ?? 0}`,
+    enabled: enabled && table !== null,
   });
-  if (history.status !== "ready") return history;
+  if (history.status !== "ready" || table === null) return history;
   return {
     status: "ready",
     rounds: withCurrentBid(

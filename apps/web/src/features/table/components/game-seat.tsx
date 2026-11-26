@@ -35,6 +35,7 @@ export function GameSeat({
   holdDice,
   compact = false,
   tight = false,
+  bidOnLeft = false,
 }: {
   name: string;
   avatarSrc: string | undefined;
@@ -50,6 +51,7 @@ export function GameSeat({
   holdDice: boolean;
   compact?: boolean;
   tight?: boolean;
+  bidOnLeft?: boolean;
 }) {
   const [diceShown, setDiceShown] = useState(dice);
   const [lost, setLost] = useState(0);
@@ -128,7 +130,14 @@ export function GameSeat({
               <ComputerTag small />
             </span>
           ) : null}
-          {compact ? null : bidAppear("absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2")}
+          {compact
+            ? null
+            : bidAppear(
+                cn(
+                  "absolute top-1/2 z-10 -translate-y-1/2",
+                  bidOnLeft ? "right-full mr-1.5" : "left-full ml-1.5"
+                )
+              )}
         </span>
         {compact ? <span className="flex w-11">{bidAppear()}</span> : null}
       </span>

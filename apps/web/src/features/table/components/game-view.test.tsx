@@ -15,18 +15,11 @@ let waitingForDice = false;
 vi.mock("../hooks/use-game-board", () => ({
   useGameBoard: () => ({ throwState: { kind: "idle" }, othersShaking: false, waitingForDice }),
 }));
-const historyWanted: boolean[] = [];
 let small = false;
 let phone = false;
 vi.mock("@/hooks/use-media-query", () => ({
   useMediaQuery: (query: string) =>
     query.includes("40rem") ? phone : query.includes("max-") ? small : wide,
-}));
-vi.mock("../hooks/use-round-history", () => ({
-  useGameHistory: (_table: unknown, enabled: boolean) => {
-    historyWanted.push(enabled);
-    return { status: "ready", rounds: [{ round: 3, bids: [], end: null }] };
-  },
 }));
 
 beforeEach(() => {
@@ -34,7 +27,6 @@ beforeEach(() => {
   small = false;
   phone = false;
   waitingForDice = false;
-  historyWanted.length = 0;
   play.mockClear();
 });
 
@@ -69,13 +61,11 @@ describe("GameView", () => {
     render(<GameView game={gameView({ table: playing() })} />);
     expect(screen.getByText(tableCopy.history)).toBeInTheDocument();
     expect(screen.getByText(tableCopy.historyNoBids)).toBeInTheDocument();
-    expect(historyWanted.every(Boolean)).toBe(true);
   });
 
-  it("keeps phones to one screen, without the rounds panel or its reads", () => {
+  it("keeps phones to one screen, without the rounds panel", () => {
     render(<GameView game={gameView({ table: playing() })} />);
     expect(screen.queryByText(tableCopy.history)).toBeNull();
-    expect(historyWanted.some(Boolean)).toBe(false);
   });
 
   describe("on a phone", () => {
@@ -130,13 +120,27 @@ describe("GameView", () => {
       expect(container.querySelector("[data-opponents]")).toBeNull();
     });
 
-    it("opens the rounds so far from the round badge, reading them only then", async () => {
+    it("puts the right-hand player's bid on the board side of their picture, so it isn't cut off", () => {
+      wide = true;
+      const game = fourPlayers();
+      const lastBid: Bid = { quantity: 3, face: 4 };
+      const seats = game.seats.map((seat) => ({ ...seat, lastBid }));
+      render(<GameView game={{ ...game, seats }} />);
+      const bidOf = (name: string) =>
+        screen
+          .getByRole("figure", { name: new RegExp(`^${name}`) })
+          .querySelector("[data-seat-bid]");
+      expect(bidOf("Kola #7A8B")?.closest(".right-full")).not.toBeNull();
+      expect(bidOf("Sly Fox")?.closest(".left-full")).not.toBeNull();
+      expect(bidOf("Ada #5E6F")?.closest(".left-full")).not.toBeNull();
+    });
+
+    it("opens the rounds so far from the round badge", async () => {
       phone = true;
       render(<GameView game={gameView({ table: playing() })} />);
-      expect(historyWanted.some(Boolean)).toBe(false);
       fireEvent.click(screen.getByRole("button", { name: tableCopy.openHistory(3, 8) }));
-      expect(await screen.findByRole("dialog", { name: tableCopy.history })).toBeInTheDocument();
-      expect(historyWanted.at(-1)).toBe(true);
+      const sheet = await screen.findByRole("dialog", { name: tableCopy.history });
+      expect(within(sheet).getByText(tableCopy.historyNoBids)).toBeInTheDocument();
     });
 
     it("leaves the bid beside the bidder, so the top strip fits", () => {
