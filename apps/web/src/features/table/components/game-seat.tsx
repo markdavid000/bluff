@@ -64,6 +64,20 @@ export function GameSeat({
     holdDice && heldFaces !== null ? { status: "ready", faces: heldFaces } : ownDice;
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
+  const bidAppear = (className?: string) => (
+    <Appear
+      show={lastBid !== null}
+      swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
+      inline
+      className={className}
+    >
+      {lastBid ? (
+        <span data-seat-bid>
+          <BidPill bid={lastBid} owner={shown} compact={compact} />
+        </span>
+      ) : null}
+    </Appear>
+  );
   return (
     <figure
       aria-label={[
@@ -74,51 +88,49 @@ export function GameSeat({
       ]
         .filter(Boolean)
         .join(", ")}
-      className={cn("flex flex-col items-center gap-1", !isActive && "opacity-50 grayscale")}
+      className={cn(
+        "flex flex-col gap-1",
+        compact ? "items-start" : "items-center",
+        !isActive && "opacity-50 grayscale"
+      )}
     >
-      <span className="relative">
-        <Appear
-          show={isMe && isTurn}
-          inline
-          pop
-          className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2"
-        >
-          <span className="block rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]">
-            {tableCopy.yourTurnTag}
-          </span>
-        </Appear>
-        <TurnRing active={isTurn} fraction={turnFraction}>
-          {avatarSrc ? (
-            <Avatar
-              src={avatarSrc}
-              size={compact ? 40 : tight ? 44 : 52}
-              className={cn(isMe && "ring-2 ring-seat-yellow")}
-            />
-          ) : (
-            <span
-              aria-hidden
-              className={cn(
-                "block animate-pulse rounded-full bg-muted calm:animate-none",
-                compact ? "size-10" : tight ? "size-11" : "size-13"
-              )}
-            />
-          )}
-        </TurnRing>
-        {compact && isComputer ? (
-          <span className="absolute -bottom-1.5 left-1/2 z-10 -translate-x-1/2">
-            <ComputerTag small />
-          </span>
-        ) : null}
-        {compact ? null : (
+      <span data-seat-top className={cn("relative", compact && "flex items-center gap-0.5")}>
+        <span className="relative">
           <Appear
-            show={lastBid !== null}
-            swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
+            show={isMe && isTurn}
             inline
-            className="absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2"
+            pop
+            className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2"
           >
-            {lastBid ? <BidPill bid={lastBid} owner={shown} compact={false} /> : null}
+            <span className="block rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]">
+              {tableCopy.yourTurnTag}
+            </span>
           </Appear>
-        )}
+          <TurnRing active={isTurn} fraction={turnFraction}>
+            {avatarSrc ? (
+              <Avatar
+                src={avatarSrc}
+                size={compact ? 32 : tight ? 44 : 52}
+                className={cn(isMe && "ring-2 ring-seat-yellow")}
+              />
+            ) : (
+              <span
+                aria-hidden
+                className={cn(
+                  "block animate-pulse rounded-full bg-muted calm:animate-none",
+                  compact ? "size-8" : tight ? "size-11" : "size-13"
+                )}
+              />
+            )}
+          </TurnRing>
+          {compact && isComputer ? (
+            <span className="absolute -bottom-1.5 left-1/2 z-10 -translate-x-1/2">
+              <ComputerTag small />
+            </span>
+          ) : null}
+          {compact ? null : bidAppear("absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2")}
+        </span>
+        {compact ? <span className="flex w-11">{bidAppear()}</span> : null}
       </span>
       <figcaption
         className={cn(
@@ -134,7 +146,7 @@ export function GameSeat({
         )}
       </figcaption>
       {isComputer && !compact ? <ComputerTag /> : null}
-      <span className={cn(compact && "flex h-7 items-center gap-1.5")}>
+      <span className={cn(compact && "flex h-7 items-center")}>
         <span className="relative">
           {isActive ? (
             <SeatDice
@@ -149,17 +161,6 @@ export function GameSeat({
             {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
           </AnimatePresence>
         </span>
-        {compact ? (
-          <span data-seat-bid className="static flex items-center">
-            <Appear
-              show={lastBid !== null}
-              swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
-              inline
-            >
-              {lastBid ? <BidPill bid={lastBid} owner={shown} compact /> : null}
-            </Appear>
-          </span>
-        ) : null}
       </span>
     </figure>
   );
@@ -171,11 +172,11 @@ function BidPill({ bid, owner, compact }: { bid: Bid; owner: string; compact: bo
       aria-label={tableCopy.lastBidOf(owner, tableCopy.bid(bid.quantity, word(bid.face)))}
       className={cn(
         "flex items-center rounded-full border-2 border-seat-yellow-edge bg-seat-yellow font-game leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]",
-        compact ? "gap-1 py-0.5 pr-1 pl-2 text-sm" : "gap-1.5 py-1 pr-1.5 pl-2.5 text-lg"
+        compact ? "gap-0.5 py-0.5 pr-0.5 pl-1 text-[0.7rem]" : "gap-1.5 py-1 pr-1.5 pl-2.5 text-lg"
       )}
     >
       {tableCopy.timesMark(bid.quantity)}
-      <DieFace face={bid.face} className={compact ? "size-5" : "size-7"} />
+      <DieFace face={bid.face} className={compact ? "size-4" : "size-7"} />
     </span>
   );
 }

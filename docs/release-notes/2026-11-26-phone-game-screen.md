@@ -21,7 +21,7 @@ From the maintainer's screenshots on 2026-11-26.
   - a 40 px avatar with the turn ring;
   - a short name;
   - their dice as one "? 4" count instead of a tile each;
-  - their last bid beside the count;
+  - their last bid beside their picture, the same as on your own seat, with its space kept so nothing moves when a bid lands;
   - the Computer badge on the avatar's edge.
 
   The board takes the full width, and your own seat stays below it, slightly smaller (`tight`).
@@ -68,3 +68,4 @@ Wider screens keep today's layout.
   - no element runs off the screen, no buttons overlap, and the page never scrolls.
 - **The game on your own turn,** at the same sizes: the board is 69, 137 and 241 px wide, and 280–342 px on other turns.
 - **Known limit:** on the smallest phones (328 × 720) the board is still small, about 69 px, while the bid controls are open on your turn.
+- **Known limit:** on 320 px phones, the outermost opponent card and the Raise button are cut by a few pixels at the screen edge. 328 px and wider fit fully.

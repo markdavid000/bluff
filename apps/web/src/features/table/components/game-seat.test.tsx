@@ -227,12 +227,14 @@ describe("GameSeat", () => {
     expect(play.mock.calls.filter(([name]) => name === "thud")).toHaveLength(1);
   });
 
-  it("fits a phone's opponents row: one dice count instead of a tile each, with the bid underneath", () => {
+  it("fits a phone's opponents row: one dice count instead of a tile each, with the bid beside the picture", () => {
     const { container } = show({ compact: true, dice: 4, lastBid: { quantity: 3, face: 4 } });
     const dice = screen.getByRole("img", { name: tableCopy.hiddenDice(4) });
     expect(dice).toHaveTextContent("4");
     expect(within(dice).getAllByText("?")).toHaveLength(1);
-    expect(container.querySelector("[data-seat-bid]")).toHaveClass("static");
+    const top = container.querySelector("[data-seat-bid]")?.closest("[data-seat-top]");
+    expect(top).toHaveClass("flex");
+    expect(top?.querySelector("img")).not.toBeNull();
   });
 
   it("draws the player's own seat a little smaller on a phone", () => {

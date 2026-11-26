@@ -119,7 +119,7 @@ export function GameView({ game }: { game: Game }) {
   );
 
   return (
-    <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4">
+    <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4 max-[40rem]:px-0">
       <h1 ref={headingRef} tabIndex={-1} className="sr-only">
         {tableCopy.tableName(table.id.toString())}
       </h1>
@@ -169,9 +169,11 @@ export function GameView({ game }: { game: Game }) {
       </Appear>
       {phone ? (
         <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2">
-          <div data-opponents className="flex w-full items-start justify-center gap-3">
+          <div data-opponents className="flex w-full items-start justify-center gap-1">
             {opponents.map(({ index }) => (
-              <div key={index}>{seatAt(index, true)}</div>
+              <div key={index} className="flex max-w-32 flex-1 basis-0 justify-center">
+                {seatAt(index, true)}
+              </div>
             ))}
           </div>
           {board}

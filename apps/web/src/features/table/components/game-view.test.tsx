@@ -1,3 +1,4 @@
+import type { Bid } from "@bluff/game";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
@@ -107,6 +108,21 @@ describe("GameView", () => {
       expect(within(row as HTMLElement).getAllByRole("figure")).toHaveLength(3);
       expect(within(row as HTMLElement).queryByRole("figure", { name: /^You/ })).toBeNull();
       expect(screen.getByRole("figure", { name: /^You/ })).toBeInTheDocument();
+    });
+
+    it("shows each opponent's bid beside their picture", () => {
+      phone = true;
+      const game = fourPlayers();
+      const lastBid: Bid = { quantity: 3, face: 4 };
+      const seats = game.seats.map((seat) => ({ ...seat, lastBid }));
+      const { container } = render(<GameView game={{ ...game, seats }} />);
+      const row = container.querySelector("[data-opponents]");
+      if (!row) throw new Error("Expected the opponents' row.");
+      const bids = [...row.querySelectorAll("[data-seat-bid]")];
+      expect(bids).toHaveLength(3);
+      for (const bid of bids) {
+        expect(bid.closest("[data-seat-top]")?.querySelector("img, [aria-hidden]")).not.toBeNull();
+      }
     });
 
     it("keeps the seats around the board on wider screens", () => {
