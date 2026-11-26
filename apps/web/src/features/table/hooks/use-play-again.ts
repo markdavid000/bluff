@@ -9,10 +9,12 @@ import { useReadContracts } from "wagmi";
 import { contracts } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { useChipBalance } from "@/hooks/use-chip-balance";
+import { callComputer } from "@/hooks/use-computer-call";
 import { useGoToTable } from "@/hooks/use-go-to-table";
 import { useNow } from "@/hooks/use-now";
 import { useTakeSeat } from "@/hooks/use-take-seat";
 import { type KnownBalance, formatChips, whyUnaffordable } from "@/lib/chips";
+import { isComputerPlayer } from "@/lib/computer-players";
 import { notify } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { type NewTable, newTableOffer } from "../lib/play-again";
@@ -52,6 +54,7 @@ export function usePlayAgain({
   const now = useNow(CHECK_EVERY_MS, !watching);
   const looking = !watching && now < since + LOOK_FOR_MS;
   const others = players.filter((player) => !player.isMe);
+  const playedComputer = last.buyIn === 0n && others.some(({ player }) => isComputerPlayer(player));
 
   const seatsOf = useReadContracts({
     contracts: others.map(({ player }) => ({
@@ -117,11 +120,14 @@ export function usePlayAgain({
   const create = useAction({
     id: "play-again",
     working: tableCopy.playingAgain,
-    run: (report) =>
-      takeSeat(
+    run: async (report) => {
+      const id = await takeSeat(
         { kind: "create", seatCount: last.seatCount, buyIn: last.buyIn, isPrivate: last.isPrivate },
         report
-      ),
+      );
+      if (playedComputer) callComputer(id);
+      return id;
+    },
     onDone: (id) => {
       setGoingTo("new");
       seated(id);

@@ -33,6 +33,26 @@ beforeEach(() => {
 const playing = (buyIn = 0n) => aTable({ status: "playing", buyIn, round: 3 });
 
 describe("GameView", () => {
+  it("gives a player who is out of dice a way back to the lobby, not a leave that can't work", () => {
+    render(
+      <GameView
+        game={gameView({
+          table: playing(),
+          stillIn: false,
+          myTurn: false,
+          dice: { status: "none" },
+          matching: null,
+        })}
+      />
+    );
+    expect(screen.getByRole("link", { name: tableCopy.backToLobby })).toHaveAttribute(
+      "href",
+      "/play"
+    );
+    expect(screen.queryByRole("button", { name: tableCopy.leave })).not.toBeInTheDocument();
+    expect(screen.queryByText(tableCopy.watching)).not.toBeInTheDocument();
+  });
+
   it("tells a watcher they are watching, with a way back instead of a way to leave", () => {
     render(
       <GameView

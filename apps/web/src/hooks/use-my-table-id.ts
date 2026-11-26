@@ -2,6 +2,7 @@
 
 import { bluffAbi } from "@bluff/contracts";
 import { usePrivy } from "@privy-io/react-auth";
+import { usePathname } from "next/navigation";
 import { type Query, useQueryClient } from "@tanstack/react-query";
 import { type Address, isAddressEqual } from "viem";
 import { useReadContract } from "wagmi";
@@ -9,7 +10,8 @@ import { contracts } from "@/config/chain";
 import { ACCOUNT_READ } from "@/lib/query-client";
 import { markSeatGone } from "./use-left-tables";
 
-const REFRESH_MS = 6_000;
+const REFRESH_MS = 30_000;
+const TABLE_PAGE = "/table/";
 
 export type MyTableId =
   | { status: "loading" }
@@ -19,12 +21,17 @@ export type MyTableId =
 export function useMyTableId(): MyTableId {
   const { user } = usePrivy();
   const account = user?.wallet?.address as Address | undefined;
+  const onTablePage = (usePathname() ?? "").startsWith(TABLE_PAGE);
   const read = useReadContract({
     address: contracts.bluff,
     abi: bluffAbi,
     functionName: "tableOf",
     args: account ? [account] : undefined,
-    query: { ...ACCOUNT_READ, enabled: Boolean(account), refetchInterval: REFRESH_MS },
+    query: {
+      ...ACCOUNT_READ,
+      enabled: Boolean(account),
+      refetchInterval: onTablePage ? false : REFRESH_MS,
+    },
   });
 
   if (read.data !== undefined) return { status: "ready", id: read.data === 0n ? null : read.data };

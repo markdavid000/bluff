@@ -80,4 +80,9 @@ describe("RoundHistory", () => {
     fireEvent.click(screen.getByText(tableCopy.history));
     expect(panel).not.toHaveAttribute("open");
   });
+
+  it("folds open and shut smoothly rather than snapping", () => {
+    render(<RoundHistory nameOf={nameOf} history={{ status: "loading" }} />);
+    expect(screen.getByRole("group")).toHaveClass("smooth-details");
+  });
 });

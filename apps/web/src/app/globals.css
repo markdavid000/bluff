@@ -208,6 +208,31 @@
   animation: tumble 2.4s cubic-bezier(0.45, 0.05, 0.35, 1) infinite;
 }
 
+@utility smooth-details {
+  interpolate-size: allow-keywords;
+  &::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 250ms ease-out,
+      opacity 250ms ease-out,
+      content-visibility 250ms allow-discrete;
+  }
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+  &:where(.calm *)::details-content {
+    transition-duration: 0ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::details-content {
+      transition-duration: 0ms;
+    }
+  }
+}
+
 @utility glow-backdrop {
   background-image:
     radial-gradient(ellipse at top, var(--glow-top) 0%, transparent 55%),

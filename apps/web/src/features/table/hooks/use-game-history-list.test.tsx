@@ -176,6 +176,50 @@ describe("useGameHistoryList", () => {
     expect(result.current.status === "ready" && result.current.more).toBe(false);
   });
 
+  it("looks for a game's ending only from when you joined it, not from the start", async () => {
+    tables = [{ id: 71n, status: FINISHED, block: 12_140_000n }];
+    const { result } = render();
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    const endingSearches = getLogs.mock.calls
+      .map(([request]) => request as { event: { name: string }; fromBlock: bigint })
+      .filter((request) => request.event.name === "GameEnded");
+    expect(endingSearches.map((request) => request.fromBlock)).toEqual([12_140_000n]);
+    expect(
+      result.current.status === "ready" && result.current.games.map((game) => game.outcome.result)
+    ).toEqual(["won"]);
+  });
+
+  it("doesn't search again for endings it has already found when more games are shown", async () => {
+    tables = Array.from({ length: 25 }, (_, index) => ({
+      id: BigInt(index + 101),
+      status: FINISHED,
+      block: 12_112_100n + BigInt(index),
+    }));
+    const { result } = render();
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    const firstPage =
+      result.current.status === "ready" ? result.current.games.map((game) => game.table.id) : [];
+    expect(firstPage).toHaveLength(20);
+    const before = getLogs.mock.calls.length;
+    act(() => {
+      if (result.current.status === "ready") result.current.loadMore();
+    });
+    await waitFor(() =>
+      expect(result.current.status === "ready" && result.current.games.length).toBe(25)
+    );
+    const searchedAgain = getLogs.mock.calls
+      .slice(before)
+      .map(([request]) => request as { event: { name: string }; args: { id?: bigint[] } })
+      .filter((request) => request.event.name === "GameEnded")
+      .flatMap((request) => request.args.id ?? []);
+    expect(searchedAgain.length).toBeGreaterThan(0);
+    expect(searchedAgain.some((id) => firstPage.includes(id))).toBe(false);
+    expect(
+      result.current.status === "ready" &&
+        result.current.games.every((game) => game.outcome.result === "won")
+    ).toBe(true);
+  });
+
   it("remembers what it found, and next time only searches newer blocks", async () => {
     rememberGames(ME, {
       searchedTo: 12_149_000n,
