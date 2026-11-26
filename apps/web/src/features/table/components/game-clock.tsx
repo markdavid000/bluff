@@ -15,7 +15,7 @@ export function GameClock({ leftMs }: { leftMs: number }) {
       data-urgent={urgent}
       className={cn(
         urgent ? URGENT_BADGE : WOODEN_BADGE,
-        "flex-col justify-center px-3.5 leading-none",
+        "flex-col justify-center px-3.5 leading-none max-[40rem]:px-2.5",
         urgent && "animate-pulse calm:animate-none"
       )}
     >

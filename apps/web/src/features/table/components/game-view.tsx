@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Appear } from "@/components/shared/appear";
+import { PatternFrame } from "@/components/shared/pattern-band";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Cowrie } from "@/components/shared/cowrie";
 import { GameIcon } from "@/components/shared/game-icon";
 import { TileLink } from "@/components/shared/tile-link";
@@ -22,7 +24,7 @@ import { GameSeat } from "./game-seat";
 import { GameClock } from "./game-clock";
 import { LeaveGameButton } from "./leave-game-button";
 import { RoundBadge } from "./round-badge";
-import { RoundHistory } from "./round-history";
+import { RoundHistory, RoundHistoryList } from "./round-history";
 import { TurnBanner } from "./turn-banner";
 import { RevealCard } from "./reveal-card";
 
@@ -38,15 +40,22 @@ const SLOT: Record<"top" | "left" | "right" | "bottom", string> = {
 const POT_STACKS = 6;
 const WIDE = "(min-width: 64rem)";
 const SMALL = "(max-width: 23rem), (max-height: 44rem)";
+const PHONE = "(max-width: 40rem)";
+const OPPONENT_ORDER = ["left", "top", "right"] as const;
 
 export function GameView({ game }: { game: Game }) {
   const colors = useThemeColors();
   const { table, seats } = game;
   const wide = useMediaQuery(WIDE);
   const small = useMediaQuery(SMALL);
+  const phone = useMediaQuery(PHONE);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [cardUp, setCardUp] = useState(false);
   if (game.reveal !== null && !cardUp) setCardUp(true);
-  const history = useGameHistory(table, wide, { bid: game.bid, bidder: game.bidder });
+  const history = useGameHistory(table, wide || historyOpen, {
+    bid: game.bid,
+    bidder: game.bidder,
+  });
   useSoundOn("tick", game.myTurn && game.turnLow ? Math.ceil(game.turnLeft / 1000) : null);
   const nameOf = (player: string) => {
     const seat = seats.find((each) => each.player.toLowerCase() === player.toLowerCase());
@@ -64,18 +73,66 @@ export function GameView({ game }: { game: Game }) {
     game.myTurn &&
     !(waitingForDice && (game.dice.status === "loading" || game.dice.status === "ready"));
   const { actionRef, headingRef, focusAfterReveal } = useTurnFocus(controlsShown);
+  const seatAt = (index: number, compact: boolean, tight = false) => {
+    const seat = seats[index];
+    if (!seat) return null;
+    return (
+      <GameSeat
+        name={seat.name}
+        avatarSrc={seat.avatarSrc}
+        isMe={seat.isMe}
+        isComputer={seat.isComputer}
+        dice={seat.dice}
+        isActive={seat.isActive}
+        isTurn={seat.isTurn}
+        turnFraction={game.turnFraction}
+        lastBid={seat.lastBid}
+        ownDice={seat.isMe ? game.dice : null}
+        matching={seat.isMe ? game.matching : null}
+        holdDice={game.boardRevealed || cardUp}
+        compact={compact}
+        tight={tight}
+      />
+    );
+  };
+  const opponents = OPPONENT_ORDER.flatMap((side) => {
+    const index = layout.findIndex((placement) => placement.side === side);
+    return index >= 0 && seats[index] ? [{ index }] : [];
+  });
+  const bottomIndex = layout.findIndex((placement) => placement.side === "bottom");
+  const board = (
+    <div className="[container-type:size] flex h-full min-h-0 w-full flex-1 items-center justify-center">
+      <div className="relative aspect-square w-[min(100cqw,100cqh)]">
+        <GameBoard
+          colors={colors}
+          seats={taken}
+          throwState={throwState}
+          chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
+          revealed={game.boardRevealed}
+          revealedDice={game.revealedDice}
+          ownSeat={game.mySeat >= 0 ? game.mySeat : null}
+          othersShaking={othersShaking}
+          label={tableCopy.boardLabel}
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4">
+    <div className="relative flex max-h-full min-h-0 w-full max-w-[68rem] flex-1 flex-col items-center gap-2 overflow-hidden px-2 pt-1 pb-4 max-[40rem]:px-0">
       <h1 ref={headingRef} tabIndex={-1} className="sr-only">
         {tableCopy.tableName(table.id.toString())}
       </h1>
-      <div className="flex w-full items-center justify-between gap-3 pb-1 text-sm min-[68rem]:pr-8">
+      <div className="flex w-full items-center justify-between gap-3 pb-1 text-sm max-[40rem]:gap-2 min-[68rem]:pr-8">
         <span className="flex min-w-0 items-center gap-2">
-          <RoundBadge round={table.round} diceInPlay={table.diceInPlay} />
+          <RoundBadge
+            round={table.round}
+            diceInPlay={table.diceInPlay}
+            onOpen={wide ? undefined : () => setHistoryOpen(true)}
+          />
           <CurrentBid bid={game.bid} bidderName={game.bidderName} />
         </span>
-        <span className="flex shrink-0 items-center gap-3">
+        <span className="flex shrink-0 items-center gap-3 max-[40rem]:gap-2">
           <Appear show={game.clockLeft > 0} inline>
             <GameClock leftMs={game.clockLeft} />
           </Appear>
@@ -110,44 +167,42 @@ export function GameView({ game }: { game: Game }) {
       <Appear show={wide} className="absolute top-[4.5rem] left-2 z-10">
         <RoundHistory history={history} nameOf={nameOf} />
       </Appear>
-      <div className="grid min-h-0 w-full max-w-5xl flex-1 grid-cols-[minmax(4.5rem,auto)_minmax(0,1fr)_minmax(4.5rem,auto)] grid-rows-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1">
-        {layout.map((placement, index) => {
-          const seat = seats[index];
-          return seat ? (
-            <div key={placement.side} className={SLOT[placement.side]}>
-              <GameSeat
-                name={seat.name}
-                avatarSrc={seat.avatarSrc}
-                isMe={seat.isMe}
-                isComputer={seat.isComputer}
-                dice={seat.dice}
-                isActive={seat.isActive}
-                isTurn={seat.isTurn}
-                turnFraction={game.turnFraction}
-                lastBid={seat.lastBid}
-                ownDice={seat.isMe ? game.dice : null}
-                matching={seat.isMe ? game.matching : null}
-                holdDice={game.boardRevealed || cardUp}
-              />
-            </div>
-          ) : null;
-        })}
-        <div className="[container-type:size] col-start-2 row-start-2 flex h-full min-h-0 items-center justify-center">
-          <div className="relative aspect-square w-[min(100cqw,100cqh)]">
-            <GameBoard
-              colors={colors}
-              seats={taken}
-              throwState={throwState}
-              chipsEach={table.buyIn > 0n ? POT_STACKS : 0}
-              revealed={game.boardRevealed}
-              revealedDice={game.revealedDice}
-              ownSeat={game.mySeat >= 0 ? game.mySeat : null}
-              othersShaking={othersShaking}
-              label={tableCopy.boardLabel}
-            />
+      {phone ? (
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2">
+          <div data-opponents className="flex w-full items-start justify-center gap-1">
+            {opponents.map(({ index }) => (
+              <div key={index} className="flex max-w-32 flex-1 basis-0 justify-center">
+                {seatAt(index, true)}
+              </div>
+            ))}
           </div>
+          {board}
+          {bottomIndex >= 0 ? seatAt(bottomIndex, false, true) : null}
         </div>
-      </div>
+      ) : (
+        <div className="grid min-h-0 w-full max-w-5xl flex-1 grid-cols-[minmax(4.5rem,auto)_minmax(0,1fr)_minmax(4.5rem,auto)] grid-rows-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1">
+          {layout.map((placement, index) =>
+            seats[index] ? (
+              <div key={placement.side} className={SLOT[placement.side]}>
+                {seatAt(index, false)}
+              </div>
+            ) : null
+          )}
+          <div className="col-start-2 row-start-2 flex h-full min-h-0">{board}</div>
+        </div>
+      )}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent>
+          <PatternFrame roomy>
+            <div className="flex max-h-[70dvh] flex-col gap-4">
+              <DialogTitle>{tableCopy.history}</DialogTitle>
+              <div className="min-h-0 overflow-y-auto pr-1 text-sm">
+                <RoundHistoryList history={history} nameOf={nameOf} />
+              </div>
+            </div>
+          </PatternFrame>
+        </DialogContent>
+      </Dialog>
 
       <span role="alert" className="sr-only">
         {game.myTurn && game.turnLow ? tableCopy.timeLow : ""}
@@ -156,7 +211,7 @@ export function GameView({ game }: { game: Game }) {
       <Appear show={controlsShown}>
         <BidControl
           actionRef={actionRef}
-          compact={small}
+          compact={small || phone}
           choice={game.choice}
           bid={game.bid}
           bidderName={game.bidderName}

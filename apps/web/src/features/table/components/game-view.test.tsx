@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { Bid } from "@bluff/game";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
@@ -16,8 +17,10 @@ vi.mock("../hooks/use-game-board", () => ({
 }));
 const historyWanted: boolean[] = [];
 let small = false;
+let phone = false;
 vi.mock("@/hooks/use-media-query", () => ({
-  useMediaQuery: (query: string) => (query.includes("max-") ? small : wide),
+  useMediaQuery: (query: string) =>
+    query.includes("40rem") ? phone : query.includes("max-") ? small : wide,
 }));
 vi.mock("../hooks/use-round-history", () => ({
   useGameHistory: (_table: unknown, enabled: boolean) => {
@@ -29,6 +32,7 @@ vi.mock("../hooks/use-round-history", () => ({
 beforeEach(() => {
   wide = false;
   small = false;
+  phone = false;
   waitingForDice = false;
   historyWanted.length = 0;
   play.mockClear();
@@ -74,7 +78,77 @@ describe("GameView", () => {
     expect(historyWanted.some(Boolean)).toBe(false);
   });
 
+  describe("on a phone", () => {
+    function fourPlayers() {
+      const base = gameView({ table: aTable({ status: "playing", round: 3, seatCount: 4 }) });
+      const [me, fox] = base.seats;
+      if (!me || !fox) throw new Error("Expected two seats in the fixture.");
+      const other = (player: `0x${string}`, name: string) => ({
+        ...fox,
+        player,
+        name,
+        lastBid: null,
+      });
+      return {
+        ...base,
+        seats: [
+          me,
+          fox,
+          other("0x0000000000000000000000000000000000005e6f", "Ada #5E6F"),
+          other("0x0000000000000000000000000000000000007a8b", "Kola #7A8B"),
+        ],
+      };
+    }
+
+    it("puts every opponent in one row above the board, and the player below it", () => {
+      phone = true;
+      const { container } = render(<GameView game={fourPlayers()} />);
+      const row = container.querySelector("[data-opponents]");
+      if (!row) throw new Error("Expected the opponents' row.");
+      expect(within(row as HTMLElement).getAllByRole("figure")).toHaveLength(3);
+      expect(within(row as HTMLElement).queryByRole("figure", { name: /^You/ })).toBeNull();
+      expect(screen.getByRole("figure", { name: /^You/ })).toBeInTheDocument();
+    });
+
+    it("shows each opponent's bid beside their picture", () => {
+      phone = true;
+      const game = fourPlayers();
+      const lastBid: Bid = { quantity: 3, face: 4 };
+      const seats = game.seats.map((seat) => ({ ...seat, lastBid }));
+      const { container } = render(<GameView game={{ ...game, seats }} />);
+      const row = container.querySelector("[data-opponents]");
+      if (!row) throw new Error("Expected the opponents' row.");
+      const bids = [...row.querySelectorAll("[data-seat-bid]")];
+      expect(bids).toHaveLength(3);
+      for (const bid of bids) {
+        expect(bid.closest("[data-seat-top]")?.querySelector("img, [aria-hidden]")).not.toBeNull();
+      }
+    });
+
+    it("keeps the seats around the board on wider screens", () => {
+      const { container } = render(<GameView game={fourPlayers()} />);
+      expect(container.querySelector("[data-opponents]")).toBeNull();
+    });
+
+    it("opens the rounds so far from the round badge, reading them only then", async () => {
+      phone = true;
+      render(<GameView game={gameView({ table: playing() })} />);
+      expect(historyWanted.some(Boolean)).toBe(false);
+      fireEvent.click(screen.getByRole("button", { name: tableCopy.openHistory(3, 8) }));
+      expect(await screen.findByRole("dialog", { name: tableCopy.history })).toBeInTheDocument();
+      expect(historyWanted.at(-1)).toBe(true);
+    });
+
+    it("leaves the bid beside the bidder, so the top strip fits", () => {
+      phone = true;
+      render(<GameView game={gameView({ table: playing() })} />);
+      const pill = screen.getByText(tableCopy.currentBidIs).closest("[data-strip-bid]");
+      expect(pill).toHaveClass("max-[40rem]:hidden");
+    });
+  });
+
   it("shows the round, the dice in play and the game clock in one slim strip", () => {
+    wide = true;
     render(<GameView game={gameView({ table: playing() })} />);
     expect(screen.getByRole("group", { name: tableCopy.roundLine(3, 8) })).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /Game ends in 10:00/ })).toBeInTheDocument();

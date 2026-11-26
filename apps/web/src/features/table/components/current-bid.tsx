@@ -18,9 +18,11 @@ function bidSentence(bid: Bid) {
 export function CurrentBid({ bid, bidderName }: { bid: Bid | null; bidderName: string | null }) {
   return (
     <>
-      <Appear show swapKey={bid ? "bid" : "none"} inline>
-        {bid ? <PlacedBid bid={bid} bidderName={bidderName} /> : <NoBid />}
-      </Appear>
+      <span data-strip-bid className="inline-flex max-[40rem]:hidden">
+        <Appear show swapKey={bid ? "bid" : "none"} inline>
+          {bid ? <PlacedBid bid={bid} bidderName={bidderName} /> : <NoBid />}
+        </Appear>
+      </span>
       <span aria-live="polite" className="sr-only">
         {bid ? bidSentence(bid) : ""}
       </span>

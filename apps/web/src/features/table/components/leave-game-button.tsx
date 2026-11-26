@@ -36,8 +36,10 @@ export function LeaveGameButton({
         working={leaving}
         workingLabel={leavingLabel}
         onClick={leave.ask}
+        aria-label={tableCopy.leave}
       >
-        {tableCopy.leave}
+        <span className="max-[40rem]:hidden">{tableCopy.leave}</span>
+        <span className="max-[23rem]:hidden min-[40rem]:hidden">{tableCopy.leaveShort}</span>
       </ActionButton>
       <Dialog open={leave.asking} onOpenChange={leave.setAsking}>
         <DialogContent>

@@ -33,6 +33,8 @@ export function GameSeat({
   ownDice,
   matching,
   holdDice,
+  compact = false,
+  tight = false,
 }: {
   name: string;
   avatarSrc: string | undefined;
@@ -46,6 +48,8 @@ export function GameSeat({
   ownDice: OwnDice | null;
   matching: readonly boolean[] | null;
   holdDice: boolean;
+  compact?: boolean;
+  tight?: boolean;
 }) {
   const [diceShown, setDiceShown] = useState(dice);
   const [lost, setLost] = useState(0);
@@ -60,6 +64,20 @@ export function GameSeat({
     holdDice && heldFaces !== null ? { status: "ready", faces: heldFaces } : ownDice;
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
+  const bidAppear = (className?: string) => (
+    <Appear
+      show={lastBid !== null}
+      swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
+      inline
+      className={className}
+    >
+      {lastBid ? (
+        <span data-seat-bid>
+          <BidPill bid={lastBid} owner={shown} compact={compact} />
+        </span>
+      ) : null}
+    </Appear>
+  );
   return (
     <figure
       aria-label={[
@@ -70,50 +88,56 @@ export function GameSeat({
       ]
         .filter(Boolean)
         .join(", ")}
-      className={cn("flex flex-col items-center gap-1", !isActive && "opacity-50 grayscale")}
+      className={cn(
+        "flex flex-col gap-1",
+        compact ? "items-start" : "items-center",
+        !isActive && "opacity-50 grayscale"
+      )}
     >
-      <span className="relative">
-        <Appear
-          show={isMe && isTurn}
-          inline
-          pop
-          className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2"
-        >
-          <span className="block rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]">
-            {tableCopy.yourTurnTag}
-          </span>
-        </Appear>
-        <TurnRing active={isTurn} fraction={turnFraction}>
-          {avatarSrc ? (
-            <Avatar src={avatarSrc} size={52} className={cn(isMe && "ring-2 ring-seat-yellow")} />
-          ) : (
-            <span
-              aria-hidden
-              className="block size-13 animate-pulse rounded-full bg-muted calm:animate-none"
-            />
-          )}
-        </TurnRing>
-        <Appear
-          show={lastBid !== null}
-          swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
-          inline
-          className="absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2"
-        >
-          {lastBid ? (
-            <span
-              aria-label={tableCopy.lastBidOf(
-                shown,
-                tableCopy.bid(lastBid.quantity, word(lastBid.face))
-              )}
-              className="flex items-center gap-1.5 rounded-full border-2 border-seat-yellow-edge bg-seat-yellow py-1 pr-1.5 pl-2.5 font-game text-lg leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]"
-            >
-              {tableCopy.timesMark(lastBid.quantity)}
-              <DieFace face={lastBid.face} className="size-7" />
+      <span data-seat-top className={cn("relative", compact && "flex items-center gap-0.5")}>
+        <span className="relative">
+          <Appear
+            show={isMe && isTurn}
+            inline
+            pop
+            className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2"
+          >
+            <span className="block rounded-full border-2 border-seat-yellow-edge bg-seat-yellow px-3 py-1 font-game text-sm leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]">
+              {tableCopy.yourTurnTag}
+            </span>
+          </Appear>
+          <TurnRing active={isTurn} fraction={turnFraction}>
+            {avatarSrc ? (
+              <Avatar
+                src={avatarSrc}
+                size={compact ? 32 : tight ? 44 : 52}
+                className={cn(isMe && "ring-2 ring-seat-yellow")}
+              />
+            ) : (
+              <span
+                aria-hidden
+                className={cn(
+                  "block animate-pulse rounded-full bg-muted calm:animate-none",
+                  compact ? "size-8" : tight ? "size-11" : "size-13"
+                )}
+              />
+            )}
+          </TurnRing>
+          {compact && isComputer ? (
+            <span className="absolute -bottom-1.5 left-1/2 z-10 -translate-x-1/2">
+              <ComputerTag small />
             </span>
           ) : null}
-        </Appear>
+          {compact ? null : bidAppear("absolute top-1/2 left-full z-10 ml-1.5 -translate-y-1/2")}
+        </span>
+        {compact ? <span className="flex w-11">{bidAppear()}</span> : null}
       </span>
-      <figcaption className="max-w-28 truncate font-game text-sm leading-tight">
+      <figcaption
+        className={cn(
+          "truncate font-game leading-tight",
+          compact ? "max-w-20 text-xs" : "max-w-28 text-sm"
+        )}
+      >
         {shown || (
           <span
             data-name-loading
@@ -121,14 +145,39 @@ export function GameSeat({
           />
         )}
       </figcaption>
-      {isComputer ? <ComputerTag /> : null}
-      <span className="relative">
-        {isActive ? <SeatDice dice={diceShown} ownDice={ownShown} matching={matching} /> : null}
-        <AnimatePresence>
-          {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
-        </AnimatePresence>
+      {isComputer && !compact ? <ComputerTag /> : null}
+      <span className={cn(compact && "flex h-7 items-center")}>
+        <span className="relative">
+          {isActive ? (
+            <SeatDice
+              dice={diceShown}
+              ownDice={ownShown}
+              matching={matching}
+              compact={compact}
+              tight={tight}
+            />
+          ) : null}
+          <AnimatePresence>
+            {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
+          </AnimatePresence>
+        </span>
       </span>
     </figure>
+  );
+}
+
+function BidPill({ bid, owner, compact }: { bid: Bid; owner: string; compact: boolean }) {
+  return (
+    <span
+      aria-label={tableCopy.lastBidOf(owner, tableCopy.bid(bid.quantity, word(bid.face)))}
+      className={cn(
+        "flex items-center rounded-full border-2 border-seat-yellow-edge bg-seat-yellow font-game leading-none whitespace-nowrap text-seat-yellow-foreground shadow-[0_3px_0_0_var(--color-seat-yellow-edge)]",
+        compact ? "gap-0.5 py-0.5 pr-0.5 pl-1 text-[0.7rem]" : "gap-1.5 py-1 pr-1.5 pl-2.5 text-lg"
+      )}
+    >
+      {tableCopy.timesMark(bid.quantity)}
+      <DieFace face={bid.face} className={compact ? "size-4" : "size-7"} />
+    </span>
   );
 }
 
@@ -158,11 +207,27 @@ function SeatDice({
   dice,
   ownDice,
   matching,
+  compact,
+  tight,
 }: {
   dice: number;
   ownDice: OwnDice | null;
   matching: readonly boolean[] | null;
+  compact: boolean;
+  tight: boolean;
 }) {
+  if (ownDice === null && compact) {
+    return (
+      <span
+        role="img"
+        aria-label={tableCopy.hiddenDice(dice)}
+        className="flex items-center gap-1 font-game text-sm leading-none"
+      >
+        <HiddenDie className="size-5 text-[0.55rem]" />
+        {dice}
+      </span>
+    );
+  }
   if (ownDice === null) {
     return (
       <span role="img" aria-label={tableCopy.hiddenDice(dice)} className="flex gap-1">
@@ -185,7 +250,7 @@ function SeatDice({
               matching?.[index] && "-translate-y-1 ring-3 ring-seat-green"
             )}
           >
-            <DieFace face={face} className="size-9" />
+            <DieFace face={face} className={tight ? "size-8" : "size-9"} />
           </span>
         ))}
       </span>
