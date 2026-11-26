@@ -15,9 +15,17 @@ vi.mock("./use-open-tables", () => ({
   useLatestOpenTables: () => latest,
 }));
 vi.mock("./use-sit-down", () => ({ useSitDown: () => ({ quickPlay }) }));
-vi.mock("./use-games-in-play", () => ({ useGamesInPlay: () => ({ status: "loading" }) }));
+const refreshGames = vi.fn();
+const watchedWith: boolean[] = [];
+vi.mock("./use-games-in-play", () => ({
+  useGamesInPlay: (watching: boolean) => {
+    watchedWith.push(watching);
+    return { games: { status: "loading" }, refresh: refreshGames };
+  },
+}));
 
 afterEach(() => {
+  watchedWith.length = 0;
   vi.clearAllMocks();
 });
 
@@ -26,5 +34,17 @@ describe("useLobby", () => {
     const { result } = renderHook(() => useLobby());
     act(() => result.current.quickPlay());
     expect(quickPlay).toHaveBeenCalledWith(latest, 0n);
+  });
+
+  it("watches the games in play closely only while their list is open, and looks again as it opens", () => {
+    const { result } = renderHook(() => useLobby());
+    expect(result.current.gamesInPlay).toEqual({ status: "loading" });
+    expect(watchedWith.at(-1)).toBe(false);
+    act(() => result.current.setWatchOpen(true));
+    expect(watchedWith.at(-1)).toBe(true);
+    expect(refreshGames).toHaveBeenCalledOnce();
+    act(() => result.current.setWatchOpen(false));
+    expect(watchedWith.at(-1)).toBe(false);
+    expect(refreshGames).toHaveBeenCalledOnce();
   });
 });

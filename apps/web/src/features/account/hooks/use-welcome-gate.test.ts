@@ -42,7 +42,10 @@ describe("useWelcomeGate", () => {
     let land: (id: bigint) => void = () => undefined;
     let seated: Promise<bigint> = Promise.resolve(0n);
     act(() => {
-      seated = takeSeatWhileHere(() => new Promise<bigint>((resolve) => (land = resolve)));
+      seated = takeSeatWhileHere(
+        () => new Promise<bigint>((resolve) => (land = resolve)),
+        () => true
+      );
     });
     seatId = 41n;
     const gate = renderHook(() => useWelcomeGate());
@@ -55,5 +58,25 @@ describe("useWelcomeGate", () => {
     });
     gate.rerender();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("takes the player to a seat that landed after the lobby closed", async () => {
+    let land: (id: bigint) => void = () => undefined;
+    let seated: Promise<bigint> = Promise.resolve(0n);
+    act(() => {
+      seated = takeSeatWhileHere(
+        () => new Promise<bigint>((resolve) => (land = resolve)),
+        () => false
+      );
+    });
+    seatId = 42n;
+    const gate = renderHook(() => useWelcomeGate());
+    expect(replace).not.toHaveBeenCalled();
+    await act(async () => {
+      land(42n);
+      await seated;
+    });
+    gate.rerender();
+    expect(replace).toHaveBeenCalledWith("/table/42");
   });
 });

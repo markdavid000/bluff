@@ -16,7 +16,7 @@ export function useLobby() {
   const [createOpen, setCreateOpen] = useState(false);
   const [tablesOpen, setTablesOpen] = useState(false);
   const [watchOpen, setWatchOpen] = useState(false);
-  const gamesInPlay = useGamesInPlay();
+  const watched = useGamesInPlay(watchOpen);
 
   const joinLink = useJoinLink();
   const balance = useChipBalance({ working: lobbyCopy.openingChips });
@@ -41,9 +41,12 @@ export function useLobby() {
     setCreateOpen,
     tablesOpen,
     setTablesOpen,
-    gamesInPlay,
+    gamesInPlay: watched.games,
     watchOpen,
-    setWatchOpen,
+    setWatchOpen: (open: boolean) => {
+      setWatchOpen(open);
+      if (open) watched.refresh();
+    },
     createFromTables: () => {
       setTablesOpen(false);
       setCreateOpen(true);

@@ -2,14 +2,17 @@
 
 import { useEffect } from "react";
 import { finishComputerCall, useComputerCall } from "@/hooks/use-computer-call";
+import { useNow } from "@/hooks/use-now";
 import { notify } from "@/lib/notify";
 import { type ArrivalTable, computerArrival } from "../lib/computer-arrival";
 
 export const COMPUTER_ARRIVAL = "computer-arrival";
+const TICK_MS = 1_000;
 
 export function useComputerArrival(table: ArrivalTable | null) {
   const call = useComputerCall();
-  const arrival = computerArrival(call, table);
+  const now = useNow(TICK_MS, call !== null && call.answeredAt !== null);
+  const arrival = computerArrival(call, table, now);
   const tableId = table?.id ?? null;
   const kind = arrival.kind;
   const message = arrival.kind === "working" || arrival.kind === "refused" ? arrival.message : "";

@@ -143,7 +143,12 @@ export function GameView({ game }: { game: Game }) {
         {game.myTurn && game.turnLow ? tableCopy.timeLow : ""}
       </span>
       <TurnBanner line={table.status === "playing" ? game.line : null} quiet={game.myTurn} />
-      <Appear show={game.myTurn && !(waitingForDice && game.dice.status !== "failed")}>
+      <Appear
+        show={
+          game.myTurn &&
+          !(waitingForDice && (game.dice.status === "loading" || game.dice.status === "ready"))
+        }
+      >
         <BidControl
           choice={game.choice}
           bid={game.bid}

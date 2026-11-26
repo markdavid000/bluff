@@ -1,26 +1,16 @@
 import { Body, Box, Material, ContactMaterial, Plane, Quaternion, Vec3, World } from "cannon-es";
-import { between, type Random } from "./random";
 import type { Face } from "@bluff/game";
-
-export type Vector = readonly [number, number, number];
-
-export type Rotation = readonly [number, number, number, number];
-
-interface DieFrame {
-  position: Vector;
-  rotation: Rotation;
-}
-
-interface ThrownDie {
-  frames: DieFrame[];
-  landedFace: Face;
-  faceTurn: Rotation;
-}
-
-export interface Throw {
-  dice: ThrownDie[];
-  settledAfterSeconds: number;
-}
+import {
+  DIE_SIZE,
+  type DieFrame,
+  FACE_NORMALS,
+  type Rotation,
+  STEP_SECONDS,
+  type Throw,
+  type Vector,
+  turnBetween,
+} from "./dice-geometry";
+import { between, type Random } from "./random";
 
 export interface ThrowOptions {
   faces: readonly Face[];
@@ -28,22 +18,9 @@ export interface ThrowOptions {
   random: Random;
 }
 
-export const DIE_SIZE = 0.6;
 const BOARD_HALF = 3.2;
-export const STEP_SECONDS = 1 / 60;
 const PHYSICS_SECONDS = 1.7;
 const SETTLE_STEPS = 12;
-
-const FACE_NORMALS: Record<Face, Vector> = {
-  1: [0, 1, 0],
-  6: [0, -1, 0],
-  2: [1, 0, 0],
-  5: [-1, 0, 0],
-  3: [0, 0, 1],
-  4: [0, 0, -1],
-};
-
-export const BOX_FACE_ORDER: readonly Face[] = [2, 5, 1, 6, 3, 4];
 
 const FACES: readonly Face[] = [1, 2, 3, 4, 5, 6];
 
@@ -126,23 +103,6 @@ function upFace(rotation: Quaternion): Face {
     }
   }
   return best;
-}
-
-function turnBetween(from: Face, to: Face): Rotation {
-  const a = new Vec3(...FACE_NORMALS[from]);
-  const b = new Vec3(...FACE_NORMALS[to]);
-  const turn = new Quaternion();
-  if (a.dot(b) < -0.999) {
-    const axis = Math.abs(a.x) < 0.9 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-    turn.setFromAxisAngle(axis, Math.PI);
-  } else {
-    turn.setFromVectors(a, b);
-  }
-  return [turn.x, turn.y, turn.z, turn.w];
-}
-
-export function faceUpRotation(face: Face): Rotation {
-  return turnBetween(face, 1);
 }
 
 export function throwDice({ faces, from, random }: ThrowOptions): Throw {

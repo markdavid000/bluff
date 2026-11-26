@@ -16,15 +16,26 @@ const ME = "0x0000000000000000000000000000000000001a2b";
 const ADA = "0x0000000000000000000000000000000000003c4d";
 const getLogs = vi.fn();
 const getBlockNumber = vi.fn();
+const multicall = vi.fn();
 const readContract = vi.fn();
 vi.mock("@/config/chain", async (importOriginal) => ({
   ...(await importOriginal<typeof Chain>()),
-  gameClient: {
+  historyClient: {
     getLogs: (request: unknown) => getLogs(request),
     getBlockNumber: () => getBlockNumber(),
+  },
+  gameClient: {
+    multicall: (request: unknown) => multicall(request),
     readContract: (request: unknown) => readContract(request),
   },
 }));
+
+type TableRead = (id: bigint) => unknown;
+function answerTables(read: TableRead) {
+  multicall.mockImplementation(async ({ contracts }: { contracts: { args: [bigint] }[] }) =>
+    contracts.map(({ args: [id] }) => read(id))
+  );
+}
 
 const PLAYING = 3;
 
@@ -62,12 +73,19 @@ function seats(...players: string[]) {
   }));
 }
 
-function render() {
+function render(watching = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return renderHook(() => useGamesInPlay(), { wrapper }).result;
+  const hook = renderHook(({ open }) => useGamesInPlay(open), {
+    wrapper,
+    initialProps: { open: watching },
+  });
+  const refreshEvery = () =>
+    queryClient.getQueryCache().find({ queryKey: ["lobby", "games-in-play"] })?.observers[0]
+      ?.options.refetchInterval;
+  return { result: hook.result, rerender: hook.rerender, refreshEvery };
 }
 
 beforeEach(() => {
@@ -76,10 +94,7 @@ beforeEach(() => {
     { eventName: "GameStarted", args: { id: 7n } },
     { eventName: "GameStarted", args: { id: 9n } },
   ]);
-  readContract.mockImplementation(async ({ args: [id] }: { args: [bigint] }) => [
-    view(id),
-    seats(ADA, "0x0000000000000000000000000000000000005e6f"),
-  ]);
+  answerTables((id) => [view(id), seats(ADA, "0x0000000000000000000000000000000000005e6f")]);
 });
 
 afterEach(() => {
@@ -87,31 +102,62 @@ afterEach(() => {
 });
 
 describe("useGamesInPlay", () => {
-  it("finds the games that started recently, newest first", async () => {
-    const result = render();
-    await waitFor(() => expect(result.current.status).toBe("ready"));
-    expect(
-      result.current.status === "ready" && result.current.games.map((game) => game.id)
-    ).toEqual([9n, 7n]);
+  it("finds the games that started in the last two hours, newest first", async () => {
+    const { result } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("ready"));
+    const games = result.current.games;
+    expect(games.status === "ready" && games.games.map((game) => game.id)).toEqual([9n, 7n]);
     expect(getLogs).toHaveBeenCalledWith(
-      expect.objectContaining({ fromBlock: 850n, toBlock: 1_000n })
+      expect.objectContaining({ fromBlock: 400n, toBlock: 1_000n })
     );
   });
 
+  it("reads every game's table in one batched request", async () => {
+    const { result } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("ready"));
+    expect(multicall).toHaveBeenCalledOnce();
+    expect(multicall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowFailure: false,
+        contracts: [
+          expect.objectContaining({ functionName: "getTable", args: [9n] }),
+          expect.objectContaining({ functionName: "getTable", args: [7n] }),
+        ],
+      })
+    );
+    expect(readContract).not.toHaveBeenCalled();
+  });
+
+  it("refreshes slowly for the count, and quickly only while the list is open", async () => {
+    const { result, rerender, refreshEvery } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("ready"));
+    expect(refreshEvery()).toBe(60_000);
+    rerender({ open: true });
+    expect(refreshEvery()).toBe(10_000);
+    rerender({ open: false });
+    expect(refreshEvery()).toBe(60_000);
+  });
+
+  it("looks again straight away when asked", async () => {
+    const { result } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("ready"));
+    expect(getLogs).toHaveBeenCalledOnce();
+    result.current.refresh();
+    await waitFor(() => expect(getLogs).toHaveBeenCalledTimes(2));
+  });
+
   it("leaves out games the player is in", async () => {
-    readContract.mockImplementation(async ({ args: [id] }: { args: [bigint] }) => [
-      view(id),
-      seats(ADA, ME),
-    ]);
-    const result = render();
-    await waitFor(() => expect(result.current.status).toBe("ready"));
-    expect(result.current.status === "ready" && result.current.games).toEqual([]);
+    answerTables((id) => [view(id), seats(ADA, ME)]);
+    const { result } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("ready"));
+    const games = result.current.games;
+    expect(games.status === "ready" && games.games).toEqual([]);
   });
 
   it("offers to try again when the games can't be read", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     getLogs.mockRejectedValue(new Error("busy"));
-    const result = render();
-    await waitFor(() => expect(result.current.status).toBe("failed"));
+    const { result } = render();
+    await waitFor(() => expect(result.current.games.status).toBe("failed"));
   });
 });

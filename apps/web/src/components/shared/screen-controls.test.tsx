@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { forgetGraphicsCheck } from "@/hooks/use-board-setting";
+import type * as Graphics from "@/lib/graphics";
 import { settingsStore } from "@/lib/settings-store";
 import { sharedCopy } from "./copy";
 import { ScreenControls } from "./screen-controls";
@@ -7,8 +9,18 @@ import { ScreenControls } from "./screen-controls";
 vi.mock("@/hooks/use-prefers-dark", () => ({ usePrefersDark: () => false }));
 vi.mock("@/hooks/use-sound", () => ({ useSound: () => ({ play: vi.fn(), stop: vi.fn() }) }));
 
+let support: Graphics.GraphicsSupport = "full";
+const probe = vi.fn(() => support);
+vi.mock("@/lib/graphics", async (importOriginal) => ({
+  ...(await importOriginal<typeof Graphics>()),
+  graphicsSupport: () => probe(),
+}));
+
 afterEach(() => {
-  act(() => settingsStore().update({ calmMotion: false, board: "3d" }));
+  act(() => settingsStore().update({ calmMotion: false, board: "3d", boardPicked: false }));
+  support = "full";
+  probe.mockClear();
+  forgetGraphicsCheck();
 });
 
 function openSettings() {
@@ -37,6 +49,24 @@ describe("ScreenControls", () => {
     expect(
       await screen.findByRole("menuitemradio", { name: sharedCopy.boardChoices.flat })
     ).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("shows the flat board on a slow device, and keeps 3D once the player picks it", async () => {
+    support = "weak";
+    openSettings();
+    expect(
+      await screen.findByRole("menuitemradio", { name: sharedCopy.boardChoices.flat })
+    ).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: sharedCopy.boardChoices["3d"] }));
+    expect(settingsStore().get()).toMatchObject({ board: "3d", boardPicked: true });
+  });
+
+  it("checks the device's graphics only once the settings are opened", async () => {
+    render(<ScreenControls />);
+    expect(probe).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole("button", { name: sharedCopy.settings }), { key: "Enter" });
+    await screen.findByRole("menuitemradio", { name: sharedCopy.boardChoices["3d"] });
+    expect(probe).toHaveBeenCalled();
   });
 
   it("lets the player calm the motion in the settings", async () => {

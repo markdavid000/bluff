@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useBoardSetting } from "@/hooks/use-board-setting";
 import { useScreenControls } from "@/hooks/use-screen-controls";
 import {
   BOARD_CHOICES,
@@ -52,6 +53,24 @@ function ControlTile({
     >
       <span className="sr-only">{label}</span>
     </ActionButton>
+  );
+}
+
+function BoardChoice() {
+  const { board, choose } = useBoardSetting();
+  return (
+    <DropdownMenuRadioGroup value={board} onValueChange={(value) => choose(value as BoardSetting)}>
+      {BOARD_CHOICES.map((choice) => (
+        <DropdownMenuRadioItem
+          key={choice}
+          value={choice}
+          className={ITEM}
+          indicator={<GameIcon name="tick" size={24} />}
+        >
+          {sharedCopy.boardChoices[choice]}
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
   );
 }
 
@@ -117,21 +136,7 @@ export function ScreenControls({ className }: { className?: string }) {
           <DropdownMenuLabel className="px-3 pb-1 font-game text-base opacity-85">
             {sharedCopy.board}
           </DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={controls.board}
-            onValueChange={(value) => controls.chooseBoard(value as BoardSetting)}
-          >
-            {BOARD_CHOICES.map((choice) => (
-              <DropdownMenuRadioItem
-                key={choice}
-                value={choice}
-                className={ITEM}
-                indicator={<GameIcon name="tick" size={24} />}
-              >
-                {sharedCopy.boardChoices[choice]}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
+          <BoardChoice />
           <DropdownMenuSeparator className="bg-toast-foreground/20" />
           <DropdownMenuCheckboxItem
             checked={controls.calm}

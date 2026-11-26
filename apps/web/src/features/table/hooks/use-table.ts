@@ -36,12 +36,13 @@ export function isNotTableRead(query: { queryKey: readonly unknown[] }): boolean
   );
 }
 
-export function useTable(id: bigint): TableRead {
+export function useTable(id: bigint, { onScreen = false }: { onScreen?: boolean } = {}): TableRead {
   const left = useHasLeftTable(id);
   useEffect(() => () => forgetLeftTable(id), [id]);
   const block = useBlockClock();
-  const [shownId, setShownId] = useState<bigint | null>(null);
-  const pinned = shownId === id && block > 0n;
+  const [shownId, setShownId] = useState<bigint | null>(onScreen ? id : null);
+  const [behindAt, setBehindAt] = useState<bigint | null>(null);
+  const pinned = shownId === id && block > 0n && behindAt !== block;
   const read = useReadContract({
     address: contracts.bluff,
     abi: bluffAbi,
@@ -59,6 +60,7 @@ export function useTable(id: bigint): TableRead {
 
   if (data && !read.isPlaceholderData && shownId !== id) setShownId(id);
   if (missing && shownId !== null) setShownId(null);
+  if (pinned && read.isError && !missing) setBehindAt(block);
 
   if (data) {
     const [view, seats] = data;

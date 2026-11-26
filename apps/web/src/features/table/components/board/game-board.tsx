@@ -8,7 +8,7 @@ import { useBoardChoice } from "../../hooks/use-board-choice";
 import type { BoardScene } from "./board-scene";
 import { FlatBoard } from "./flat-board";
 
-function BoardPlaceholder() {
+export function BoardPlaceholder() {
   return (
     <div className="aspect-square w-full">
       <span className="sr-only">{tableCopy.loadingBoard}</span>
@@ -25,10 +25,11 @@ type SceneProps = ComponentProps<typeof BoardScene>;
 
 export function GameBoard({
   colors,
+  paused = false,
   ...board
 }: Omit<SceneProps, "colors"> & { colors: ThemeColors | null }) {
   const flat = useBoardChoice();
   if (flat) return <FlatBoard {...board} />;
   if (!colors) return <BoardPlaceholder />;
-  return <LazyBoardScene {...board} colors={colors} />;
+  return <LazyBoardScene {...board} colors={colors} paused={paused} />;
 }

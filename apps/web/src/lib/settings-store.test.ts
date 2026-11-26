@@ -26,6 +26,7 @@ describe("settings store", () => {
       theme: "auto",
       seenTips: [],
       board: "3d",
+      boardPicked: false,
     });
   });
 
@@ -33,6 +34,12 @@ describe("settings store", () => {
     const storage = memoryStorage();
     createSettingsStore(storage).update({ board: "flat" });
     expect(createSettingsStore(storage).get().board).toBe("flat");
+  });
+
+  it("remembers that the player picked the board themselves", () => {
+    const storage = memoryStorage();
+    createSettingsStore(storage).update({ board: "3d", boardPicked: true });
+    expect(createSettingsStore(storage).get()).toMatchObject({ board: "3d", boardPicked: true });
   });
 
   it("falls back to the 3D board for a value it doesn't know, including the old automatic choice", () => {

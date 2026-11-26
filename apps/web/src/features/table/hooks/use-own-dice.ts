@@ -43,13 +43,17 @@ export function useOwnDice({
 }): OwnDice {
   const wanted = inGame && me !== undefined;
   const block = useBlockClock();
+  const [roundSeen, setRoundSeen] = useState<{ key: string; block: bigint } | null>(null);
+  const roundKey = `${id}:${me ?? ""}:${round}`;
+  if (block > 0n && roundSeen?.key !== roundKey) setRoundSeen({ key: roundKey, block });
+  const readBlock = roundSeen?.key === roundKey ? roundSeen.block : undefined;
   const permit = usePermit({ working: tableCopy.unlockingDice, automatic: false });
   const read = useReadContract({
     address: contracts.bluff,
     abi: bluffAbi,
     functionName: "diceOf",
     args: me ? [id, me] : undefined,
-    blockNumber: block > 0n ? block : undefined,
+    blockNumber: readBlock,
     scopeKey: `dice-${id}-round-${round}`,
     query: { enabled: wanted },
   });

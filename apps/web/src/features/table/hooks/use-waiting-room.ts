@@ -25,6 +25,7 @@ import { notify } from "@/lib/notify";
 import { tableLink } from "@/lib/table-links";
 import { tableCopy } from "../copy";
 import { useComputerArrival } from "./use-computer-arrival";
+import { computerSatAt, rememberComputerAt } from "../lib/remembered-computer";
 import { type Role, nextStep } from "../lib/next-step";
 import { COMPUTER_WAIT_MS, type Table, freeSeats, notReady } from "@bluff/game";
 import { useInviteCode } from "./use-invite-code";
@@ -54,7 +55,7 @@ export function useWaitingRoom(id: bigint) {
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
-  const read = useTable(id);
+  const read = useTable(id, { onScreen: true });
   const live = read.status === "ready" ? read.table : null;
   const [departingFrom, setDepartingFrom] = useState<Table | null>(null);
   const table = departingFrom ?? live;
@@ -93,7 +94,10 @@ export function useWaitingRoom(id: bigint) {
     departing: departingFrom !== null,
     waiting: table?.status === "waiting",
   });
-  const [hadComputer, setHadComputer] = useState(false);
+  const [hadComputer, setHadComputer] = useState(() => computerSatAt(id));
+  useEffect(() => {
+    if (hadComputer) rememberComputerAt(id);
+  }, [hadComputer, id]);
   useWorkingNotice(`checking-${id}`, tableCopy.checkingPaid, table?.status === "verifying");
   const sendMove = useSendMove();
   const takeSeat = useTakeSeat();
@@ -219,9 +223,13 @@ export function useWaitingRoom(id: bigint) {
 
   const role = roleOf(table, me);
   const readAt = read.status === "ready" ? read.readAt : null;
-  const showPending =
+  const readyConfirmed =
     pendingReady !== null &&
-    (pendingReady.block === null || readAt === null || readAt < pendingReady.block);
+    pendingReady.block !== null &&
+    readAt !== null &&
+    readAt >= pendingReady.block;
+  if (readyConfirmed) setPendingReady(null);
+  const showPending = pendingReady !== null && !readyConfirmed;
   const seats = table.seats.map((seat) => ({
     ...seat,
     ready: same(seat.player, me) && showPending && pendingReady ? pendingReady.value : seat.ready,
@@ -237,7 +245,9 @@ export function useWaitingRoom(id: bigint) {
   const known: KnownBalance =
     balance.status === "ready"
       ? { status: "ready", amount: balance.amount }
-      : { status: "unknown" };
+      : balance.status === "loading"
+        ? { status: "loading" }
+        : { status: "unknown" };
   const unaffordable = whyUnaffordable(table.buyIn, known);
   const mine = seats.find((seat) => seat.isMe);
   const timeLeft = Math.max(table.deadline - now, 0);
@@ -283,6 +293,7 @@ export function useWaitingRoom(id: bigint) {
                   : unaffordable === "too-few"
                     ? tableCopy.notEnough(formatChips(table.buyIn))
                     : null,
+      checkingChips: unaffordable === "checking",
       busy,
       confirm,
       toggling: ready.working,
