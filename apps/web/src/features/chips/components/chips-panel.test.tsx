@@ -106,6 +106,7 @@ describe("ChipsPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: chipsCopy.cashOutResume }));
     expect(resume).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: chipsCopy.cashOut })).toBeDisabled();
+    expect(screen.getByText(chipsCopy.finishFirst)).toBeInTheDocument();
   });
 
   it("offers to try again when the free chips can't be checked", () => {

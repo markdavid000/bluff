@@ -30,6 +30,7 @@ export const chipsCopy = {
   cashOutDone: "Chips cashed out. They are now practice dollars.",
   cashOutResume: "Your last cash out did not finish. Finish it now",
   cashOutFinishing: "Finishing your cash out…",
+  finishFirst: "Finish your last cash out before you cash out more.",
   confirmInWallet: "Confirm in your wallet",
   close: "Close",
   dollars: (amount: string) => `${amount} practice dollars`,

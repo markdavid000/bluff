@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contracts } from "@/config/chain";
 import type { ContractCall } from "@/hooks/use-send-move";
 import { ONE_CHIP } from "@/lib/chips";
+import { onNotice } from "@/lib/notify";
+import { errorCopy } from "@/lib/copy";
 import { rememberedCashOuts } from "../lib/pending-cash-outs";
 import { useCashOut } from "./use-cash-out";
 
@@ -90,7 +92,7 @@ function render(onFinished = vi.fn()) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return { onFinished, ...renderHook(() => useCashOut({ onFinished }), { wrapper }) };
+  return { onFinished, queryClient, ...renderHook(() => useCashOut({ onFinished }), { wrapper }) };
 }
 
 beforeEach(() => {
@@ -152,25 +154,38 @@ describe("useCashOut", () => {
     ]);
   });
 
-  it("keeps an interrupted cash out, and finishes it instead of burning again on retry", async () => {
+  it("keeps an interrupted cash out, and asks to finish it before cashing out more", async () => {
     sendMove.mockImplementation(async (call: ContractCall) => {
       if (call.functionName === "unwrap") return unwrapReceipt();
       throw new Error("The connection dropped.");
     });
-    const { result, onFinished } = render();
+    const { result, onFinished, queryClient } = render();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
     act(() => result.current.cashOut(25n * ONE_CHIP));
     await waitFor(() => expect(result.current.working).toBe(false));
     expect(onFinished).not.toHaveBeenCalled();
     expect(rememberedCashOuts(ACCOUNT)).toEqual([REQUEST]);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["pending-cash-out", ACCOUNT] });
 
     readContract.mockImplementation(async ({ functionName }: { functionName: string }) =>
       functionName === "unwrapRequester" ? ACCOUNT : BURNT
     );
+    sendMove.mockClear();
     sendMove.mockResolvedValue(finalized);
-    act(() => result.current.cashOut(25n * ONE_CHIP));
+    const shown: string[] = [];
+    const stop = onNotice((event) => {
+      if (event.type === "show") shown.push(event.notice.title);
+    });
+    act(() => result.current.cashOut(40n * ONE_CHIP));
+    await waitFor(() => expect(shown).toContain(errorCopy.finishCashOutFirst));
+    stop();
+    expect(sendMove).not.toHaveBeenCalled();
+    expect(encrypt).toHaveBeenCalledTimes(1);
+    expect(onFinished).not.toHaveBeenCalled();
 
+    act(() => result.current.resume(REQUEST));
     await waitFor(() => expect(onFinished).toHaveBeenCalledOnce());
-    expect(calls("unwrap")).toHaveLength(1);
+    expect(calls("unwrap")).toHaveLength(0);
     expect(calls("finalizeUnwrap").at(-1)).toEqual(
       expect.objectContaining({ args: [REQUEST, 25n * ONE_CHIP, DECRYPTION_PROOF] })
     );

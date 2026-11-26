@@ -7,6 +7,7 @@ export const errorCopy = {
   networkBusy: "The network is busy. Please try again in a moment.",
   mayStillLand: "This is taking a while. It may still go through, so watch the table.",
   noWallet: "Your seat is still getting ready. Please try again in a moment.",
+  finishCashOutFirst: "Finish your last cash out first. Then you can cash out more.",
   inviteNotWorking: "That invite link doesn't work. Ask the host for a new one.",
   walletNeedsCoins:
     "Your wallet needs a few free practice coins to pay for moves. Add some, then try again.",
