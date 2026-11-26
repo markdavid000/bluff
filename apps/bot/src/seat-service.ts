@@ -115,8 +115,9 @@ export function createSeatService({
         error,
       });
       startRunner(player, at, now(), await chain.blockNumber());
-      if (at === tableId) return { kind: "seated", player: player.address };
-      throw error;
+      return at === tableId
+        ? { kind: "seated", player: player.address }
+        : { kind: "refused", reason: "all-busy" };
     }
     pool.release(player.index);
     const reason =
