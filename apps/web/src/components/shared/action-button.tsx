@@ -68,7 +68,7 @@ export function ActionButton({
                 {icon === "cowrie" ? (
                   <Cowrie size={iconSize} />
                 ) : icon ? (
-                  <GameIcon name={icon} size={iconSize} />
+                  <GameIcon name={icon} size={iconSize} className="max-[40rem]:size-[0.8lh]" />
                 ) : null}
                 {children}
               </>

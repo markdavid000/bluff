@@ -21,9 +21,12 @@ export const tileVariants = cva(
         quiet: "bg-tile text-tile-foreground [--edge:var(--color-tile-edge)]",
       },
       size: {
-        large: "min-h-16 px-8 py-4 text-2xl [--depth:7px]",
-        medium: "min-h-12 px-6 py-3 text-lg [--depth:6px]",
-        small: "min-h-10 px-4 py-2 text-base [--depth:4px]",
+        large:
+          "min-h-16 px-8 py-4 text-2xl [--depth:7px] max-[40rem]:min-h-12 max-[40rem]:px-5 max-[40rem]:py-2.5 max-[40rem]:text-xl max-[40rem]:[--depth:5px]",
+        medium:
+          "min-h-12 px-6 py-3 text-lg [--depth:6px] max-[40rem]:min-h-10 max-[40rem]:px-4 max-[40rem]:py-2 max-[40rem]:text-base max-[40rem]:[--depth:4px]",
+        small:
+          "min-h-10 px-4 py-2 text-base [--depth:4px] max-[40rem]:min-h-9 max-[40rem]:px-3 max-[40rem]:py-1.5 max-[40rem]:text-sm max-[40rem]:[--depth:3px]",
       },
     },
     defaultVariants: { tone: "red", size: "medium" },
