@@ -15,7 +15,10 @@ vi.mock("../hooks/use-game-board", () => ({
   useGameBoard: () => ({ throwState: { kind: "idle" }, othersShaking: false, waitingForDice }),
 }));
 const historyWanted: boolean[] = [];
-vi.mock("@/hooks/use-media-query", () => ({ useMediaQuery: () => wide }));
+let small = false;
+vi.mock("@/hooks/use-media-query", () => ({
+  useMediaQuery: (query: string) => (query.includes("max-") ? small : wide),
+}));
 vi.mock("../hooks/use-round-history", () => ({
   useGameHistory: (_table: unknown, enabled: boolean) => {
     historyWanted.push(enabled);
@@ -25,6 +28,7 @@ vi.mock("../hooks/use-round-history", () => ({
 
 beforeEach(() => {
   wide = false;
+  small = false;
   waitingForDice = false;
   historyWanted.length = 0;
   play.mockClear();
@@ -294,5 +298,94 @@ describe("GameView", () => {
     fireEvent.click(screen.getByRole("button", { name: tableCopy.leave }));
     fireEvent.click(await screen.findByRole("button", { name: tableCopy.leaveConfirm }));
     expect(leave).toHaveBeenCalledOnce();
+  });
+  describe("keyboard focus", () => {
+    const card = {
+      outcome: "holds" as const,
+      quantity: 2,
+      face: 4 as const,
+      count: 3,
+      loserName: "Sly Fox #3C4D",
+      loserIsMe: false,
+      rows: [],
+    };
+
+    it("moves to Raise when the player's turn comes round", () => {
+      const theirs = gameView({ table: playing(), myTurn: false });
+      const { rerender } = render(<GameView game={theirs} />);
+      expect(document.activeElement).toBe(document.body);
+      rerender(<GameView game={{ ...theirs, myTurn: true }} />);
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: tableCopy.raise }));
+    });
+
+    it("leaves focus alone when the player is busy somewhere else on their turn", () => {
+      const theirs = gameView({ table: playing(), myTurn: false });
+      const { rerender } = render(<GameView game={theirs} />);
+      const leave = screen.getByRole("button", { name: tableCopy.leave });
+      leave.focus();
+      rerender(<GameView game={{ ...theirs, myTurn: true }} />);
+      expect(document.activeElement).toBe(leave);
+    });
+
+    it("waits for the reveal card instead of pulling focus out of it", () => {
+      const open = gameView({ table: playing(), myTurn: false, reveal: card });
+      const { rerender } = render(<GameView game={open} />);
+      const inside = screen.getByRole("dialog", { name: tableCopy.bidHolds });
+      expect(inside).toContainElement(document.activeElement as HTMLElement);
+      rerender(<GameView game={{ ...open, myTurn: true }} />);
+      expect(inside).toContainElement(document.activeElement as HTMLElement);
+    });
+
+    it("goes to Raise when the reveal card closes on the player's turn", async () => {
+      const open = gameView({ table: playing(), myTurn: true, reveal: card });
+      const { rerender } = render(<GameView game={open} />);
+      rerender(<GameView game={{ ...open, reveal: null }} />);
+      await waitFor(() =>
+        expect(document.activeElement).toBe(screen.getByRole("button", { name: tableCopy.raise }))
+      );
+    });
+
+    it("goes to the table heading when the reveal card closes on someone else's turn", async () => {
+      const open = gameView({ table: playing(), myTurn: false, reveal: card });
+      const { rerender } = render(<GameView game={open} />);
+      rerender(<GameView game={{ ...open, reveal: null }} />);
+      await waitFor(() =>
+        expect(document.activeElement).toBe(
+          screen.getByRole("heading", { name: tableCopy.tableName("12") })
+        )
+      );
+    });
+  });
+  describe("on a small phone", () => {
+    it("keeps the usual bid control on a roomy screen", () => {
+      render(<GameView game={gameView({ table: playing() })} />);
+      expect(screen.getByRole("button", { name: tableCopy.oneMore })).toHaveClass("size-9");
+      expect(screen.getByRole("button", { name: tableCopy.raise })).toHaveClass("min-h-12");
+    });
+
+    it("gives the stepper finger-sized buttons and slims the bid control down", () => {
+      small = true;
+      render(<GameView game={gameView({ table: playing() })} />);
+      expect(screen.getByRole("button", { name: tableCopy.oneFewer })).toHaveClass("size-11");
+      expect(screen.getByRole("button", { name: tableCopy.oneMore })).toHaveClass("size-11");
+      expect(screen.getByRole("button", { name: tableCopy.raise })).toHaveClass("min-h-10");
+      expect(
+        screen.getByRole("button", { name: tableCopy.callBluffOn("Sly Fox #3C4D") })
+      ).toHaveClass("min-h-10");
+    });
+
+    it("puts the faces on their own row, then the stepper beside Raise", () => {
+      small = true;
+      render(<GameView game={gameView({ table: playing() })} />);
+      const faces = screen.getByRole("group", { name: tableCopy.yourBid });
+      const stepper = screen.getByRole("button", { name: tableCopy.oneMore });
+      const raise = screen.getByRole("button", { name: tableCopy.raise });
+      expect(
+        faces.compareDocumentPosition(stepper) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      const raiseRow = raise.parentElement;
+      expect(raiseRow).toContainElement(stepper);
+      expect(raiseRow).not.toContainElement(faces);
+    });
   });
 });

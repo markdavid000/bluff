@@ -17,7 +17,15 @@ vi.mock("@/lib/graphics", async (importOriginal) => ({
 }));
 
 afterEach(() => {
-  act(() => settingsStore().update({ calmMotion: false, board: "3d", boardPicked: false }));
+  act(() =>
+    settingsStore().update({
+      calmMotion: false,
+      board: "3d",
+      boardPicked: false,
+      theme: "auto",
+      sounds: true,
+    })
+  );
   support = "full";
   probe.mockClear();
   forgetGraphicsCheck();
@@ -29,6 +37,28 @@ function openSettings() {
 }
 
 describe("ScreenControls", () => {
+  it("keeps the night switch's name fixed and says whether it is on", () => {
+    render(<ScreenControls />);
+    const night = screen.getByRole("button", { name: sharedCopy.nightMode });
+    expect(night).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(night);
+    expect(screen.getByRole("button", { name: sharedCopy.nightMode })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+  });
+
+  it("keeps the sounds switch's name fixed and says whether it is on", () => {
+    render(<ScreenControls />);
+    const sounds = screen.getByRole("button", { name: sharedCopy.soundEffects });
+    expect(sounds).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(sounds);
+    expect(screen.getByRole("button", { name: sharedCopy.soundEffects })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+  });
+
   it("shows the settings button in full colour, since it opens a menu rather than switching off", () => {
     render(<ScreenControls />);
     expect(screen.getByRole("button", { name: sharedCopy.settings })).not.toHaveClass("grayscale");

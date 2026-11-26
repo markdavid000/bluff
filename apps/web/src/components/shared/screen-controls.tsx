@@ -85,13 +85,13 @@ export function ScreenControls({ className }: { className?: string }) {
       <ControlTile
         icon={controls.night ? "moon" : "sun"}
         on={controls.night}
-        label={controls.night ? sharedCopy.switchToDay : sharedCopy.switchToNight}
+        label={sharedCopy.nightMode}
         onPress={controls.toggleTheme}
       />
       <ControlTile
         icon="headphone"
         on={controls.sounds}
-        label={controls.sounds ? sharedCopy.soundsOff : sharedCopy.soundsOn}
+        label={sharedCopy.soundEffects}
         onPress={controls.toggleSounds}
       />
       <DropdownMenu>

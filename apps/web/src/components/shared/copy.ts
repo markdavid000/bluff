@@ -1,8 +1,6 @@
 export const sharedCopy = {
-  switchToNight: "Switch to night",
-  switchToDay: "Switch to day",
-  soundsOff: "Turn sounds off",
-  soundsOn: "Turn sounds on",
+  nightMode: "Night mode",
+  soundEffects: "Sound effects",
   settings: "Settings",
   board: "Board",
   boardChoices: { "3d": "3D board", flat: "Flat board" },

@@ -11,6 +11,7 @@ import { contracts, gameChain, publicRecordOfDollars } from "@/config/chain";
 import { useAction } from "@/hooks/use-action";
 import { type MoveStep, useSendMove } from "@/hooks/use-send-move";
 import { MoveNotReadyError } from "@/lib/errors";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { chipsCopy } from "../copy";
 import { forgetCashOut, rememberCashOut, rememberedCashOuts } from "../lib/pending-cash-outs";
 import { firstOpenCashOut, pendingCashOutKey } from "./use-pending-cash-out";
@@ -37,7 +38,7 @@ export function useCashOut({ onFinished }: { onFinished?: () => void } = {}) {
     abi: dollarTokenAbi,
     functionName: "balanceOf",
     args: account ? [account] : undefined,
-    query: { enabled: Boolean(account) },
+    query: { ...ACCOUNT_READ, enabled: Boolean(account) },
   });
 
   function ready() {

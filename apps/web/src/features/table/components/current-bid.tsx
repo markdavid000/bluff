@@ -11,20 +11,26 @@ import { tableCopy } from "../copy";
 const RAISED =
   "shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_4px_0_0_var(--color-seat-yellow-edge),0_8px_14px_-6px_rgb(0_0_0/0.4)]";
 
+function bidSentence(bid: Bid) {
+  return tableCopy.bid(bid.quantity, tableCopy.faceWords[bid.face - 1] ?? String(bid.face));
+}
+
 export function CurrentBid({ bid, bidderName }: { bid: Bid | null; bidderName: string | null }) {
   return (
-    <Appear show swapKey={bid ? "bid" : "none"} inline>
-      {bid ? <PlacedBid bid={bid} bidderName={bidderName} /> : <NoBid />}
-    </Appear>
+    <>
+      <Appear show swapKey={bid ? "bid" : "none"} inline>
+        {bid ? <PlacedBid bid={bid} bidderName={bidderName} /> : <NoBid />}
+      </Appear>
+      <span aria-live="polite" className="sr-only">
+        {bid ? bidSentence(bid) : ""}
+      </span>
+    </>
   );
 }
 
 function NoBid() {
   return (
-    <span
-      aria-live="polite"
-      className="inline-flex h-12 items-center rounded-2xl border-2 border-dashed border-muted-foreground/50 px-3 font-game text-sm text-muted-foreground"
-    >
+    <span className="inline-flex h-12 items-center rounded-2xl border-2 border-dashed border-muted-foreground/50 px-3 font-game text-sm text-muted-foreground">
       {tableCopy.noBidYet}
     </span>
   );
@@ -33,7 +39,7 @@ function NoBid() {
 function PlacedBid({ bid, bidderName }: { bid: Bid; bidderName: string | null }) {
   const calm = useCalmMotion();
   return (
-    <span aria-live="polite" className="relative inline-flex">
+    <span className="relative inline-flex">
       <motion.span
         key={`${bid.quantity}-${bid.face}`}
         initial={calm ? false : { scale: 1.35, rotate: -4 }}
@@ -56,9 +62,6 @@ function PlacedBid({ bid, bidderName }: { bid: Bid; bidderName: string | null })
           {tableCopy.timesMark(bid.quantity)}
         </span>
         <DieFace face={bid.face} className="size-8" />
-        <span className="sr-only">
-          {tableCopy.bid(bid.quantity, tableCopy.faceWords[bid.face - 1] ?? String(bid.face))}
-        </span>
       </motion.span>
     </span>
   );

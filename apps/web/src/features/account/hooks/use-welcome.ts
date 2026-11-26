@@ -10,6 +10,7 @@ import { useSendMove } from "@/hooks/use-send-move";
 import { PRESET_AVATARS, type PresetAvatar, defaultAvatarFor, isPresetAvatar } from "@/lib/avatar";
 import { isValidNickname, suggestNickname } from "@/lib/nickname";
 import { notify } from "@/lib/notify";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { accountCopy } from "../copy";
 import { useNicknameTaken } from "./use-nickname-taken";
 import { usePlayer } from "./use-player";
@@ -47,7 +48,7 @@ export function useWelcome() {
     abi: chipFaucetAbi,
     functionName: "nextClaimAt",
     args: player.status === "ready" ? [player.address] : undefined,
-    query: { enabled: player.status === "ready" },
+    query: { ...ACCOUNT_READ, enabled: player.status === "ready" },
   });
   const now = useNow(CLAIM_CHECK_MS, nextClaim.data !== undefined);
   const claimKnown = nextClaim.data !== undefined;

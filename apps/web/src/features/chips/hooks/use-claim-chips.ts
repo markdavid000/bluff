@@ -7,6 +7,7 @@ import { invalidateBalanceQueries } from "@zama-fhe/sdk/query";
 import type { Address } from "viem";
 import { useReadContract } from "wagmi";
 import { contracts } from "@/config/chain";
+import { ACCOUNT_READ } from "@/lib/query-client";
 import { useAction } from "@/hooks/use-action";
 import { useNow } from "@/hooks/use-now";
 import { useSendMove } from "@/hooks/use-send-move";
@@ -24,7 +25,7 @@ export function useClaimChips() {
     abi: chipFaucetAbi,
     functionName: "nextClaimAt",
     args: account ? [account] : undefined,
-    query: { enabled: Boolean(account) },
+    query: { ...ACCOUNT_READ, enabled: Boolean(account) },
   });
   const nextClaimMs = nextClaim.data === undefined ? null : Number(nextClaim.data) * 1000;
   const now = useNow(TICK_MS, nextClaimMs !== null);
