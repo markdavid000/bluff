@@ -20,6 +20,7 @@ function harness(seatedTables: bigint[]) {
   const events = new Map<bigint, bigint[]>();
   const failures: Error[] = [];
   const seen: { ids: bigint[]; head: bigint }[] = [];
+  const lines: string[] = [];
   const chain: WatchChain = {
     blockNumber: async () => head,
     touchedTables: async (from, to) => {
@@ -36,10 +37,11 @@ function harness(seatedTables: bigint[]) {
     seated: () => seatedTables,
     onTables: (ids, at) => void seen.push({ ids, head: at }),
     now: () => clock,
-    log: createLog(() => undefined),
+    log: createLog((line) => void lines.push(line)),
   });
   return {
     watch,
+    lines,
     spans,
     seen,
     events,
@@ -114,6 +116,26 @@ describe("chain watch", () => {
       [101n, 101n],
       [101n, 101n],
     ]);
+  });
+
+  it("mentions a lagging server at most once a minute, not on every check", async () => {
+    const h = harness([12n]);
+    await h.watch.poll();
+    const behindNow = async () => {
+      h.failures.push(behind());
+      h.mine(1n);
+      await h.watch.poll();
+    };
+    await behindNow();
+    h.wait(2_000);
+    await behindNow();
+    h.wait(2_000);
+    await behindNow();
+    expect(h.lines.filter((line) => line.includes("search behind"))).toHaveLength(1);
+    h.wait(60_000);
+    await h.watch.poll();
+    await behindNow();
+    expect(h.lines.filter((line) => line.includes("search behind"))).toHaveLength(2);
   });
 
   it("passes on any other failure to search", async () => {

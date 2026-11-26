@@ -15,11 +15,12 @@ import {
 } from "viem";
 import { type HDAccount, mnemonicToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
-import { MoveRefused, TableMissing } from "./chain-errors";
+import { MoveRefused, MoveReverted, TableMissing } from "./chain-errors";
 import type { WatchChain } from "./chain-watch";
 import type { BotConfig } from "./config";
 import type { PoolChain } from "./player-pool";
 import { gasLimit } from "./gas";
+import { checkBlock, untilCaughtUp } from "./lagging";
 import { revertName } from "./revert";
 import type { BluffCall, SeatChain } from "./seat-runner";
 import type { Seated, ServiceChain } from "./seat-service";
@@ -27,6 +28,10 @@ import type { Seated, ServiceChain } from "./seat-service";
 const BLUFF = sepoliaDeployment.bluff;
 const FAUCET = sepoliaDeployment.faucet;
 const BANK_INDEX = 0;
+
+function pause(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface Signer {
   account: HDAccount;
@@ -67,7 +72,7 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
 
   async function confirmed(hash: Hex) {
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    if (receipt.status !== "success") throw new Error(`Transaction ${hash} reverted`);
+    if (receipt.status !== "success") throw new MoveReverted(hash);
     return { blockNumber: receipt.blockNumber };
   }
 
@@ -78,13 +83,17 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
 
   async function readTable(id: bigint, atBlock?: bigint): Promise<Table> {
     try {
-      const [view, seats] = await publicClient.readContract({
-        address: BLUFF,
-        abi: bluffAbi,
-        functionName: "getTable",
-        args: [id],
-        blockNumber: atBlock,
-      });
+      const [view, seats] = await untilCaughtUp(
+        () =>
+          publicClient.readContract({
+            address: BLUFF,
+            abi: bluffAbi,
+            functionName: "getTable",
+            args: [id],
+            blockNumber: atBlock,
+          }),
+        pause
+      );
       return toTable(view, seats);
     } catch (error) {
       if (revertName(error) === "TableNotFound") throw new TableMissing(id);
@@ -97,9 +106,13 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
   }
 
   async function checked(account: HDAccount, data: Hex, atBlock?: bigint): Promise<bigint> {
+    const blockNumber = checkBlock(atBlock, await publicClient.getBlockNumber());
     const [tried, estimated] = await Promise.allSettled([
-      publicClient.call({ account, to: BLUFF, data, blockNumber: atBlock }),
-      publicClient.estimateGas({ account, to: BLUFF, data, blockNumber: atBlock }),
+      untilCaughtUp(() => publicClient.call({ account, to: BLUFF, data, blockNumber }), pause),
+      untilCaughtUp(
+        () => publicClient.estimateGas({ account, to: BLUFF, data, blockNumber }),
+        pause
+      ),
     ]);
     if (tried.status === "rejected") refused(tried.reason);
     if (estimated.status === "rejected") throw estimated.reason;
@@ -165,14 +178,19 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
     readTable,
     send,
     joinAndReady,
-    async ownDice(index, id, timeoutMs) {
+    async ownDice(index, id, timeoutMs, atBlock) {
       const { account, zama } = signer(index);
-      const handles = await publicClient.readContract({
-        address: BLUFF,
-        abi: bluffAbi,
-        functionName: "diceOf",
-        args: [id, account.address],
-      });
+      const handles = await untilCaughtUp(
+        () =>
+          publicClient.readContract({
+            address: BLUFF,
+            abi: bluffAbi,
+            functionName: "diceOf",
+            args: [id, account.address],
+            blockNumber: atBlock,
+          }),
+        pause
+      );
       if (handles.length === 0) return [];
       const clear = await zama.decryption.decryptValues(
         handles.map((handle) => ({ encryptedValue: handle, contractAddress: BLUFF })),
@@ -180,13 +198,18 @@ export function createChain(config: Pick<BotConfig, "mnemonic" | "rpcUrl" | "max
       );
       return handles.map((handle) => clear[handle]);
     },
-    async revealProof(id, timeoutMs) {
-      const handles = await publicClient.readContract({
-        address: BLUFF,
-        abi: bluffAbi,
-        functionName: "revealHandles",
-        args: [id],
-      });
+    async revealProof(id, timeoutMs, atBlock) {
+      const handles = await untilCaughtUp(
+        () =>
+          publicClient.readContract({
+            address: BLUFF,
+            abi: bluffAbi,
+            functionName: "revealHandles",
+            args: [id],
+            blockNumber: atBlock,
+          }),
+        pause
+      );
       const result = await signer(BANK_INDEX).zama.decryption.decryptPublicValues([...handles], {
         timeout: timeoutMs,
         signal: AbortSignal.timeout(timeoutMs),

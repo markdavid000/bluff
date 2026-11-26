@@ -5,6 +5,8 @@ import type { SeatRefusal } from "./seat-policy";
 export const RATE_LIMIT = { requests: 5, windowMs: 10 * 60_000 } as const;
 const MOST_BODY_BYTES = 1024;
 const TABLE_ID = /^[1-9]\d{0,77}$/;
+const LARGEST_TABLE_ID = 2n ** 256n - 1n;
+const MOST_CALLERS_REMEMBERED = 1_000;
 
 export type SeatReason = SeatRefusal | "all-busy" | "resting" | "not-found";
 
@@ -67,19 +69,26 @@ function tableIdFrom(text: string): bigint {
       : undefined;
   if (typeof tableId !== "string" || !TABLE_ID.test(tableId))
     throw new BadRequest("No table number");
-  return BigInt(tableId);
+  const id = BigInt(tableId);
+  if (id > LARGEST_TABLE_ID) throw new BadRequest("The table number is too big");
+  return id;
 }
 
 function clientAddress(request: IncomingMessage): string {
-  const forwarded = request.headers["x-forwarded-for"];
-  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim();
-  return first || request.socket.remoteAddress || "unknown";
+  const seenByFly = request.headers["fly-client-ip"];
+  const fly = (Array.isArray(seenByFly) ? seenByFly[0] : seenByFly)?.trim();
+  return fly || request.socket.remoteAddress || "unknown";
 }
 
 function createRateLimit(now: () => number) {
   const seen = new Map<string, number[]>();
   return (address: string): number => {
     const time = now();
+    if (seen.size >= MOST_CALLERS_REMEMBERED) {
+      for (const [caller, times] of seen) {
+        if (times.every((at) => time - at >= RATE_LIMIT.windowMs)) seen.delete(caller);
+      }
+    }
     const recent = (seen.get(address) ?? []).filter((at) => time - at < RATE_LIMIT.windowMs);
     if (recent.length >= RATE_LIMIT.requests) {
       seen.set(address, recent);
