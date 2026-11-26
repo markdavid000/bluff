@@ -110,4 +110,17 @@ describe("useCoachTips", () => {
     change({ myTurn: false });
     expect(dismissed).toContain(shown[0]?.id);
   });
+
+  it("clears its tip when the player leaves the game screen mid-turn", () => {
+    const { unmount } = render({
+      myTurn: true,
+      choice: { quantity: 1, face: 6 },
+      risk: "safe",
+      safer: null,
+    });
+    wait(COACH_DELAY_MS);
+    expect(shown).toHaveLength(1);
+    unmount();
+    expect(dismissed).toContain(shown[0]?.id);
+  });
 });

@@ -251,6 +251,7 @@ export function useWaitingRoom(id: bigint) {
   const unaffordable = whyUnaffordable(table.buyIn, known);
   const mine = seats.find((seat) => seat.isMe);
   const timeLeft = Math.max(table.deadline - now, 0);
+  if (startSent && table.status !== "waiting") setStartSent(false);
   const starting = start.working || (startSent && table.status === "waiting");
   const busy =
     ready.working || starting || leave.working || close.working || join.working || remove.working;
