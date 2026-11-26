@@ -36,11 +36,11 @@ export function isNotTableRead(query: { queryKey: readonly unknown[] }): boolean
   );
 }
 
-export function useTable(id: bigint): TableRead {
+export function useTable(id: bigint, { onScreen = false }: { onScreen?: boolean } = {}): TableRead {
   const left = useHasLeftTable(id);
   useEffect(() => () => forgetLeftTable(id), [id]);
   const block = useBlockClock();
-  const [shownId, setShownId] = useState<bigint | null>(null);
+  const [shownId, setShownId] = useState<bigint | null>(onScreen ? id : null);
   const pinned = shownId === id && block > 0n;
   const read = useReadContract({
     address: contracts.bluff,

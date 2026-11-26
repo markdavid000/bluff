@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeWalletFor } from "./active-wallet";
+import { activeWalletFor, isSponsoredWallet } from "./active-wallet";
 
 const BLUFF_WALLET = {
   address: "0x00000000000000000000000000000000000B1FF0",
@@ -28,5 +28,13 @@ describe("activeWalletFor", () => {
 
   it("uses no wallet when nobody is signed in", () => {
     expect(activeWalletFor({ wallets: [METAMASK], user: null })).toBeUndefined();
+  });
+});
+
+describe("isSponsoredWallet", () => {
+  it("knows Bluff pays for moves from the wallet it made, and not from a player's own", () => {
+    expect(isSponsoredWallet(BLUFF_WALLET)).toBe(true);
+    expect(isSponsoredWallet(METAMASK)).toBe(false);
+    expect(isSponsoredWallet(undefined)).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import { useDiceThrow } from "./use-dice-throw";
 
 export const SHAKE_MS = 650;
 export const OTHERS_SHAKE_MS = 1_200;
+export const DICE_WAIT_MS = 10_000;
 
 export function useGameBoard({
   round,
@@ -24,6 +25,7 @@ export function useGameBoard({
   const [roundSeen, setRoundSeen] = useState(0);
   const [shakingRound, setShakingRound] = useState<number | null>(null);
   const [thrownRound, setThrownRound] = useState(0);
+  const [lateRound, setLateRound] = useState(0);
   if (round > 0 && round !== roundSeen) {
     setRoundSeen(round);
     setShakingRound(round);
@@ -71,6 +73,12 @@ export function useGameBoard({
   }, [shakingRound]);
 
   useEffect(() => {
+    if (!playing) return;
+    const timer = window.setTimeout(() => setLateRound(round), DICE_WAIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [playing, round]);
+
+  useEffect(() => {
     if (!playing || !ready || thrownFor.current === round) return;
     const timer = window.setTimeout(() => throwNow(round), SHAKE_MS);
     return () => window.clearTimeout(timer);
@@ -79,6 +87,6 @@ export function useGameBoard({
   return {
     throwState: dice.state,
     othersShaking: shakingRound === round,
-    waitingForDice: playing && thrownRound !== round,
+    waitingForDice: playing && thrownRound !== round && lateRound !== round,
   };
 }

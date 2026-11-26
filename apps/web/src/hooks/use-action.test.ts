@@ -219,4 +219,60 @@ describe("useAction", () => {
     await act(async () => move.resolve());
     expect(notices).toEqual([]);
   });
+
+  describe("once the screen that started it is gone", () => {
+    it("says the move failed, with no Try again that would send it from nowhere", async () => {
+      const move = deferred();
+      const run = vi.fn(() => move.promise);
+      const onDone = vi.fn();
+      const { result, unmount } = renderHook(() =>
+        useAction({ id: "bid", working: "Placing your bid…", run, onDone })
+      );
+      act(() => result.current.start());
+      act(() => vi.advanceTimersByTime(SHOW_AFTER_MS));
+      unmount();
+      await act(async () => move.reject(new Error("network down")));
+      await act(async () => vi.advanceTimersByTime(MIN_SHOWN_MS));
+      const last = notices.at(-1);
+      expect(last).toMatchObject({ id: "bid", kind: "error" });
+      expect(last && "action" in last ? last.action : undefined).toBeUndefined();
+      expect(run).toHaveBeenCalledOnce();
+      expect(onDone).not.toHaveBeenCalled();
+    });
+
+    it("only takes its working message away when the move lands, and hands nothing on", async () => {
+      const move = deferred();
+      const onDone = vi.fn();
+      const { result, unmount } = renderHook(() =>
+        useAction({
+          id: "leave",
+          working: "Leaving…",
+          done: "You left the table",
+          run: () => move.promise,
+          onDone,
+        })
+      );
+      act(() => result.current.start());
+      act(() => vi.advanceTimersByTime(SHOW_AFTER_MS));
+      unmount();
+      await act(async () => move.resolve());
+      await act(async () => vi.advanceTimersByTime(MIN_SHOWN_MS));
+      expect(notices.at(-1)).toEqual({ dismissed: "leave" });
+      expect(onDone).not.toHaveBeenCalled();
+    });
+
+    it("still finishes a move that landed just before the screen went", async () => {
+      const move = deferred();
+      const onDone = vi.fn();
+      const { result, unmount } = renderHook(() =>
+        useAction({ id: "bid", working: "Placing your bid…", run: () => move.promise, onDone })
+      );
+      act(() => result.current.start());
+      act(() => vi.advanceTimersByTime(SHOW_AFTER_MS));
+      await act(async () => move.resolve());
+      unmount();
+      expect(notices.at(-1)).toEqual({ dismissed: "bid" });
+      expect(onDone).not.toHaveBeenCalled();
+    });
+  });
 });

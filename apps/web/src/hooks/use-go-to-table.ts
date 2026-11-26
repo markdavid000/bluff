@@ -28,12 +28,15 @@ function setHeading(id: bigint | null) {
   changed();
 }
 
-export async function takeSeatWhileHere(take: () => Promise<bigint>): Promise<bigint> {
+export async function takeSeatWhileHere(
+  take: () => Promise<bigint>,
+  stillHere: () => boolean
+): Promise<bigint> {
   takingSeat += 1;
   changed();
   try {
     const id = await take();
-    setHeading(id);
+    if (stillHere()) setHeading(id);
     return id;
   } finally {
     takingSeat -= 1;
@@ -51,6 +54,10 @@ export function useTakingSeat(): boolean {
 
 export function headToTable(id: bigint) {
   setHeading(id);
+}
+
+export function stopHeadingTo(id: bigint) {
+  if (heading === id) setHeading(null);
 }
 
 export function arriveAtTable() {

@@ -42,6 +42,11 @@ describe("whyUnaffordable", () => {
     expect(whyUnaffordable(10n * ONE_CHIP, { status: "unknown" })).toBe("show-chips");
   });
 
+  it("asks for nothing while the chips are still loading", () => {
+    expect(whyUnaffordable(10n * ONE_CHIP, { status: "loading" })).toBe("checking");
+    expect(whyUnaffordable(0n, { status: "loading" })).toBeNull();
+  });
+
   it("says when the player has too few chips", () => {
     expect(whyUnaffordable(25n * ONE_CHIP, { status: "ready", amount: 24n * ONE_CHIP })).toBe(
       "too-few"

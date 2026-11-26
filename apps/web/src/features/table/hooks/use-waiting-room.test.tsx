@@ -65,8 +65,12 @@ vi.mock("./use-invite-code", () => ({
 vi.mock("./use-link-invite", () => ({ useLinkInvite: () => linkCode }));
 const markLeftTable = vi.fn();
 vi.mock("@/hooks/use-left-tables", () => ({ markLeftTable: (id: bigint) => markLeftTable(id) }));
+const tableAsked: unknown[] = [];
 vi.mock("./use-table", () => ({
-  useTable: () => tableRead,
+  useTable: (_id: bigint, options: unknown) => {
+    tableAsked.push(options);
+    return tableRead;
+  },
   isNotTableRead: () => true,
 }));
 vi.mock("./use-table-events", () => ({ useTableEvents: vi.fn() }));
@@ -132,6 +136,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  window.sessionStorage.clear();
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });
@@ -174,6 +179,13 @@ describe("useWaitingRoom", () => {
       expect(callComputer).toHaveBeenCalledWith(12n);
     });
 
+    it("still offers the computer back after the page reloads", () => {
+      tableRead = { status: "ready", table: withComputer(), readAt: 100n };
+      render().unmount();
+      tableRead = { status: "ready", table: alone(), readAt: 101n };
+      expect(viewOf(render().result).computerLeft).toBe(true);
+    });
+
     it("never offers the computer back at a table one never sat at", () => {
       tableRead = { status: "ready", table: alone(), readAt: 100n };
       expect(viewOf(render().result).computerLeft).toBe(false);
@@ -196,6 +208,11 @@ describe("useWaitingRoom", () => {
       rerender();
       expect(viewOf(result).computerLeft).toBe(false);
     });
+  });
+
+  it("starts from the table already on screen, so a reopened table never loads", () => {
+    render();
+    expect(tableAsked.at(-1)).toEqual({ onScreen: true });
   });
 
   it("has no room to show until the table is read", () => {
@@ -246,6 +263,42 @@ describe("useWaitingRoom", () => {
     };
     rerender();
     expect(viewOf(result).myReady).toBe(true);
+  });
+
+  it("never brings the old mark back while a newer block is being read", async () => {
+    const { result, rerender } = render();
+    act(() => viewOf(result).toggleReady());
+    await waitFor(() => expect(viewOf(result).toggling).toBe(false));
+    tableRead = {
+      status: "ready",
+      table: table([
+        [HOST, false],
+        [KOLA, true],
+      ]),
+      readAt: 101n,
+    };
+    rerender();
+    expect(viewOf(result).myReady).toBe(true);
+    tableRead = {
+      status: "ready",
+      table: table([
+        [HOST, false],
+        [KOLA, false],
+      ]),
+      readAt: 105n,
+    };
+    rerender();
+    expect(viewOf(result).myReady).toBe(false);
+    tableRead = {
+      status: "ready",
+      table: table([
+        [HOST, false],
+        [KOLA, false],
+      ]),
+      readAt: null,
+    };
+    rerender();
+    expect(viewOf(result).myReady).toBe(false);
   });
 
   it("puts the mark back when the move fails", async () => {
@@ -418,6 +471,30 @@ describe("useWaitingRoom", () => {
       myTableId = { status: "ready", id: 99n };
       expect(viewOf(render().result).joinProblem).toBe(tableCopy.seatedElsewhere);
       myTableId = { status: "ready", id: null };
+    });
+
+    it("waits quietly while the player's chips are still loading, asking nothing of them", () => {
+      balance = { status: "loading" };
+      tableRead = {
+        status: "ready",
+        table: table([[HOST, false]], { buyIn: 25n * ONE_CHIP }),
+        readAt: 1n,
+      };
+      const view = viewOf(render().result);
+      expect(view.joinProblem).toBeNull();
+      expect(view.checkingChips).toBe(true);
+    });
+
+    it("asks the player to show their chips when they are hidden", () => {
+      balance = { status: "hidden", reveal: vi.fn(), revealing: false, asksWallet: false };
+      tableRead = {
+        status: "ready",
+        table: table([[HOST, false]], { buyIn: 25n * ONE_CHIP }),
+        readAt: 1n,
+      };
+      const view = viewOf(render().result);
+      expect(view.joinProblem).toBe(tableCopy.showChipsFirst);
+      expect(view.checkingChips).toBe(false);
     });
 
     it("says how many chips a paid table needs", () => {
