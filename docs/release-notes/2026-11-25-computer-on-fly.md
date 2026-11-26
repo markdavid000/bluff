@@ -14,7 +14,7 @@ Builds the approved [ADR-2026-11-25-computer-on-fly](../adr/ADR-2026-11-25-compu
 - **`apps/bot/Dockerfile`**, built from the repository root:
   - installs the workspace with `--frozen-lockfile --ignore-scripts` (there's no git in the build for `lefthook`);
   - compiles the contracts' ABIs and bundles the service;
-  - ships only the bot's production dependencies (`pnpm deploy --prod --legacy`) on `node:24-slim`, as the `node` user.
+  - ships only the bot's production dependencies (`pnpm deploy --prod --legacy --ignore-scripts`) on `node:24-slim`, as the `node` user.
 - **`apps/bot/fly.toml`:**
   - port 8080, HTTPS forced;
   - never stops (`auto_stop_machines = "off"`, `min_machines_running = 1`);

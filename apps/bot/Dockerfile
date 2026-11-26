@@ -5,7 +5,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @bluff/contracts compile
 RUN pnpm --filter @bluff/bot build
-RUN pnpm --filter @bluff/bot deploy --prod --legacy /service
+RUN pnpm --filter @bluff/bot deploy --prod --legacy --ignore-scripts /service
 
 FROM node:24-slim
 ENV NODE_ENV=production
