@@ -9,6 +9,7 @@ import { safeNextPath } from "@/lib/safe-redirect";
 import { tablePath } from "@/lib/table-links";
 import { closeSession } from "../lib/session-client";
 import { usePlayer } from "./use-player";
+import { useSigningOut } from "./use-signing-out";
 
 const WELCOME = "/welcome";
 
@@ -21,7 +22,8 @@ export function useWelcomeGate() {
   const [closeAttempt, setCloseAttempt] = useState(0);
   const [closeFailed, setCloseFailed] = useState(false);
   const onWelcome = pathname === WELCOME;
-  const signedOut = player.status === "signed-out";
+  const signingOut = useSigningOut();
+  const signedOut = player.status === "signed-out" && !signingOut;
   const seat = useMyTableId();
   const seatId = seat.status === "ready" ? seat.id : null;
   const seatGone = useIsSeatGone(seatId);

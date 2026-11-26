@@ -3,6 +3,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { SESSION_RENEW_MS, closeSession, openSession } from "../lib/session-client";
+import { isSigningOut } from "./use-signing-out";
 
 export function useSessionKeeper() {
   const { ready, authenticated, getAccessToken } = usePrivy();
@@ -18,6 +19,7 @@ export function useSessionKeeper() {
     if (!authenticated) {
       if (wasSignedIn.current) {
         wasSignedIn.current = false;
+        if (isSigningOut()) return;
         closeSession().catch((error: unknown) =>
           console.error("Bluff could not close the session after sign-out.", error)
         );

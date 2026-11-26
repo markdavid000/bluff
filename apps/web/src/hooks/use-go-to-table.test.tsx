@@ -7,6 +7,8 @@ import { hashFn } from "wagmi/query";
 import { createQueryClient } from "@/lib/query-client";
 import {
   arriveAtTable,
+  headToTable,
+  stopHeadingTo,
   takeSeatWhileHere,
   useGoToTable,
   useHeadingTo,
@@ -43,7 +45,10 @@ describe("takeSeatWhileHere", () => {
     const heading = renderHook(() => useHeadingTo());
     let seated: Promise<bigint> = Promise.resolve(0n);
     act(() => {
-      seated = takeSeatWhileHere(() => new Promise<bigint>((resolve) => (land = resolve)));
+      seated = takeSeatWhileHere(
+        () => new Promise<bigint>((resolve) => (land = resolve)),
+        () => true
+      );
     });
     expect(taking.result.current).toBe(true);
     await act(async () => {
@@ -55,13 +60,40 @@ describe("takeSeatWhileHere", () => {
     act(() => arriveAtTable());
   });
 
+  it("heads nowhere once the screen that asked for the seat has gone", async () => {
+    const heading = renderHook(() => useHeadingTo());
+    await act(async () => {
+      await takeSeatWhileHere(
+        () => Promise.resolve(45n),
+        () => false
+      );
+    });
+    expect(heading.result.current).toBeNull();
+  });
+
   it("lets go of the player when the seat fails, heading nowhere", async () => {
     const taking = renderHook(() => useTakingSeat());
     const heading = renderHook(() => useHeadingTo());
     await act(async () => {
-      await expect(takeSeatWhileHere(() => Promise.reject(new Error("no")))).rejects.toThrow("no");
+      await expect(
+        takeSeatWhileHere(
+          () => Promise.reject(new Error("no")),
+          () => true
+        )
+      ).rejects.toThrow("no");
     });
     expect(taking.result.current).toBe(false);
+    expect(heading.result.current).toBeNull();
+  });
+});
+
+describe("stopHeadingTo", () => {
+  it("lets go of the table it names, and leaves any other alone", () => {
+    const heading = renderHook(() => useHeadingTo());
+    act(() => headToTable(50n));
+    act(() => stopHeadingTo(51n));
+    expect(heading.result.current).toBe(50n);
+    act(() => stopHeadingTo(50n));
     expect(heading.result.current).toBeNull();
   });
 });

@@ -22,7 +22,7 @@ export const accountCopy = {
   walletProblem: "Your seat is not ready yet. Try again.",
   openPlayer: (name: string) => `${name}, your name and face`,
   signingOut: "Signing you out…",
-  signedOut: "You are signed out",
+  signOutProblem: "We could not sign you out. Please try again.",
   noNickname: "Player",
   readyToPlay: (name: string) => `Ready to play, ${name}?`,
   welcomeHeading: "Pick your name and face",

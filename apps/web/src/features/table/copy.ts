@@ -206,6 +206,7 @@ export const tableCopy = {
   notEnough: (amount: string) => `You need ${amount} chips for this table.`,
   confirmInWallet: "Confirm in your wallet",
   keeperProblem: "Your table is taking a while. It will keep trying.",
+  keeperFromOwnWallet: "Your wallet will ask you to confirm a move that keeps this table going.",
   pastTitle: "Your games",
   pastFinding: "Finding your games…",
   pastNone: "No games yet. Play one!",

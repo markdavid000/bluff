@@ -22,6 +22,7 @@ export function ResultsCard({ game }: { game: Game }) {
       startedAt: table.startedAt,
     },
     players: game.seats,
+    watching: game.watching,
   });
   const label = (working: string) => (again.confirm ? tableCopy.confirmInWallet : working);
   const offer = again.offer;
@@ -102,7 +103,7 @@ export function ResultsCard({ game }: { game: Game }) {
               <ActionButton
                 tone="green"
                 icon={offer.buyIn > 0n ? "cowrie" : "rocket"}
-                disabled={again.busy && !again.joining}
+                disabled={(again.busy && !again.joining) || again.offerWaitsForChips}
                 working={again.joining}
                 workingLabel={label(tableCopy.joining)}
                 onClick={again.joinOffer}
@@ -118,7 +119,7 @@ export function ResultsCard({ game }: { game: Game }) {
               tone={offer && !offer.isPrivate ? "quiet" : "red"}
               icon="play"
               sound="drum"
-              disabled={again.busy && !again.playing}
+              disabled={(again.busy && !again.playing) || again.waitingForChips}
               working={again.playing}
               workingLabel={label(tableCopy.playingAgain)}
               onClick={again.playAgain}

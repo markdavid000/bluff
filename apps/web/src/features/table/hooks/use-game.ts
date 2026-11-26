@@ -53,7 +53,7 @@ export function useGame(id: bigint) {
   const queryClient = useQueryClient();
   const { user } = usePrivy();
   const me = user?.wallet?.address as Address | undefined;
-  const read = useTable(id);
+  const read = useTable(id, { onScreen: true });
   const table = read.status === "ready" ? read.table : null;
   const tableOver = table?.status === "finished";
   const forgetSeat = useEffectEvent(() => forgetMyTable(id));
@@ -155,6 +155,9 @@ export function useGame(id: bigint) {
       bidderPlayer: table.bid ? (table.seats[table.bid.bidder]?.player ?? null) : null,
       callerPlayer: table.caller === null ? null : (table.seats[table.caller]?.player ?? null),
     });
+  }
+  if (revealCounts !== null && revealCounts.seenAt === 0n && block > 0n) {
+    setRevealCounts({ ...revealCounts, seenAt: block });
   }
   const [closedRound, setClosedRound] = useState(0);
   const [movedOn, setMovedOn] = useState<{ round: number; at: number } | null>(null);

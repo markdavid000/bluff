@@ -37,7 +37,8 @@ const invalidateBalanceQueries = vi.fn();
 vi.mock("@zama-fhe/sdk/query", () => ({
   invalidateBalanceQueries: (...args: unknown[]) => invalidateBalanceQueries(...args),
 }));
-vi.mock("@/hooks/use-block-clock", () => ({ useFollowChain: vi.fn(), useBlockClock: () => 100n }));
+let block = 100n;
+vi.mock("@/hooks/use-block-clock", () => ({ useFollowChain: vi.fn(), useBlockClock: () => block }));
 vi.mock("@/hooks/use-player-profiles", () => ({
   usePlayerProfiles: () => ({
     status: "ready",
@@ -48,8 +49,12 @@ vi.mock("@/hooks/use-player-profiles", () => ({
   }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
+const tableAsked: unknown[] = [];
 vi.mock("./use-table", () => ({
-  useTable: () => tableRead,
+  useTable: (_id: bigint, options: unknown) => {
+    tableAsked.push(options);
+    return tableRead;
+  },
   isNotTableRead: () => true,
 }));
 vi.mock("./use-table-events", () => ({
@@ -121,6 +126,7 @@ function viewOf(result: { current: ReturnType<typeof useGame> }) {
 }
 
 beforeEach(() => {
+  block = 100n;
   vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
   vi.setSystemTime(NOW);
   show(game());
@@ -137,6 +143,11 @@ afterEach(() => {
 });
 
 describe("useGame", () => {
+  it("starts from the table already on screen, so the switch from the waiting room never loads", () => {
+    render();
+    expect(tableAsked.at(-1)).toEqual({ onScreen: true });
+  });
+
   it("has no game to show until the table is read", () => {
     tableRead = { status: "loading" };
     expect(render().result.current.view).toBeNull();
@@ -234,6 +245,15 @@ describe("useGame", () => {
     rerender();
     expect(viewOf(result).reveal).toMatchObject({ outcome: "caught", loserName: "Sly Fox #3C4D" });
     caughtUp = null;
+  });
+
+  it("still looks the reveal up on the chain when the table was read before the first block", () => {
+    block = 0n;
+    show(game({ status: "revealing", bid: { quantity: 3, face: 4, bidder: 1 }, caller: 0 }), null);
+    const { rerender } = render();
+    block = 120n;
+    rerender();
+    expect(catchUpAsked.at(-1)).toMatchObject({ round: 1, fromBlock: 120n, wanted: true });
   });
 
   it("stops waiting for a reveal that never arrives", () => {

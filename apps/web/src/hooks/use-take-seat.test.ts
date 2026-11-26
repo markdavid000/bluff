@@ -1,9 +1,10 @@
 import { bluffAbi } from "@bluff/contracts";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { type Hex, decodeAbiParameters, encodeAbiParameters, encodeEventTopics } from "viem";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contracts } from "@/config/chain";
 import { ONE_CHIP } from "@/lib/chips";
+import { arriveAtTable, useHeadingTo, useTakingSeat } from "./use-go-to-table";
 import type { ContractCall } from "./use-send-move";
 import { SEAT_RECHECK_LIMIT_MS, SEAT_RECHECK_MS, useTakeSeat } from "./use-take-seat";
 
@@ -79,6 +80,43 @@ afterEach(() => {
 });
 
 describe("useTakeSeat", () => {
+  describe("when the screen that took the seat is gone before it lands", () => {
+    afterEach(() => {
+      act(() => arriveAtTable());
+    });
+
+    it("leaves the seat for the welcome gate to open, rather than holding it for a screen that's gone", async () => {
+      let land: (receipt: unknown) => void = () => undefined;
+      sendMove.mockReturnValue(new Promise((resolve) => (land = resolve)));
+      const heading = renderHook(() => useHeadingTo());
+      const taking = renderHook(() => useTakingSeat());
+      const { result, unmount } = renderHook(() => useTakeSeat());
+      let seated: Promise<bigint> = Promise.resolve(0n);
+      act(() => {
+        seated = result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn());
+      });
+      expect(taking.result.current).toBe(true);
+      unmount();
+      await act(async () => {
+        land({ transactionHash: "0x99", logs: [joined(12n, ME)] });
+        await seated;
+      });
+      expect(taking.result.current).toBe(false);
+      expect(heading.result.current).toBeNull();
+    });
+
+    it("lets go of a seat that landed just before the screen went", async () => {
+      const heading = renderHook(() => useHeadingTo());
+      const { result, unmount } = renderHook(() => useTakeSeat());
+      await act(async () => {
+        await result.current({ kind: "join", tableId: 12n, buyIn: 0n }, vi.fn());
+      });
+      expect(heading.result.current).toBe(12n);
+      act(() => unmount());
+      expect(heading.result.current).toBeNull();
+    });
+  });
+
   it("creates a free table and returns its number", async () => {
     const { result } = renderHook(() => useTakeSeat());
     await expect(

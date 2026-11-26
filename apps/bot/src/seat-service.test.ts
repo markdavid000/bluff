@@ -2,13 +2,14 @@ import type { Table } from "@bluff/game";
 import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 import type { Address } from "viem";
 import { describe, expect, it } from "vitest";
-import { MoveRefused, TableMissing } from "./chain-errors";
+import { MoveRefused, MoveReverted, TableMissing } from "./chain-errors";
 import { createLog } from "./log";
 import type { Acquired, PlayerPool } from "./player-pool";
-import { type Seated, type ServiceChain, createSeatService } from "./seat-service";
+import { MOST_SEATING, type Seated, type ServiceChain, createSeatService } from "./seat-service";
 
 const NOW = 1_800_000_000_000;
 const HOST = "0x0000000000000000000000000000000000001a2b" as Address;
+const STRANGER = "0x0000000000000000000000000000000000009f9f" as Address;
 const BABA = {
   index: 1,
   address: "0x00000000000000000000000000000000000b0b0b" as Address,
@@ -34,11 +35,18 @@ function harness({
   read,
   acquired = { kind: "player", player: BABA },
   join,
+  seatOf = async () => 0n,
+  balance = async () => 10n ** 17n,
 }: {
   read?: () => Promise<Table>;
   acquired?: Acquired;
   join?: () => Promise<Seated>;
+  seatOf?: () => Promise<bigint>;
+  balance?: () => Promise<bigint>;
 } = {}) {
+  let clock = NOW;
+  let head = 150n;
+  let balanceReads = 0;
   const sent: { index: number; tableId: bigint; atBlock: bigint }[] = [];
   const readAt: (bigint | undefined)[] = [];
   const waits: number[] = [];
@@ -46,7 +54,7 @@ function harness({
   const started: { index: number; tableId: bigint; seatedAt: number; seatedBlock: bigint }[] = [];
   let waited = 0;
   const chain: ServiceChain = {
-    blockNumber: async () => 150n,
+    blockNumber: async () => head,
     readTable: async (id, atBlock) => {
       readAt.push(atBlock);
       return read ? read() : quickTable();
@@ -55,7 +63,11 @@ function harness({
       sent.push({ index, tableId, atBlock });
       return join ? join() : { joinedBlock: 200n, readyBlock: 200n };
     },
-    balanceOf: async () => 10n ** 17n,
+    balanceOf: async () => {
+      balanceReads += 1;
+      return balance();
+    },
+    tableOf: async () => seatOf(),
   };
   const spares: number[] = [];
   const pool = {
@@ -63,6 +75,7 @@ function harness({
     ensureSpare: async () => void spares.push(1),
     release: (index: number) => void released.push(index),
     known: () => [{ ...BABA, busy: true }],
+    owns: (address: string) => address.toLowerCase() === BABA.address.toLowerCase(),
   } as unknown as PlayerPool;
   const service = createSeatService({
     bank: "0x00000000000000000000000000000000000000b0",
@@ -70,14 +83,31 @@ function harness({
     pool,
     startRunner: (player, tableId, seatedAt, seatedBlock) =>
       void started.push({ index: player.index, tableId, seatedAt, seatedBlock }),
-    now: () => NOW,
+    now: () => clock,
     sleep: async (ms) => {
       waited += ms;
       waits.push(ms);
+      clock += ms;
     },
     log: createLog(() => undefined),
   });
-  return { service, sent, released, started, readAt, waits, spares, waited: () => waited };
+  return {
+    service,
+    sent,
+    released,
+    started,
+    readAt,
+    waits,
+    spares,
+    waited: () => waited,
+    pass: (ms: number) => {
+      clock += ms;
+    },
+    newBlock: (block: bigint) => {
+      head = block;
+    },
+    balanceReads: () => balanceReads,
+  };
 }
 
 describe("seat service", () => {
@@ -151,7 +181,7 @@ describe("seat service", () => {
       read: async () => (++reads < 3 ? Promise.reject(new TableMissing(12n)) : quickTable()),
     });
     expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
-    expect(h.waits).toEqual([1_000, 1_000]);
+    expect(h.waits).toEqual([3_000, 3_000]);
   });
 
   it.each<[Acquired["kind"], string]>([
@@ -175,10 +205,131 @@ describe("seat service", () => {
     }
   );
 
-  it("frees the player and passes on any other failure to join", async () => {
+  it("frees the player and passes on any other failure to join, once the chain shows it never sat down", async () => {
     const h = harness({ join: async () => Promise.reject(new Error("rpc down")) });
     await expect(h.service.seat(12n)).rejects.toThrow("rpc down");
     expect(h.released).toEqual([1]);
+    expect(h.started).toEqual([]);
+  });
+
+  describe("when a join's outcome is unclear", () => {
+    it("keeps playing a table the computer did join, though the confirmation failed", async () => {
+      const h = harness({
+        join: async () => Promise.reject(new Error("receipt timed out")),
+        seatOf: async () => 12n,
+      });
+      expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
+      expect(h.released).toEqual([]);
+      expect(h.started).toMatchObject([{ index: 1, tableId: 12n }]);
+    });
+
+    it("never frees a computer the chain shows is still seated somewhere else", async () => {
+      const h = harness({
+        join: async () => Promise.reject(new MoveRefused("AlreadyAtTable", null)),
+        seatOf: async () => 99n,
+      });
+      await expect(h.service.seat(12n)).rejects.toThrow("AlreadyAtTable");
+      expect(h.released).toEqual([]);
+      expect(h.started).toMatchObject([{ index: 1, tableId: 99n }]);
+    });
+
+    it("says the table is full when its join was beaten on-chain, instead of failing", async () => {
+      let reads = 0;
+      const h = harness({
+        join: async () => Promise.reject(new MoveReverted("0xdead")),
+        read: async () =>
+          ++reads === 1
+            ? quickTable()
+            : quickTable({
+                seats: [
+                  { player: HOST, ready: false, isHost: true, isActive: true, ...NO_DICE },
+                  { player: STRANGER, ready: false, isHost: false, isActive: true, ...NO_DICE },
+                ],
+              }),
+      });
+      expect(await h.service.seat(12n)).toEqual({ kind: "refused", reason: "full" });
+      expect(h.released).toEqual([1]);
+      expect(h.sent).toHaveLength(1);
+    });
+
+    it("gives up on a stumbling join after 15 seconds of real time, however slow each try is", async () => {
+      const h = harness({
+        join: async () => {
+          h.pass(12_000);
+          throw new Error("rpc down");
+        },
+      });
+      await expect(h.service.seat(12n)).rejects.toThrow("rpc down");
+      expect(h.sent.length).toBeLessThanOrEqual(2);
+    });
+
+    it("checks each retry at the newest block, not the one the table was first read at", async () => {
+      let calls = 0;
+      const h = harness({
+        join: async () => {
+          calls += 1;
+          if (calls === 1) {
+            h.newBlock(160n);
+            throw new Error("rpc down");
+          }
+          return { joinedBlock: 200n, readyBlock: 200n };
+        },
+      });
+      await h.service.seat(12n);
+      expect(h.sent.map((attempt) => attempt.atBlock)).toEqual([150n, 160n]);
+    });
+  });
+
+  describe("when the same table is asked for again", () => {
+    it("says the computer is seated, not 'taken', when one of ours already sits there", async () => {
+      const h = harness({
+        read: async () =>
+          quickTable({
+            seats: [
+              { player: HOST, ready: false, isHost: true, isActive: true, ...NO_DICE },
+              { player: BABA.address, ready: true, isHost: false, isActive: true, ...NO_DICE },
+            ],
+          }),
+      });
+      expect(await h.service.seat(12n)).toEqual({ kind: "seated", player: BABA.address });
+      expect(h.sent).toEqual([]);
+    });
+
+    it("shares one attempt between two requests for the same table at once", async () => {
+      const h = harness();
+      const [first, second] = await Promise.all([h.service.seat(12n), h.service.seat(12n)]);
+      expect(first).toEqual(second);
+      expect(h.sent).toHaveLength(1);
+    });
+  });
+
+  it("turns new tables away while too many are already being seated", async () => {
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const h = harness({
+      join: async () => {
+        await held;
+        return { joinedBlock: 200n, readyBlock: 200n };
+      },
+    });
+    const seating = Array.from({ length: MOST_SEATING }, (_, i) => h.service.seat(BigInt(20 + i)));
+    expect(await h.service.seat(99n)).toEqual({ kind: "refused", reason: "all-busy" });
+    release();
+    await Promise.all(seating);
+    expect(await h.service.seat(98n)).toMatchObject({ kind: "seated" });
+  });
+
+  it("serves health from a short cache, and keeps its last answer when the network stumbles", async () => {
+    let failing = false;
+    const h = harness({
+      balance: async () => (failing ? Promise.reject(new Error("rpc down")) : 10n ** 17n),
+    });
+    const first = await h.service.health();
+    await h.service.health();
+    expect(h.balanceReads()).toBe(2);
+    h.pass(31_000);
+    failing = true;
+    expect(await h.service.health()).toEqual(first);
   });
 
   it("reports the bank and each player's balance for the health check", async () => {

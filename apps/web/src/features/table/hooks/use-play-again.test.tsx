@@ -79,7 +79,7 @@ function waitingTable(id: bigint, host: string, buyIn = 0n) {
   ];
 }
 
-function render(buyIn = 0n, isPrivate = false) {
+function render(buyIn = 0n, isPrivate = false, watching = false) {
   const queryClient = new QueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -92,6 +92,7 @@ function render(buyIn = 0n, isPrivate = false) {
           { player: ME, name: "Me #1A2B", isMe: true },
           { player: ADA, name: "Ada #3C4D", isMe: false },
         ],
+        watching,
       }),
     { wrapper }
   );
@@ -137,6 +138,31 @@ describe("usePlayAgain", () => {
     act(() => result.current.playAgain());
     expect(takeSeat).not.toHaveBeenCalled();
     expect(shown.map((notice) => notice.title)).toEqual([tableCopy.notEnough("10")]);
+  });
+
+  it("waits quietly while the player's chips are still loading, rather than asking to see them", () => {
+    balance = { status: "loading" };
+    const { result } = render(10n * ONE_CHIP);
+    act(() => result.current.playAgain());
+    expect(takeSeat).not.toHaveBeenCalled();
+    expect(shown).toEqual([]);
+    expect(result.current.waitingForChips).toBe(true);
+  });
+
+  it("still asks to see the chips when they are hidden", () => {
+    balance = { status: "hidden", reveal: vi.fn(), revealing: false, asksWallet: false };
+    const { result } = render(10n * ONE_CHIP);
+    expect(result.current.waitingForChips).toBe(false);
+    act(() => result.current.playAgain());
+    expect(shown.map((notice) => notice.title)).toEqual([tableCopy.showChipsFirst]);
+  });
+
+  it("never looks for new tables for someone who only watched", () => {
+    reads = { tableOf: [20n], getTable: [waitingTable(20n, ADA)] };
+    const { result } = render(0n, false, true);
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asked.every((call) => !call.enabled)).toBe(true);
+    expect(result.current.offer).toBeNull();
   });
 
   it("offers the new table a player from the last game set up, and joins it", async () => {

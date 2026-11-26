@@ -79,6 +79,7 @@ function room(overrides: Room = {}): Room {
     myReady: false,
     canStart: false,
     joinProblem: null,
+    checkingChips: false,
     busy: false,
     confirm: false,
     toggling: false,
@@ -235,6 +236,12 @@ describe("WaitingScreen", () => {
     it("pays and joins a paid table", () => {
       show(room({ role: "visitor", table: table({ buyIn: 25n * ONE_CHIP }) }));
       expect(screen.getByRole("button", { name: tableCopy.payAndJoin("25") })).toBeInTheDocument();
+    });
+
+    it("holds the pay button while the player's chips are still loading", () => {
+      show(room({ role: "visitor", checkingChips: true, table: table({ buyIn: 25n * ONE_CHIP }) }));
+      expect(screen.getByRole("button", { name: tableCopy.payAndJoin("25") })).toBeDisabled();
+      expect(screen.queryByText(tableCopy.showChipsFirst)).not.toBeInTheDocument();
     });
 
     it.each([tableCopy.full, tableCopy.started])("explains why they cannot join: %s", (problem) => {

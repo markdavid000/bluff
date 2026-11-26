@@ -8,6 +8,9 @@ export const errorCopy = {
   mayStillLand: "This is taking a while. It may still go through, so watch the table.",
   noWallet: "Your seat is still getting ready. Please try again in a moment.",
   inviteNotWorking: "That invite link doesn't work. Ask the host for a new one.",
+  walletNeedsCoins:
+    "Your wallet needs a few free practice coins to pay for moves. Add some, then try again.",
+  walletNotConnected: "Your wallet is locked or not connected. Unlock it, then try again.",
   reasons: {
     AlreadyAtTable: "You are already at a table. Finish or leave it first.",
     BidNotHigher: "Your bid has to be higher than the last one.",
