@@ -8,6 +8,7 @@ import {
   othersTables,
   peopleTables,
   type TableView,
+  joinable,
   openSeats,
   toLobbyTable,
 } from "./tables";
@@ -33,6 +34,25 @@ const view: TableView = {
   bidder: 0,
   caller: 0,
 };
+
+describe("joinable", () => {
+  const table = toLobbyTable(view);
+  const closesAt = table.closesAt;
+
+  it("offers a waiting table with a free seat and time left", () => {
+    expect(joinable(table, closesAt - 5 * 60_000)).toBe(true);
+  });
+
+  it("skips a table whose time is up, or about to be", () => {
+    expect(joinable(table, closesAt + 1)).toBe(false);
+    expect(joinable(table, closesAt - 30_000)).toBe(false);
+  });
+
+  it("skips a full table and one already playing", () => {
+    expect(joinable({ ...table, playerCount: 3 }, closesAt - 5 * 60_000)).toBe(false);
+    expect(joinable({ ...table, waiting: false }, closesAt - 5 * 60_000)).toBe(false);
+  });
+});
 
 describe("BUY_INS", () => {
   it("offers exactly the chips to play the game allows", () => {

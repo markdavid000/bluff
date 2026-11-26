@@ -142,6 +142,22 @@ export function useWaitingRoom(id: bigint) {
     onDone: () => setStartSent(true),
   });
 
+  const remove = useAction({
+    id: "remove-player",
+    working: tableCopy.removing,
+    run: (report, player: Address) =>
+      sendMove(
+        {
+          address: contracts.bluff,
+          abi: bluffAbi,
+          functionName: "removeUnready",
+          args: [id, player],
+        },
+        report
+      ),
+    onDone: () => invalidateBalanceQueries(queryClient, contracts.chips),
+  });
+
   const leave = useAction({
     id: "leave",
     working: tableCopy.leaving,
@@ -226,13 +242,15 @@ export function useWaitingRoom(id: bigint) {
   const mine = seats.find((seat) => seat.isMe);
   const timeLeft = Math.max(table.deadline - now, 0);
   const starting = start.working || (startSent && table.status === "waiting");
-  const busy = ready.working || starting || leave.working || close.working || join.working;
+  const busy =
+    ready.working || starting || leave.working || close.working || join.working || remove.working;
   const confirm =
     ready.confirmInWallet ||
     start.confirmInWallet ||
     leave.confirmInWallet ||
     close.confirmInWallet ||
-    join.confirmInWallet;
+    join.confirmInWallet ||
+    remove.confirmInWallet;
 
   return {
     read,
@@ -270,6 +288,12 @@ export function useWaitingRoom(id: bigint) {
       toggling: ready.working,
       starting,
       leaving: leave.working,
+      removing: remove.working,
+      canRemove: (player: string) =>
+        role === "host" &&
+        table.status === "waiting" &&
+        table.seats.some((seat) => same(seat.player, player) && !seat.isHost && !seat.ready),
+      removePlayer: (player: Address) => remove.start(player),
       closing: close.working,
       joining: join.working || (seatTaken && role === "visitor"),
       joinStep,

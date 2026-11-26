@@ -81,6 +81,7 @@ interface IBluff {
     event TableUnlisted(uint256 indexed id);
     event SeatVerificationStarted(uint256 indexed id, uint64 deadline);
     event SeatRemoved(uint256 indexed id, address indexed player);
+    event PlayerRemoved(uint256 indexed id, address indexed player);
     event TableReopened(uint256 indexed id, uint64 deadline);
     event GameStarted(uint256 indexed id, uint64 startedAt, uint64 clockEndsAt);
     event RoundStarted(uint256 indexed id, uint32 round, uint8 starter, uint64 deadline);
@@ -131,6 +132,9 @@ interface IBluff {
     error CashierAlreadySet();
     error InvitesAlreadySet();
     error NotInvited(uint256 id);
+    error CannotRemoveHost(uint256 id);
+    error PlayerIsReady(uint256 id, address player);
+    error RemovedFromTable(uint256 id);
 
     function createFreeTable(uint8 seatCount, bool isPrivate) external returns (uint256 id);
 
@@ -144,6 +148,8 @@ interface IBluff {
     function setReady(uint256 id, bool isReady) external;
 
     function startTable(uint256 id) external;
+
+    function removeUnready(uint256 id, address player) external;
 
     function leaveTable(uint256 id) external;
 

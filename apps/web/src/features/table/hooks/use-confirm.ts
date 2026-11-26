@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function useLeaveConfirm(leave: () => void) {
+export function useConfirm(act: () => void) {
   const [asking, setAsking] = useState(false);
   return {
     asking,
@@ -10,7 +10,7 @@ export function useLeaveConfirm(leave: () => void) {
     ask: () => setAsking(true),
     confirm: () => {
       setAsking(false);
-      leave();
+      act();
     },
   };
 }

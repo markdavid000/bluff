@@ -37,6 +37,9 @@ export function noticeFor(
     case "HostChanged":
       if (!host || isComputerPlayer(host)) return null;
       return same(host, me) ? tableCopy.youAreHost : tableCopy.isHost(nameOf(host));
+    case "PlayerRemoved":
+      if (!player) return null;
+      return mine ? tableCopy.youWereRemovedByHost : tableCopy.removedByHost(nameOf(player));
     case "SeatRemoved":
       if (!player) return null;
       return mine ? tableCopy.youWereRemoved : tableCopy.removedForNotPaying(nameOf(player));

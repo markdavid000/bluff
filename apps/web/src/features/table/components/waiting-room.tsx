@@ -10,6 +10,7 @@ import { seatLayout } from "../lib/seat-layout";
 import { useTipsOnFirstVisit } from "../hooks/use-tips-dialog";
 import { GameBoard } from "./board/game-board";
 import { ComputerSeat } from "./computer-seat";
+import { RemoveGuestButton } from "./remove-guest-button";
 import { CopyInviteButton } from "./copy-invite-button";
 import { InviteSeat } from "./invite-seat";
 import { SeatBadge } from "./seat-badge";
@@ -54,15 +55,24 @@ export function WaitingRoom({ room }: { room: Room }) {
                 }
               >
                 {seat ? (
-                  <SeatBadge
-                    name={seat.name}
-                    avatarSrc={seat.avatarSrc}
-                    ready={seat.ready}
-                    isHost={seat.isHost}
-                    isMe={seat.isMe}
-                    isComputer={seat.isComputer}
-                    updating={seat.isMe && room.toggling}
-                  />
+                  <div className="flex flex-col items-center gap-2">
+                    <SeatBadge
+                      name={seat.name}
+                      avatarSrc={seat.avatarSrc}
+                      ready={seat.ready}
+                      isHost={seat.isHost}
+                      isMe={seat.isMe}
+                      isComputer={seat.isComputer}
+                      updating={seat.isMe && room.toggling}
+                    />
+                    {room.canRemove(seat.player) ? (
+                      <RemoveGuestButton
+                        name={seat.name || tableCopy.unnamed}
+                        disabled={room.busy}
+                        onRemove={() => room.removePlayer(seat.player)}
+                      />
+                    ) : null}
+                  </div>
                 ) : waiting && room.computerComing ? (
                   <ComputerSeat />
                 ) : waiting && room.computerLeft ? (

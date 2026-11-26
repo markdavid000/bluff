@@ -106,14 +106,15 @@ describe("waiting room", function () {
       expect(await bluff.openTableCount()).to.equal(0n);
     });
 
-    it("refuses players who are not seated", async function () {
+    it("lets someone who isn't seated close an expired table", async function () {
       const { alice, carol, bluff } = await deployGameFixture();
       const id = await nextTableId(bluff, alice);
       await bluff.connect(alice).createFreeTable(3, false);
       await time.increase(LOBBY_LIMIT + 1);
       await expect(bluff.connect(carol).cancelTable(id))
-        .to.be.revertedWithCustomError(bluff, "NotAtTable")
+        .to.emit(bluff, "TableCancelled")
         .withArgs(id);
+      expect(await bluff.tableOf(alice.address)).to.equal(0n);
     });
 
     it("refuses to cancel a game in progress", async function () {

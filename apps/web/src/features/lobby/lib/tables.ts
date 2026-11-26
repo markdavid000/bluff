@@ -11,6 +11,7 @@ export const SEAT_COUNTS = [2, 3, 4] as const;
 export type SeatCount = (typeof SEAT_COUNTS)[number];
 
 const WAITING = 1;
+const CLOSING_SOON_MS = 60_000;
 
 export interface LobbyTable {
   id: bigint;
@@ -50,6 +51,10 @@ export function othersTables(tables: LobbyTable[], me: string | undefined): Lobb
 
 export function openSeats(table: LobbyTable): number {
   return table.seatCount - table.playerCount;
+}
+
+export function joinable(table: LobbyTable, now: number): boolean {
+  return table.waiting && openSeats(table) > 0 && table.closesAt - now > CLOSING_SOON_MS;
 }
 
 export function affordProblem(buyIn: bigint, balance: KnownBalance): string | null {

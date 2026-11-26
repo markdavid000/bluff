@@ -64,6 +64,7 @@ contract Bluff is
         EnumerableSet.UintSet openTables;
         mapping(uint256 tableId => mapping(address player => bool)) ready;
         IBluffInvites invites;
+        mapping(uint256 tableId => mapping(address player => bool)) barred;
     }
 
     bytes32 private constant _BLUFF_STORAGE_LOCATION =
@@ -126,12 +127,23 @@ contract Bluff is
         _startGame($, id);
     }
 
+    function removeUnready(uint256 id, address player) external nonReentrant {
+        BluffStorage storage $ = _getBluffStorage();
+        Table storage table = _requireStatus($, id, TableStatus.Waiting);
+        if (table.host != msg.sender) revert NotHost(id);
+        if ($.tableOf[player] != id) revert NotAtTable(id);
+        if (player == table.host) revert CannotRemoveHost(id);
+        if ($.ready[id][player]) revert PlayerIsReady(id, player);
+        $.barred[id][player] = true;
+        _leaveBeforeGame($, id, player, true);
+    }
+
     function leaveTable(uint256 id) external nonReentrant {
         BluffStorage storage $ = _getBluffStorage();
         _requireSeated($, id, msg.sender);
         TableStatus status = $.tables[id].status;
         if (status == TableStatus.Waiting || status == TableStatus.Verifying) {
-            _leaveBeforeGame($, id, msg.sender);
+            _leaveBeforeGame($, id, msg.sender, false);
         } else {
             _leaveGame($, id, msg.sender);
         }
@@ -139,7 +151,6 @@ contract Bluff is
 
     function cancelTable(uint256 id) external nonReentrant {
         BluffStorage storage $ = _getBluffStorage();
-        _requireSeated($, id, msg.sender);
         Table storage table = _requireStatus($, id, TableStatus.Waiting);
         if (block.timestamp <= table.deadline) revert DeadlineNotPassed(table.deadline);
         _cancel($, id);
@@ -339,7 +350,7 @@ contract Bluff is
     }
 
     function version() external pure virtual returns (string memory) {
-        return "1.4.0";
+        return "1.5.0";
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
@@ -488,11 +499,12 @@ contract Bluff is
         return seat.dice;
     }
 
-    function _leaveBeforeGame(BluffStorage storage $, uint256 id, address player) private {
+    function _leaveBeforeGame(BluffStorage storage $, uint256 id, address player, bool removed) private {
         Table storage table = $.tables[id];
         bool refunded = table.buyIn != 0;
         _removeSeat($, id, player);
-        emit PlayerLeft(id, player, refunded);
+        if (removed) emit PlayerRemoved(id, player);
+        else emit PlayerLeft(id, player, refunded);
         if (table.status == TableStatus.Verifying) {
             _reopen($, id);
         } else if (table.playerCount == 0) {
@@ -700,6 +712,7 @@ contract Bluff is
     ) private view returns (Table storage table) {
         table = _requireStatus($, id, TableStatus.Waiting);
         if (table.playerCount == table.seatCount) revert TableFull(id);
+        if ($.barred[id][player]) revert RemovedFromTable(id);
         if (table.isPrivate && !$.invites.isInvited(id, player)) revert NotInvited(id);
         _requireNotAtTable($, player);
     }

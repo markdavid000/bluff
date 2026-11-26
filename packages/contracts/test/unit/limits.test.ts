@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { artifacts, ethers } from "hardhat";
 
 const SIZE_LIMIT = 24_576;
-const BLUFF_HEADROOM = 768;
+const BLUFF_HEADROOM = 256;
 const HCU_LIMIT_EXCEEDED = "0x77e3c293";
 const HCU_DEPTH_LIMIT_EXCEEDED = "0xfc344870";
 
