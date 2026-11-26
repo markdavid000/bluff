@@ -35,14 +35,22 @@ interface Player {
   isMe: boolean;
 }
 
-export function usePlayAgain({ last, players }: { last: LastTable; players: readonly Player[] }) {
+export function usePlayAgain({
+  last,
+  players,
+  watching,
+}: {
+  last: LastTable;
+  players: readonly Player[];
+  watching: boolean;
+}) {
   const goToTable = useGoToTable();
   const queryClient = useQueryClient();
   const takeSeat = useTakeSeat();
   const balance = useChipBalance({ working: tableCopy.gettingReady });
   const [since] = useState(() => Date.now());
-  const now = useNow(CHECK_EVERY_MS);
-  const looking = now < since + LOOK_FOR_MS;
+  const now = useNow(CHECK_EVERY_MS, !watching);
+  const looking = !watching && now < since + LOOK_FOR_MS;
   const others = players.filter((player) => !player.isMe);
 
   const seatsOf = useReadContracts({
@@ -133,10 +141,13 @@ export function usePlayAgain({ last, players }: { last: LastTable; players: read
   const known: KnownBalance =
     balance.status === "ready"
       ? { status: "ready", amount: balance.amount }
-      : { status: "unknown" };
+      : balance.status === "loading"
+        ? { status: "loading" }
+        : { status: "unknown" };
   function affordable(buyIn: bigint): boolean {
     const problem = whyUnaffordable(buyIn, known);
     if (problem === null) return true;
+    if (problem === "checking") return false;
     notify.error(
       problem === "show-chips" ? tableCopy.showChipsFirst : tableCopy.notEnough(formatChips(buyIn)),
       { id: "play-again" }
@@ -149,6 +160,8 @@ export function usePlayAgain({ last, players }: { last: LastTable; players: read
       match && host
         ? { id: match.id, hostName: host.name, buyIn: match.buyIn, isPrivate: match.isPrivate }
         : null,
+    waitingForChips: whyUnaffordable(last.buyIn, known) === "checking",
+    offerWaitsForChips: match !== null && whyUnaffordable(match.buyIn, known) === "checking",
     playAgain: () => {
       if (affordable(last.buyIn)) create.start();
     },

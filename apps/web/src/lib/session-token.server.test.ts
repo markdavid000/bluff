@@ -68,13 +68,15 @@ describe("session token", () => {
     await expect(createSessionToken("did:privy:abc", "short")).rejects.toThrow(/32 characters/);
   });
 
-  it("sets a cookie the page cannot read, that lasts an hour", () => {
-    expect(sessionCookieOptions(true)).toEqual({
+  it("sets a cookie the page cannot read, that outlives its token so a run-out session is refreshed", () => {
+    const options = sessionCookieOptions(true);
+    expect(options).toEqual({
       httpOnly: true,
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 3600,
+      maxAge: 86400,
     });
+    expect(options.maxAge).toBeGreaterThan(SESSION_SECONDS);
   });
 });

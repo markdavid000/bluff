@@ -34,13 +34,14 @@ async function start(seatService: SeatService) {
     });
 }
 
-function seat(body: unknown, origin = SITE, ip = "203.0.113.7") {
+function seat(body: unknown, origin = SITE, ip = "203.0.113.7", forwardedFor?: string) {
   return fetch(`${base}/seat`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       origin,
-      "x-forwarded-for": ip,
+      "fly-client-ip": ip,
+      ...(forwardedFor ? { "x-forwarded-for": forwardedFor } : {}),
       connection: "close",
     },
     body: typeof body === "string" ? body : JSON.stringify(body),
@@ -112,6 +113,20 @@ describe("server", () => {
     expect((await seat({ tableId: "12" }, SITE, "198.51.100.9")).status).toBe(202);
     clock += RATE_LIMIT.windowMs;
     expect((await seat({ tableId: "12" })).status).toBe(202);
+  });
+
+  it("counts a caller by the address Fly saw, however they fill in X-Forwarded-For", async () => {
+    await start(service());
+    for (let i = 0; i < RATE_LIMIT.requests; i++) {
+      const fake = `198.51.100.${i}`;
+      expect((await seat({ tableId: "12" }, SITE, "203.0.113.50", fake)).status).toBe(202);
+    }
+    expect((await seat({ tableId: "12" }, SITE, "203.0.113.50", "192.0.2.99")).status).toBe(429);
+  });
+
+  it("refuses a table number too big for the game to hold", async () => {
+    await start(service());
+    expect((await seat({ tableId: "9".repeat(78) })).status).toBe(400);
   });
 
   it("logs a failure and answers 503, without passing the error on", async () => {

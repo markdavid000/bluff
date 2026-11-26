@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { errorCopy } from "@/lib/copy";
 import { explainProblem } from "@/lib/errors";
 import { notify } from "@/lib/notify";
@@ -34,18 +34,40 @@ export function useAction<Args extends unknown[], Result = unknown>({
   const timers = useRef<number[]>([]);
   const shownAt = useRef<number | null>(null);
   const running = useRef(false);
+  const here = useRef(false);
+  const finishing = useRef<(() => void) | null>(null);
 
   function clearTimers() {
     timers.current.forEach((timer) => window.clearTimeout(timer));
     timers.current = [];
   }
 
-  useEffect(() => clearTimers, []);
+  const leave = useEffectEvent(() => {
+    here.current = false;
+    clearTimers();
+    const finish = finishing.current;
+    finishing.current = null;
+    finish?.();
+  });
+
+  useEffect(() => {
+    here.current = true;
+    return () => leave();
+  }, []);
 
   function afterMinimum(finish: () => void) {
     const elapsed = shownAt.current === null ? MIN_SHOWN_MS : Date.now() - shownAt.current;
-    if (elapsed >= MIN_SHOWN_MS) finish();
-    else timers.current.push(window.setTimeout(finish, MIN_SHOWN_MS - elapsed));
+    if (!here.current || elapsed >= MIN_SHOWN_MS) {
+      finish();
+      return;
+    }
+    finishing.current = finish;
+    timers.current.push(
+      window.setTimeout(() => {
+        finishing.current = null;
+        finish();
+      }, MIN_SHOWN_MS - elapsed)
+    );
   }
 
   async function start(...args: Args) {
@@ -71,6 +93,10 @@ export function useAction<Args extends unknown[], Result = unknown>({
       clearTimers();
       afterMinimum(() => {
         running.current = false;
+        if (!here.current) {
+          if (shownAt.current !== null) notify.dismiss(id);
+          return;
+        }
         setStatus({ kind: "done" });
         if (!quiet && done) notify.success(done, { id });
         else if (shownAt.current !== null) notify.dismiss(id);
@@ -82,10 +108,10 @@ export function useAction<Args extends unknown[], Result = unknown>({
       if (problem.kind === "failed") console.error(`Action ${id} failed.`, error);
       afterMinimum(() => {
         running.current = false;
-        setStatus({ kind: "failed", reason: problem.reason });
+        if (here.current) setStatus({ kind: "failed", reason: problem.reason });
         if (problem.kind === "cancelled" || problem.kind === "unsure") {
           notify.info(problem.reason, { id });
-        } else if (problem.kind === "refused") {
+        } else if (problem.kind === "refused" || !here.current) {
           notify.error(problem.reason, { id });
         } else {
           notify.error(problem.reason, {

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onNotice } from "@/lib/notify";
 import { tableCopy } from "../copy";
 import { KEEPER_STAGGER_MS, type Table, type TableStatus } from "@bluff/game";
-import { useTableKeeper } from "./use-table-keeper";
+import { OWN_WALLET_GRACE_MS, useTableKeeper } from "./use-table-keeper";
 import { NO_DICE, NO_GAME } from "@bluff/game/testing";
 
 vi.mock("@/config/env", () => ({
@@ -56,6 +56,12 @@ vi.mock("@zama-fhe/react-sdk", () => ({
   useDecryptPublicValues: () => ({ mutateAsync: decryptPublic }),
 }));
 vi.mock("@/hooks/use-send-move", () => ({ useSendMove: () => sendMove }));
+let walletType = "privy";
+let signedIn = HOST;
+vi.mock("@privy-io/react-auth", () => ({
+  usePrivy: () => ({ user: { wallet: { address: signedIn } } }),
+  useWallets: () => ({ wallets: [{ address: signedIn, walletClientType: walletType }] }),
+}));
 
 function table(status: TableStatus): Table {
   return {
@@ -87,6 +93,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(START + 1_000);
   chainStatus = 2;
+  walletType = "privy";
+  signedIn = HOST;
   shown = [];
   stop = onNotice((event) => {
     if (event.type === "show") shown.push(event.notice.title);
@@ -114,7 +122,22 @@ describe("useTableKeeper", () => {
     );
   });
 
+  it("leaves duty moves to others for a player on their own wallet, stepping in only when the table is stuck", async () => {
+    walletType = "metamask";
+    renderHook(() => useTableKeeper({ table: table("verifying"), me: HOST, now: Date.now() }));
+    await wait(KEEPER_STAGGER_MS * 4);
+    expect(sendMove).not.toHaveBeenCalled();
+    expect(shown).toEqual([]);
+    await wait(OWN_WALLET_GRACE_MS);
+    expect(shown).toContain(tableCopy.keeperFromOwnWallet);
+    expect(sendMove).toHaveBeenCalledWith(
+      expect.objectContaining({ functionName: "confirmSeats" }),
+      expect.any(Function)
+    );
+  });
+
   it("has another player wait their turn before stepping in", async () => {
+    signedIn = KOLA;
     renderHook(() => useTableKeeper({ table: table("verifying"), me: KOLA, now: Date.now() }));
     await wait(KEEPER_STAGGER_MS - 2_000);
     expect(sendMove).not.toHaveBeenCalled();
@@ -137,6 +160,7 @@ describe("useTableKeeper", () => {
   });
 
   it("drops a scheduled move when the player leaves the page", async () => {
+    signedIn = KOLA;
     const { unmount } = renderHook(() =>
       useTableKeeper({ table: table("verifying"), me: KOLA, now: Date.now() })
     );

@@ -156,6 +156,22 @@ describe("GameView", () => {
     ).toBeNull();
   });
 
+  it("lets the player move while their dice are still locked", () => {
+    waitingForDice = true;
+    render(
+      <GameView
+        game={gameView({
+          table: playing(),
+          dice: { status: "locked", unlock: vi.fn(), unlocking: false },
+        })}
+      />
+    );
+    expect(screen.getByRole("button", { name: tableCopy.raise })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: tableCopy.callBluffOn("Sly Fox #3C4D") })
+    ).toBeInTheDocument();
+  });
+
   it("still lets the player move when their dice couldn't be read", () => {
     waitingForDice = true;
     render(
