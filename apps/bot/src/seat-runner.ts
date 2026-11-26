@@ -9,6 +9,7 @@ const THINKING_MS = { least: 2_000, most: 6_000 } as const;
 const TURN_MARGIN_MS = 15_000;
 const RETRY_MS = 3_000;
 const REVEAL_PATIENCE_MS = 45_000;
+const REPEAT_NOTE_MS = 30_000;
 
 export type BluffCall =
   | { functionName: "setReady"; args: readonly [bigint, boolean] }
@@ -29,8 +30,17 @@ export type BluffCall =
 export interface SeatChain {
   readTable(id: bigint, atBlock?: bigint): Promise<Table>;
   send(index: number, call: BluffCall, atBlock?: bigint): Promise<{ blockNumber: bigint }>;
-  ownDice(index: number, id: bigint, timeoutMs: number): Promise<readonly unknown[]>;
-  revealProof(id: bigint, timeoutMs: number): Promise<{ clearValues: Hex; proof: Hex }>;
+  ownDice(
+    index: number,
+    id: bigint,
+    timeoutMs: number,
+    atBlock?: bigint
+  ): Promise<readonly unknown[]>;
+  revealProof(
+    id: bigint,
+    timeoutMs: number,
+    atBlock?: bigint
+  ): Promise<{ clearValues: Hex; proof: Hex }>;
 }
 
 function turnKey(table: Table): string {
@@ -69,6 +79,7 @@ export function createSeatRunner({
   let finished = false;
   let running: Promise<void> | null = null;
   let again = false;
+  let revealNotedAt: number | null = null;
 
   function notice(block?: bigint) {
     if (block !== undefined && block > newestBlock) newestBlock = block;
@@ -91,11 +102,23 @@ export function createSeatRunner({
     });
   }
 
-  async function ownFaces(deadline: number) {
+  function atNewest(): bigint | undefined {
+    return newestBlock > 0n ? newestBlock : undefined;
+  }
+
+  async function readOwnDice(timeoutMs: number, expected: number) {
+    const dice = await chain.ownDice(index, tableId, timeoutMs, atNewest());
+    if (dice.length !== expected) {
+      throw new Error(`Read ${dice.length} dice for a seat holding ${expected}`);
+    }
+    return facesFrom(dice);
+  }
+
+  async function ownFaces(deadline: number, expected: number) {
     for (;;) {
       const timeLeft = deadline - TURN_MARGIN_MS - now();
       try {
-        return facesFrom(await chain.ownDice(index, tableId, Math.max(timeLeft, RETRY_MS)));
+        return await readOwnDice(Math.max(timeLeft, RETRY_MS), expected);
       } catch (error) {
         log.warn("dice not ready", { table, player: address, ms: timeLeft, error });
         if (now() + RETRY_MS > deadline - TURN_MARGIN_MS) {
@@ -118,7 +141,8 @@ export function createSeatRunner({
     const thinking = THINKING_MS.least + random() * (THINKING_MS.most - THINKING_MS.least);
     log.info("thinking", { table, player: address, ms: deadline - now() });
     await sleep(Math.max(0, Math.min(thinking, deadline - now() - TURN_MARGIN_MS)));
-    const faces = await ownFaces(deadline);
+    const mine = current.seats.find((seat) => seat.player.toLowerCase() === address.toLowerCase());
+    const faces = await ownFaces(deadline, mine?.dice ?? 0);
     if (faces === null) {
       actedOn = key;
       return;
@@ -151,9 +175,12 @@ export function createSeatRunner({
     for (;;) {
       const timeLeft = until - now();
       try {
-        return await chain.revealProof(tableId, Math.max(timeLeft, RETRY_MS));
+        return await chain.revealProof(tableId, Math.max(timeLeft, RETRY_MS), atNewest());
       } catch (error) {
-        log.warn("reveal not ready", { table, player: address, ms: timeLeft, error });
+        if (revealNotedAt === null || now() - revealNotedAt >= REPEAT_NOTE_MS) {
+          revealNotedAt = now();
+          log.warn("reveal not ready", { table, player: address, ms: timeLeft, error });
+        }
         if (!(await stillDue(action))) return null;
         if (now() + RETRY_MS > until) throw error;
         await sleep(RETRY_MS);
