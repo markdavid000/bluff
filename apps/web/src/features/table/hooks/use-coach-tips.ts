@@ -50,4 +50,6 @@ export function useCoachTips({
   useEffect(() => {
     if (!myTurn) notify.dismiss(COACH_ID);
   }, [myTurn]);
+
+  useEffect(() => () => notify.dismiss(COACH_ID), []);
 }

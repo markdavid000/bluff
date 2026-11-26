@@ -139,12 +139,14 @@ export function GameView({ game }: { game: Game }) {
               {tableCopy.pot(formatChips(game.pot))}
             </span>
           ) : null}
-          {game.watching ? (
+          {game.watching || !game.stillIn ? (
             <>
-              <span className="flex items-center gap-1.5 rounded-full border-2 border-seat-blue-edge bg-seat-blue px-3 py-1 font-game text-sm whitespace-nowrap text-seat-foreground">
-                <GameIcon name="zoom" size={18} />
-                {tableCopy.watching}
-              </span>
+              {game.watching ? (
+                <span className="flex items-center gap-1.5 rounded-full border-2 border-seat-blue-edge bg-seat-blue px-3 py-1 font-game text-sm whitespace-nowrap text-seat-foreground">
+                  <GameIcon name="zoom" size={18} />
+                  {tableCopy.watching}
+                </span>
+              ) : null}
               <TileLink href="/play" tone="quiet" size="small" icon="back">
                 {tableCopy.backToLobby}
               </TileLink>

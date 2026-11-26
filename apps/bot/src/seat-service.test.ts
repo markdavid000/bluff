@@ -223,12 +223,12 @@ describe("seat service", () => {
       expect(h.started).toMatchObject([{ index: 1, tableId: 12n }]);
     });
 
-    it("never frees a computer the chain shows is still seated somewhere else", async () => {
+    it("never frees a computer the chain shows is still seated somewhere else, and says it is busy", async () => {
       const h = harness({
         join: async () => Promise.reject(new MoveRefused("AlreadyAtTable", null)),
         seatOf: async () => 99n,
       });
-      await expect(h.service.seat(12n)).rejects.toThrow("AlreadyAtTable");
+      expect(await h.service.seat(12n)).toEqual({ kind: "refused", reason: "all-busy" });
       expect(h.released).toEqual([]);
       expect(h.started).toMatchObject([{ index: 1, tableId: 99n }]);
     });
