@@ -12,7 +12,7 @@ import { type Abi, type Address, type TransactionReceipt, encodeFunctionData } f
 import { usePublicClient, useSendTransaction } from "wagmi";
 import { gameChain } from "@/config/chain";
 import { seeBlock } from "@/lib/block-clock";
-import { MoveNotReadyError } from "@/lib/errors";
+import { MoveNotReadyError, refusedWithoutReason } from "@/lib/errors";
 import { useEnsureGameChain } from "./use-game-chain";
 import { useMovesSponsored } from "./use-moves-sponsored";
 
@@ -34,6 +34,11 @@ const GAME_ERRORS: Abi = [
 export type MoveStep = "preparing" | "confirming" | "sending" | "waiting";
 
 const RECEIPT_CHECK_MS = 1_000;
+export const SPONSOR_TRIES = 3;
+export const SPONSOR_RETRY_MS = 4_000;
+function pause(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function useSendMove() {
   const { user } = usePrivy();
@@ -50,15 +55,26 @@ export function useSendMove() {
     const account = user?.wallet?.address as Address | undefined;
     if (!account || !publicClient) throw new MoveNotReadyError();
     report("preparing");
-    await publicClient.simulateContract({ ...call, abi: [...call.abi, ...GAME_ERRORS], account });
+    const check = () =>
+      publicClient.simulateContract({ ...call, abi: [...call.abi, ...GAME_ERRORS], account });
+    await check();
     const data = encodeFunctionData(call);
     let hash: `0x${string}`;
     if (sponsored) {
       report("sending");
-      ({ hash } = await sendSponsored(
-        { to: call.address, data, chainId: gameChain.id },
-        { sponsor: true, uiOptions: { showWalletUIs: false } }
-      ));
+      for (let attempt = 1; ; attempt++) {
+        try {
+          ({ hash } = await sendSponsored(
+            { to: call.address, data, chainId: gameChain.id },
+            { sponsor: true, uiOptions: { showWalletUIs: false } }
+          ));
+          break;
+        } catch (error) {
+          if (!refusedWithoutReason(error) || attempt >= SPONSOR_TRIES) throw error;
+          await pause(SPONSOR_RETRY_MS);
+          await check();
+        }
+      }
     } else {
       await ensureGameChain();
       report("confirming");

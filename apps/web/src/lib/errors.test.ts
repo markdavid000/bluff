@@ -35,6 +35,13 @@ describe("explainProblem", () => {
     });
   });
 
+  it("says the network is busy when the sponsor refused a move without a reason", () => {
+    const error = new Error(
+      "Execution reverted for an unknown reason. Details: execution reverted"
+    );
+    expect(explainProblem(error)).toEqual({ kind: "failed", reason: errorCopy.networkBusy });
+  });
+
   it("asks for patience when the decryption service is busy", () => {
     expect(explainProblem(new RelayerRequestFailedError("busy", 503))).toEqual({
       kind: "failed",

@@ -61,6 +61,12 @@ function ruleInMessage(message: string): KnownReason | null {
   return null;
 }
 
+const UNCLEAR_REFUSAL = "Execution reverted for an unknown reason";
+
+export function refusedWithoutReason(error: unknown): boolean {
+  return error instanceof Error && error.message.includes(UNCLEAR_REFUSAL);
+}
+
 export function mayStillLand(error: unknown): boolean {
   return (
     typeof error === "object" && error !== null && "name" in error && error.name === "AbortError"
@@ -79,6 +85,7 @@ function walletNotConnected(error: unknown): boolean {
 
 export function explainProblem(error: unknown): ActionProblem {
   if (mayStillLand(error)) return { kind: "unsure", reason: errorCopy.mayStillLand };
+  if (refusedWithoutReason(error)) return { kind: "failed", reason: errorCopy.networkBusy };
   if (walletNotConnected(error)) return { kind: "failed", reason: errorCopy.walletNotConnected };
   if (error instanceof MoveNotReadyError) return { kind: "failed", reason: errorCopy.noWallet };
   if (error instanceof InviteNotWorkingError) {
