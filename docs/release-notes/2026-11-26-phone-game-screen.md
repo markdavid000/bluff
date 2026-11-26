@@ -5,7 +5,7 @@ base: dev
 scenario-impact: none
 ---
 
-# A game screen made for phones
+# Game and waiting screens made for phones
 
 From the maintainer's screenshots on 2026-11-26.
 
@@ -32,6 +32,22 @@ From the maintainer's screenshots on 2026-11-26.
   - Leave reads "Leave", or just its flag on screens 368 px wide or less, with the full name kept for screen readers.
 - **Rounds so far:** the Round badge becomes a button that opens the rounds in a sheet, and the history is only read while the sheet is open.
 
+- **Your own seat sits in a row** on phones: your picture and turn ring on the left, with your name, dice and last bid beside them. The bid controls use their shorter layout. This roughly doubles the board on your turn: 69 → 133 px on a 328 px phone, and 157 → 305 px on a 390 px one.
+
+## The waiting room, on screens narrower than 40rem
+
+With four seats it used to pile players on top of each other, the Remove buttons covered names, and the board shrank to nothing. Now it follows the game screen:
+
+- **The other seats sit in one row above the board.** Each is compact:
+  - a 44 px picture and a short name;
+  - the Ready tick and the state;
+  - Remove as a round flag on the picture's corner;
+  - an empty seat as a round Invite button.
+
+  The board takes the full width, and you sit below it.
+
+- **The lower half is tighter:** smaller status text and gaps, shorter buttons, and Leave reads "Leave". Screen readers still get the full names.
+
 Wider screens keep today's layout.
 
 ## Verification
@@ -47,4 +63,7 @@ Wider screens keep today's layout.
 - **Rendered at 328×720, 360×740 and 390×844 with 2 and 4 players** (headless Chrome with phone emulation, on a temporary preview page that isn't committed):
   - no element runs off the screen;
   - no overlap in the top bar.
-- **Known limit:** on a 328 px phone with 4 players, the board shrinks to about 60 px during your own turn, while the bid controls are open. It's full size on other turns.
+- **The waiting room, rendered the same way with 2, 3 and 4 seats, full and part full,** at 328, 360 and 390 px wide:
+  - the board is 132–350 px, where before it was a sliver;
+  - no element runs off the screen, no buttons overlap, and the page never scrolls.
+- **The game on your own turn,** at the same sizes: the board is 133–305 px, and 280–342 px on other turns.

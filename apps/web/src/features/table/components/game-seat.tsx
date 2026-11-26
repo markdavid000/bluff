@@ -64,6 +64,7 @@ export function GameSeat({
     holdDice && heldFaces !== null ? { status: "ready", faces: heldFaces } : ownDice;
   const shown = isMe ? tableCopy.you : name;
   const state = !isActive ? tableCopy.out : tableCopy.diceLeft(diceShown);
+  const bidInFlow = compact || tight;
   return (
     <figure
       aria-label={[
@@ -74,7 +75,11 @@ export function GameSeat({
       ]
         .filter(Boolean)
         .join(", ")}
-      className={cn("flex flex-col items-center gap-1", !isActive && "opacity-50 grayscale")}
+      className={cn(
+        "flex items-center",
+        tight ? "flex-row gap-3" : "flex-col gap-1",
+        !isActive && "opacity-50 grayscale"
+      )}
     >
       <span className="relative">
         <Appear
@@ -109,7 +114,7 @@ export function GameSeat({
             <ComputerTag small />
           </span>
         ) : null}
-        {compact ? null : (
+        {bidInFlow ? null : (
           <Appear
             show={lastBid !== null}
             swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
@@ -120,46 +125,48 @@ export function GameSeat({
           </Appear>
         )}
       </span>
-      <figcaption
-        className={cn(
-          "truncate font-game leading-tight",
-          compact ? "max-w-20 text-xs" : "max-w-28 text-sm"
-        )}
-      >
-        {shown || (
-          <span
-            data-name-loading
-            className="inline-block h-[1em] w-16 animate-pulse rounded bg-muted align-middle calm:animate-none"
-          />
-        )}
-      </figcaption>
-      {isComputer && !compact ? <ComputerTag /> : null}
-      <span className={cn(compact && "flex h-7 items-center gap-1.5")}>
-        <span className="relative">
-          {isActive ? (
-            <SeatDice
-              dice={diceShown}
-              ownDice={ownShown}
-              matching={matching}
-              compact={compact}
-              tight={tight}
+      <span className={cn("flex flex-col gap-1", tight ? "items-start" : "items-center")}>
+        <figcaption
+          className={cn(
+            "truncate font-game leading-tight",
+            compact ? "max-w-20 text-xs" : "max-w-28 text-sm"
+          )}
+        >
+          {shown || (
+            <span
+              data-name-loading
+              className="inline-block h-[1em] w-16 animate-pulse rounded bg-muted align-middle calm:animate-none"
             />
-          ) : null}
-          <AnimatePresence>
-            {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
-          </AnimatePresence>
-        </span>
-        {compact ? (
-          <span data-seat-bid className="static flex items-center">
-            <Appear
-              show={lastBid !== null}
-              swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
-              inline
-            >
-              {lastBid ? <BidPill bid={lastBid} owner={shown} compact /> : null}
-            </Appear>
+          )}
+        </figcaption>
+        {isComputer && !compact ? <ComputerTag /> : null}
+        <span className={cn(bidInFlow && "flex items-center gap-1.5", compact && "h-7")}>
+          <span className="relative">
+            {isActive ? (
+              <SeatDice
+                dice={diceShown}
+                ownDice={ownShown}
+                matching={matching}
+                compact={compact}
+                tight={tight}
+              />
+            ) : null}
+            <AnimatePresence>
+              {lost > 0 ? <LostDie key={lost} onDone={() => setLost(0)} /> : null}
+            </AnimatePresence>
           </span>
-        ) : null}
+          {bidInFlow ? (
+            <span data-seat-bid className="static flex items-center">
+              <Appear
+                show={lastBid !== null}
+                swapKey={lastBid ? `${lastBid.quantity}-${lastBid.face}` : ""}
+                inline
+              >
+                {lastBid ? <BidPill bid={lastBid} owner={shown} compact /> : null}
+              </Appear>
+            </span>
+          ) : null}
+        </span>
       </span>
     </figure>
   );

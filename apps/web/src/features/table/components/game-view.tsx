@@ -209,7 +209,7 @@ export function GameView({ game }: { game: Game }) {
       <Appear show={controlsShown}>
         <BidControl
           actionRef={actionRef}
-          compact={small}
+          compact={small || phone}
           choice={game.choice}
           bid={game.bid}
           bidderName={game.bidderName}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ONE_CHIP } from "@/lib/chips";
 import { tableCopy } from "../copy";
@@ -11,6 +11,10 @@ vi.mock("@/hooks/use-theme-colors", () => ({ useThemeColors: () => null }));
 const useTipsOnFirstVisit = vi.fn();
 vi.mock("../hooks/use-tips-dialog", () => ({
   useTipsOnFirstVisit: () => useTipsOnFirstVisit(),
+}));
+let phone = false;
+vi.mock("@/hooks/use-media-query", () => ({
+  useMediaQuery: (query: string) => query.includes("40rem") && phone,
 }));
 vi.mock("../hooks/use-board-choice", () => ({
   useBoardChoice: () => false,
@@ -108,6 +112,49 @@ function show(view: Room | null, read: Record<string, unknown> = { status: "read
 
 beforeEach(() => {
   vi.clearAllMocks();
+  phone = false;
+});
+
+const ADA = "0x0000000000000000000000000000000000005e6f";
+
+function fourSeats(): Room {
+  return room({
+    table: table({ seatCount: 4 }),
+    freeSeats: 1,
+    canRemove: (player: string) => player === ADA,
+    seats: [
+      ...(room().seats as object[]),
+      {
+        player: ADA,
+        ready: false,
+        isHost: false,
+        isActive: true,
+        isMe: false,
+        name: "Ada #5E6F",
+        avatarSrc: "/c.svg",
+      },
+    ],
+  });
+}
+
+describe("the waiting room on a phone", () => {
+  it("puts the other seats in one row above the board, with you below", () => {
+    phone = true;
+    show(fourSeats());
+    const row = screen.getByTestId("opponents");
+    expect(within(row).getAllByRole("figure")).toHaveLength(2);
+    expect(within(row).getByRole("button", { name: tableCopy.copyInvite })).toBeInTheDocument();
+    expect(
+      within(row).getByRole("button", { name: tableCopy.removeGuest("Ada #5E6F") })
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole("figure", { name: /You/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("figure", { name: /You/ })).toBeInTheDocument();
+  });
+
+  it("keeps the seats around the board on wider screens", () => {
+    show(fourSeats());
+    expect(screen.queryByTestId("opponents")).not.toBeInTheDocument();
+  });
 });
 
 describe("WaitingScreen", () => {

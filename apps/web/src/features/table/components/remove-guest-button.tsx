@@ -16,10 +16,12 @@ export function RemoveGuestButton({
   name,
   disabled,
   onRemove,
+  compact = false,
 }: {
   name: string;
   disabled: boolean;
   onRemove: () => void;
+  compact?: boolean;
 }) {
   const remove = useConfirm(onRemove);
   return (
@@ -31,8 +33,9 @@ export function RemoveGuestButton({
         aria-label={tableCopy.removeGuest(name)}
         disabled={disabled}
         onClick={remove.ask}
+        className={compact ? "size-8 min-h-0 rounded-full p-0" : undefined}
       >
-        {tableCopy.removeButton}
+        {compact ? null : tableCopy.removeButton}
       </ActionButton>
       <Dialog open={remove.asking} onOpenChange={remove.setAsking}>
         <DialogContent>
