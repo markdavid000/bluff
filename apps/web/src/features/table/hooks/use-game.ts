@@ -25,6 +25,7 @@ import { useCoachTips } from "./use-coach-tips";
 import { useGameEnd } from "./use-game-end";
 import { useOwnDice } from "./use-own-dice";
 import { useRoundResultCatchUp } from "./use-round-result-catch-up";
+import { useGameHistory } from "./use-round-history";
 import { type PlacedBid, type RoundResult, useTableEvents } from "./use-table-events";
 import { useTable } from "./use-table";
 import { useTableKeeper } from "./use-table-keeper";
@@ -298,6 +299,16 @@ export function useGame(id: bigint) {
     },
   });
 
+  const shownBidder = pendingShown
+    ? (me ?? null)
+    : table?.bid
+      ? (table.seats[table.bid.bidder]?.player ?? null)
+      : null;
+  const history = useGameHistory(table, table?.status === "playing", {
+    bid: shownBid,
+    bidder: shownBidder,
+  });
+
   if (!table) return { read, view: null };
 
   const bid = shownBid;
@@ -368,8 +379,19 @@ export function useGame(id: bigint) {
     left && (finished ? end.status !== "loading" : !(table.seats[mySeat]?.isActive ?? false));
   const iWon = end.status === "ready" && end.winners.some((winner) => same(winner, me));
   const chosen = myTurn ? choice.choice : null;
+  const chainBids =
+    history.status === "ready"
+      ? (history.rounds.find((round) => round.round === table.round)?.bids ?? [])
+      : [];
+  const chainBidOf = (player: string): Bid | undefined => {
+    const found = chainBids.findLast((bid) => bid.player.toLowerCase() === player.toLowerCase());
+    return found && isValidFace(found.face)
+      ? { quantity: found.quantity, face: found.face }
+      : undefined;
+  };
   const lastBidOf = (player: string, index: number): Bid | null =>
     (roundBids.round === table.round ? roundBids.bids[player.toLowerCase()] : undefined) ??
+    chainBidOf(player) ??
     (table.bid && table.bid.bidder === index ? table.bid : null);
 
   return {
@@ -409,11 +431,8 @@ export function useGame(id: bigint) {
         : table.bid
           ? nameOfSeat(table.bid.bidder)
           : null,
-      bidder: pendingShown
-        ? (me ?? null)
-        : table.bid
-          ? (table.seats[table.bid.bidder]?.player ?? null)
-          : null,
+      bidder: shownBidder,
+      history,
       choice,
       matching:
         chosen !== null ? ownFaces.map((face) => face === chosen.face || face === WILD_FACE) : null,
